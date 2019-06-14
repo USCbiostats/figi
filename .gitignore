@@ -2,10 +2,14 @@
 *
 
 # Whitelist all directories
-!*/Code
-!*/Code_hpcc
-!*/Postharmonization
-!*/Results
+!/Code/
+#!/Code/*
+!/Code_hpcc/
+#!/Code_hpcc/*
+!/Postharmonization/
+#!/Postharmonization/*
+!/Results/
+#!/Results/*
 !.gitignore
 
 # files

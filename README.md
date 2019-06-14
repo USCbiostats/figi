@@ -1,3 +1,4 @@
-# FIGI Code
+# FIGI
 
-This repository contains most of the code used for FIGI analysis. 
+This repository contains code used for FIGI analysis and documentation. Data and results not included. 
+
