@@ -1,0 +1,111 @@
+---
+title: "FIGI Post-Imputation Quality Control"
+bibliography: /home/rak/Dropbox/library.bib
+output: 
+  html_document
+  #word_document:
+    #reference_docx: word_styles.docx
+---
+
+<!-- FULL YAML IF NEED --- -->
+<!-- title: "FIGI GxE Set Principal Components Results" -->
+<!-- bibliography: /home/rak/Dropbox/library.bib -->
+<!-- output:  -->
+<!--   html_document: -->
+<!--     #css: FIGI_GxESet_styles_rmarkdown.css -->
+<!--     code_folding: hide -->
+<!--     toc: true -->
+<!--     toc_float: true -->
+<!--     toc_depth: 2 -->
+<!--     theme: united -->
+<!-- --- -->
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
+# Goals
+* Explore HRC Imputation results
+    + run vcfparse.pl + IC.pl script (wrayner) on all imputation batches
+    + create summary plots of Rsq and MAF (modify as needed), explore determinants of imputation quality
+    + tabulate counts by Rsq/MAF bins
+* html outputs from IC.pl script store in same folder as this file
+
+
+# Post Imputation
+
+## Rsq barplot
+```{r setup, include=F}
+library(tidyverse)
+library(data.table)
+library(ggstance)
+```
+
+
+```{r, tidy=T, message=F, error=F, cache=T, fig.width=12}
+quickw <- function(x) {
+  fread(paste0("~/data/IC_working/INFO-", x, ".GW.txt")) %>% 
+    filter(V1 != "Total") %>% 
+    mutate(tmp = ifelse(V1 <= 0.3, 0, 
+                        ifelse(V1 > 0.3 & V1 < 0.8, 1, 2)),
+           Info_cat = factor(tmp, labels = c("<=0.3", ">0.3 & <0.8", ">=0.8"))) %>% 
+    group_by(Info_cat) %>% 
+    summarise(SNPs = sum(V2), Pct = sum(V3)) %>% 
+    mutate(batch = x)
+}
+
+batch_list <- c("axiom_acs_aus_nf", 
+                "axiom_mecc_cfr_ky",
+                "ccfr_1m_1mduo_reimpute",
+                "ccfr_omni",
+                "corect_oncoarray", 
+                "corsa_axiom",
+                "cytosnp_comb",
+                "initial_comb_datasets",
+                "mecc",
+                "newfoundland_omniquad",
+                "omni_comb",
+                "omniexpress_exomechip",
+                "oncoarray_to_usc",
+                "plco_3",
+                "reach", 
+                "ukbiobank")
+
+df <- do.call(rbind, lapply(batch_list, function(x) quickw(x)))
+
+# add sample sizes for each imputation batch
+sample_sizes <- c('2766', '7501', '2180', '1600', '36621', '2467', '10908', '5924', '983', '637', '5986', '5503', '20912', '4864', '750', '27594')
+df$samplesize <- rep(sample_sizes, each = 3)
+df$batch_ss <- paste0(df$batch, " (", df$samplesize, ")")
+
+# add platform information
+# (get info from FIGI EpiData)
+#load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData")
+#table(figi$filename, figi$platform)
+platform <- c("Axiom", "Axiom", "Illumina_1M_1Mduo", "Illumina_Omni", "OncoArray", "Axiom", "CytoSNP", "InitialGWAS", "Omni2.5", "Omniquad", "OmniExpress", "OmniExpress_ExomeChip", "OncoArray_Custom", "OncoArray", "OncoArray_Custom", "Axiom")
+df$platform <- rep(platform, each = 3)
+
+# plot by imputation batch
+ggplot(df, aes(Pct, batch_ss)) + 
+  geom_barh(aes(fill = Info_cat), stat = "identity") + 
+  theme_bw() + 
+  theme(strip.text.y = element_text(angle = 0),
+        axis.text = element_text(size = 12)) + 
+  geom_vline(xintercept = 50, linetype = "dashed") 
+
+# plot grouped by platform
+ggplot(df, aes(Pct, batch_ss)) + 
+  geom_barh(aes(fill = Info_cat), stat = "identity") + 
+  facet_grid(platform  ~ . , scales = "free", space = "free") + 
+  theme_bw() + 
+  theme(strip.text.y = element_text(angle = 0),
+        axis.text = element_text(size = 12)) + 
+  geom_vline(xintercept = 50, linetype = "dashed") 
+```
+
+

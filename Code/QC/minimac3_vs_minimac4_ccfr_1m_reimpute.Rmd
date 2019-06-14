@@ -1,0 +1,60 @@
+---
+title: "minimac3 vs minimac4 check"
+output: 
+  #html_document:
+    #theme: united
+  word_document:
+   reference_docx: word_styles.docx
+---
+
+We decided to reimpute UKB data. Keith uploaded VCF files to the Michigan Imputation Server but had to use the minimac4 workflow because of file size limitations. The majority of imputation was performed using shapeit+minimac3. Furthermore, phasing software is limited to EAGLE as opposed to SHAPEIT for the minimac4 workflow.  
+
+This check is to ensure that software versions don't lead to large differences in imputed genotypes. I used **chromosome 22 from the ccfr_1m_1mduo_reimpute imputation batch**. Keith submitted the file to HRC using minimac4 workflow.  
+
+Compare the following three files:  
+- eagle + minimac3  
+- eagle + minimac4  
+- shapeit + minimac3  
+
+
+```{r, include=F}
+library(tidyverse)
+library(data.table)
+library(qqman)
+library(R.utils)
+library(lmtest)
+library(kableExtra)
+library(broom)
+library(purrr)
+library(ggplot2)
+library(cowplot)
+```
+
+<br><br>
+
+# Rsq/MAF comparison (all markers)
+
+```{r, echo = F, fig.show='hold', out.width = "50%", fig.align = "default"}
+ggdraw() + draw_image("/home/rak/data/ccfr_1m_reimpute_minimac3_vs_minimac4/shapeit_minimac3_vs_eagle_minimac4_Rsq_allmarkers.png")
+ggdraw() + draw_image("/home/rak/data/ccfr_1m_reimpute_minimac3_vs_minimac4/minimac3_vs_minimac4_rsq_allmarkers.png")
+```
+
+```{r, echo = F, fig.show='hold', out.width = "50%", fig.align = "default"}
+ggdraw() + draw_image("/home/rak/data/ccfr_1m_reimpute_minimac3_vs_minimac4/shapeit_minimac3_vs_eagle_minimac4_MAF_allmarkers.png")
+ggdraw() + draw_image("/home/rak/data/ccfr_1m_reimpute_minimac3_vs_minimac4/minimac3_vs_minimac4_MAF_allmarkers.png")
+```
+
+<br><br>
+
+# Rsq/MAF comparison (MAF > 1%)
+
+```{r, echo = F, fig.show='hold', out.width = "50%", fig.align = "default"}
+ggdraw() + draw_image("/home/rak/data/ccfr_1m_reimpute_minimac3_vs_minimac4/shapeit_minimac3_vs_eagle_minimac4_Rsq_commonmarkers.png")
+ggdraw() + draw_image("/home/rak/data/ccfr_1m_reimpute_minimac3_vs_minimac4/minimac3_vs_minimac4_rsq_commonmarkers.png")
+```
+
+```{r, echo = F, fig.show='hold', out.width = "50%", fig.align = "default"}
+ggdraw() + draw_image("/home/rak/data/ccfr_1m_reimpute_minimac3_vs_minimac4/shapeit_minimac3_vs_eagle_minimac4_MAF_commonmarkers.png")
+ggdraw() + draw_image("/home/rak/data/ccfr_1m_reimpute_minimac3_vs_minimac4/minimac3_vs_minimac4_MAF_commonmarkers.png")
+```
+

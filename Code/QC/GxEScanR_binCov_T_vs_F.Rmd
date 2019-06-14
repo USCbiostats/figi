@@ -1,0 +1,42 @@
+---
+title: "GxEScanR binCov T vs F (linear)"
+output: 
+  html_document:
+    theme: united
+  #word_document:
+   #reference_docx: word_styles.docx
+---
+
+Quick comparison between running a binary E as 'binary' vs 'linear' 
+
+```{r, include=F}
+library(tidyverse)
+library(data.table)
+
+figi_chr22_binCovT <- fread("~/data/Results/NSAIDS/asp_ref_190518/results_GxE_asp_ref_sex_age_pc3_studygxe_72820_binCovT_chr22.out")
+figi_chr22_binCovF <- fread("~/data/Results/NSAIDS/asp_ref_190518/results_GxE_asp_ref_sex_age_pc3_studygxe_72820_binCovF_chr22.out")
+```
+
+<br><br>
+
+# E|G
+```{r echo=F, fig.show='hold', out.width = "50%", fig.align = "default"}
+plot(figi_chr22_binCovT$chiSqGE, figi_chr22_binCovF$chiSqGE, main = "G|E ChiSq Statistics", xlab = "binCov=T", ylab = "binCov=F")
+abline(0, 1, col = 'red')
+```
+
+<br><br>
+
+# Case Only
+```{r echo=F, fig.show='hold', out.width = "50%", fig.align = "default"}
+plot(figi_chr22_binCovT$chiSqCase, figi_chr22_binCovF$chiSqCase, main = "Case-only ChiSq Statistics", xlab = "binCov=T", ylab = "binCov=F")
+abline(0, 1, col = 'red')
+```
+
+<br><br>
+
+# Control Only
+```{r echo=F, fig.show='hold', out.width = "50%", fig.align = "default"}
+plot(figi_chr22_binCovT$chiSqControl, figi_chr22_binCovF$chiSqControl, main = "Control-only ChiSq Statistics", xlab = "binCov=T", ylab = "binCov=F")
+abline(0, 1, col = 'red')
+```

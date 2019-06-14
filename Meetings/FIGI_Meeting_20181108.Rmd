@@ -1,0 +1,70 @@
+---
+title: "FIGI - 11/08/2018"
+bibliography: /Users/mak/Dropbox/Projects/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    #toc: true
+    #toc_float: true
+    #toc_depth: 2
+    theme: "cosmo"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style type="text/css">
+h1 { /* Header 1 */
+  font-size: 24px;
+  font-weight: bold;
+}
+h2 { /* Header 2 */
+    font-size: 18px;
+    font-weight: bold;
+}
+h3 { /* Header 2 */
+    font-size: 14px;
+    font-weight: bold;
+}
+hr {
+  border: 1px solid #000;
+}
+</style>
+
+
+# FIGI QQ Plots
+![](/Users/mak/Dropbox/code/_working/FIGI_age_sex_qq.png){ width=45% } ![](/Users/mak/Dropbox/code/_working/FIGI_age_sex_pc_qq.png){ width=45% }  
+![](/Users/mak/Dropbox/code/_working/FIGI_age_sex_studyname_qq.png){ width=45% } ![](/Users/mak/Dropbox/code/_working/FIGI_age_sex_studyname_pc_qq.png){ width=45% }  
+
+
+# FIGI GxEScanR Incomplete Results
+![](/Users/mak/Dropbox/code/_working/GxEScanR_tmpresults_qq.png)
+<br>
+![](/Users/mak/Dropbox/code/_working/GxEScanR_tmpresults_manhattan.png)
+
+
+# Folate (Next Week)
+
+
+## Distribution of Folate by Study Country (USA vs Other)  
+
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_boxplot_usa.png)
+<br>
+
+
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_boxplot_other.png)
+<br>
+
+## Case-control+Cohort, Total Folate   
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_tot_500_fp_caco_cohort.png)
+<br>
+
+## Case-control+Cohort, Dietary Folate  
+
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_diet_500_fp_caco_cohort.png)
+<br>
+## Case-control+Cohort, Supplemental Folate  
+
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_supp_500_fp_caco_cohort.png)
+<br>

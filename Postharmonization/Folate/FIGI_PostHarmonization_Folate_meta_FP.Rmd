@@ -1,0 +1,141 @@
+---
+title: "FIGI FOLATE - 11/13/2018"
+bibliography: /Users/mak/Dropbox/Projects/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    #toc: true
+    #toc_float: true
+    #toc_depth: 2
+    theme: "cosmo"
+---
+	
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style type="text/css">
+	h1 { /* Header 1 */
+			font-size: 24px;
+		font-weight: bold;
+	}
+h2 { /* Header 2 */
+		font-size: 18px;
+	font-weight: bold;
+}
+h3 { /* Header 2 */
+		font-size: 14px;
+	font-weight: bold;
+}
+hr {
+	border: 1px solid #000;
+}
+</style>
+
+# Folate
+
+Units: mcg/day  
+
+Typically scaled @ 500 mcg/day (e.g. Kantor 2014)  
+
+(Recommended daily value = 400 mcg/day)  
+<br>
+
+<!-- # Case/Control/AdvAdenoma counts by studyname -->
+<!-- GxE Epi dataset **N = 102,799** -->
+<!-- ```{r results='asis', message = F, echo = F, warning = F} -->
+<!-- #------ Assemble Counts Table ------# -->
+<!-- library(tidyverse) -->
+<!-- library(data.table) -->
+<!-- library(ggplot2) -->
+<!-- library(kableExtra) -->
+
+<!-- finalt <- readRDS("~/Dropbox/code/FIGI_PostHarmonization/working/folate_counts.rds") -->
+
+<!-- kable(finalt) %>% -->
+<!-- 	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left') -->
+<!-- ``` -->
+
+# Counts - Cases/Controls/AdvAdenoma
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_outcome_barplot.png)
+<br>
+
+# Folate Distribution
+
+## Total Folate - All Studies
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_boxplot.png)
+<br>
+
+## Total Folate - Cohort & CaseControl Studies
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_boxplot_cohort.png){ width=49% } ![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_boxplot_caco.png){ width=49% }  
+<br>
+
+## Folate distribution by studyname (Controls only)
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_boxplot_control_studydesign.png)
+<br>
+
+## Folate (tot, diet, sup) distribution by Sex
+
+### CaseControl + Cohort studies
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_violin_caco_cohort.png)
+<br>
+
+### CaseControl Studies
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_violin_caco.png)
+<br>
+
+### Cohort Studies
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_violin_cohort.png)
+<br>
+
+### American Studies
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_violin_usa.png)
+<br>
+
+### Non-American Studies
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_violin_other.png)
+<br>
+
+-------
+
+# Folate meta-analyses - All Studies
+
+## Total Folate
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_tot_500_fp_caco_cohort.png)
+<br>
+
+## Dietary and Supplemental Folate
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_diet_500_fp_caco_cohort.png){ width=49% } ![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_supp_500_fp_caco_cohort.png){ width=49% }  
+<br>
+
+------
+
+# Total Folate meta-analyses - heterogeneity by study design
+
+## Case-control vs. Cohort
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_tot_500_fp_caco.png){ width=49% }
+![](/Users/mak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_folate_tot_500_fp_cohort.png){ width=49% }
+
+
+# Heterogeneity
+```{r , message = F, echo = F, warning = F}
+#------ Assemble Counts Table ------#
+library(tidyverse)
+library(data.table)
+library(ggplot2)
+library(kableExtra)
+
+r_glm <- readRDS("~/Dropbox/code/FIGI_PostHarmonization/working/heterogeneity_studydesign.rds")
+
+kable(r_glm) %>%
+	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+# Meta regression
+w <- (r_glm$std.error)^2
+x <- lm(estimate ~ study_design, data = r_glm, weights = w)
+
+# Summary
+summary(x)
+
+
+```

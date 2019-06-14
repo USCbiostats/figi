@@ -1,0 +1,46 @@
+---
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)
+library(tidyverse)
+library(data.table)
+options(htmltools.dir.version = FALSE)
+```
+
+Recall we ran GWIS with NSAID as the exposure variable.  
+Final N = 72,438.  
+Model: outcome ~ dosage*asp_ref + age(imputed) + sex + PC1-10 + studyname(platform/study)  
+```{r, out.width='90%',  echo = F} 
+knitr::include_graphics("./figures/results_GxE_asp_ref_sex_age_pcs_studyname_N72438.txt.mh.png")
+```
+
+We investigated these 10 hits, starting with plots of allele frequencies by studyname variable. Note that a single study is always off for all 10 of these hits:   
+```{r, out.width=c('50%', '50%'), fig.show='hold', echo = F, dpi = 300}
+af_studyname <- readRDS("./rds/ukbiobank_aaf_question/af_studyname.rds")
+snplist <- c("2:4964187", "3:98981063", "6:138017298", "7:99995536", "10:3001065", "16:79591072", "17:18528708", "18:3780526", "21:34169318", "22:40651008")
+for(snp in snplist[1:10]) {
+plot(af_studyname[, snp, drop = T], ylab = snp, xlab = "studyname", cex = 0.9, xaxt='n')
+}
+```
+
+\pagebreak
+
+Looks like UKBIOBANK has some markers with flipped coding. I checked SNPs on the original files I received from FH and the codes for Reference/Alternate Alleles are consistent with the other imputation batches, so there's no obvious indication that there's a flip (except for the allele frequencies being very different..).  
+
+Although I don't have all the HRC Info files yet (Keith is working on sending them), judging by the files I do have, all but 1 of these (2:4964187) would not have survived an imputation quality filter based on Rsq values.  
+
+Next I checked Allele Frequencies for all UKBIOBANK SNPs, and compared them with corect_oncoarray batch (largest batch, with N = 36621). Before plotting, I filtered any markers that are rare in BOTH imputation batches (MAF > 0.05), and kept only markers that have greater than 100% change in AAF between the two imputation batches.  
+
+```{r, out.width='100%',  echo = F}
+knitr::include_graphics("./figures/AAF_Comparison_Chr1-4.png")
+knitr::include_graphics("./figures/AAF_Comparison_Chr5-8.png")
+knitr::include_graphics("./figures/AAF_Comparison_Chr9-12.png")
+knitr::include_graphics("./figures/AAF_Comparison_Chr13-16.png")
+knitr::include_graphics("./figures/AAF_Comparison_Chr17-20.png")
+knitr::include_graphics("./figures/AAF_Comparison_Chr21-22.png")
+```
+
+Fortunately, there are only a handful of SNPs that appear "flipped", but would be difficult to discern if the allele frequences are > ~ 0.4.  

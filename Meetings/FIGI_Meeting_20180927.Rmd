@@ -1,0 +1,114 @@
+---
+title: "FIGI - 10/02/2018"
+bibliography: /Users/mak/Dropbox/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: "cosmo"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style type="text/css">
+h1 { /* Header 1 */
+  font-size: 24px;
+  font-weight: bold;
+}
+h2 { /* Header 2 */
+    font-size: 18px;
+    font-weight: bold;
+}
+h3 { /* Header 2 */
+    font-size: 14px;
+    font-weight: bold;
+}
+hr {
+  border: 1px solid #000;
+}
+</style>
+
+
+# Status of Merged BinaryDosage Files
+
+## With UKBIOBANK
+- Chromosomes 1-5 still fail to merge when including UKBIOBANK imputation batch
+
+## Without UKBIOBANK
+- Chromosomes 1-22 DONE (w/o UKBIOBANK)
+<br>
+
+------
+
+
+# Status of GxSex scan
+- Genomewide GxSex (excluding UKB)
+- Covariates: age_ref, PC1-4, sex
+- 44201 Cases, 43353 Controls
+	- Total N = 87,554
+
+![](/Users/mak/Desktop/plots/sexplot.png)
+<br>
+
+------
+
+# Plots
+
+## Marginal G  
+### Manhattan Plot  
+![](/Users/mak/Desktop/plots/FIGI_ALL_chr1_22_G_manhattan_incomplete.png)
+
+### QQ Plot
+![](/Users/mak/Desktop/plots/FIGI_ALL_chr1_22_G_qq_incomplete.png)
+
+### QQ Plot (exclude -log10p > 5)
+![](/Users/mak/Desktop/plots/FIGI_ALL_chr1_22_G_qq_subset_incomplete.png)
+<br>
+
+## Marginal GxE  
+### Manhattan Plot  
+![](/Users/mak/Desktop/plots/FIGI_ALL_chr1_22_GxE_manhattan_incomplete.png)
+
+### QQ Plot
+![](/Users/mak/Desktop/plots/FIGI_ALL_chr1_22_GxE_qq_incomplete.png)
+
+### QQ Plot (exclude -log10p > 5)
+![](/Users/mak/Desktop/plots/FIGI_ALL_chr1_22_GxE_qq_subset_incomplete.png)
+<br>
+
+------
+
+# To Do
+- Investigate Study Heterogeneity
+- Post-imputation analysis (NSAID, Alcohol)
+- GxEScanR Pending Modifications:
+	- indexed BDose
+	- study/platform adjustment (modify algorithm to accomodate > 20 covariates)
+- Analyses TODO:
+	- adjust by platform only
+	- include some common Es to the model also. 
+	- all the PCs? 1-10
+
+
+## Run Times example (Chromosome 1, 13 chunks)
+<!-- ## Run Times (Chunks) -->
+<!-- ```{r results='asis', message = F, echo = F, warning = F} -->
+<!-- library(kableExtra) -->
+<!-- x <- read.csv("~/Desktop/Book2.csv", header = F, col.names = c("filename", "SNPs", "RunTime")) -->
+
+<!-- kable(x) %>%  -->
+<!-- 	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left') -->
+
+<!-- ``` -->
+
+```{r results='asis', message = F, echo = F, warning = F}
+library(kableExtra)
+x <- read.csv("~/Desktop/bdose3.csv", header = T)
+kable(x) %>%
+	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+```
+

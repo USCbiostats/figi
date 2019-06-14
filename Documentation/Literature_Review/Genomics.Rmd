@@ -1,0 +1,29 @@
+---
+title: "Genomics"
+bibliography: /Users/mak/Dropbox/library.bib
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: united
+---
+<!-- Use this to make window large in html file -->
+<style type="text/css">
+.main-container {
+  max-width: 1500px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
+# TCGA
+
+# predixcan
+
+# dags and causal epidemiology 
+
+# INTERACTIONS
+
+# missingness

@@ -1,0 +1,493 @@
+---
+title: "FIGI NSAIDs Post Harmonization"
+bibliography: /home/rak/Dropbox/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    css: styles_rmarkdown.css
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: united
+---
+
+```{r setup, echo=F, include=F, cache=T}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(broom)
+library(table1)
+library(kableExtra)
+library(data.table)
+library(rlang)
+library(rmeta)
+library(qqman)
+
+rm(list = ls())
+gxe_set <- readRDS("~/git/DATA/FIGI_EpiData_rdata/FIGI_Genotype_Epi_181120_EpiOnly.rds") %>% 
+  filter(drop == 0 & gxe == 1) %>%  # GxE set - N = 102792 as of 12/13/2018
+  mutate(studyname = ifelse(studyname %in% c("HPFS_1", "HPFS_2"), "HPFS_1_2", studyname),
+         studyname = ifelse(studyname %in% c("NHS_1", "NHS_2"), "NHS_1_2", studyname),
+         aspirinyrs_b = ifelse(aspirinyrs > 0, 1, 0),
+         nsaidsyrs_b = ifelse(nsaidsyrs > 0, 1, 0),
+         aspyrs_ref_b = ifelse(aspyrs_ref > 0, 1, 0))
+
+
+getCounts <- function(data, group, exposure) {
+
+  if(missing(group)) {
+    castFormula = as.formula(paste0("studyname ~", "outc", "+", exposure))
+    data %>% 
+    dplyr::group_by_('outc') %>% 
+    dplyr::select_(exposure, 'outc') %>% 
+    dplyr::count_(exposure) %>% 
+    dplyr::mutate(tot = sum(n),
+                  pct = round(100*(n/tot), 1),
+                  n_pct = paste0(n, " (", pct, ")"),
+                  studyname = "Total") %>% dplyr::select(-n, -pct) %>% ungroup() %>% ### shouldn't be 'studyname'  FYI - be mindful if you're generalizing
+    reshape2::dcast(castFormula, fill = "", value.var = 'n_pct') %>% 
+    dplyr::rename(Case_NA = Case_, 
+                  Control_NA = Control_) %>% 
+    dplyr::select(studyname, Case_No, Case_Yes, Case_NA, Control_No, Control_Yes, Control_NA)
+  } else {
+    castFormula = as.formula(paste0(group, "~", "outc", "+", exposure))
+    data %>% 
+    dplyr::group_by_(group, 'outc') %>% 
+    dplyr::select_(group, exposure, 'outc') %>% 
+    dplyr::count_(exposure) %>% 
+    dplyr::mutate(tot = sum(n),
+           pct = round(100*(n/tot), 1),
+           n_pct = paste0(n, " (", pct, ")")) %>% dplyr::select(-n, -pct) %>% ungroup() %>% 
+    reshape2::dcast(castFormula, fill = "") %>% 
+    dplyr::rename(Case_NA = Case_, 
+                  Control_NA = Control_) %>% 
+    dplyr::select(studyname, Case_No, Case_Yes, Case_NA, Control_No, Control_Yes, Control_NA)
+    }
+    }
+
+getCounts_outc <- function(data, group) {
+  tmp_counts <- data %>% 
+    dplyr::group_by_('outc', group) %>% 
+    dplyr::summarize(count = n()) %>% 
+    tidyr::spread(key = outc, value = count) %>% 
+    dplyr::rename(Control = `0`, Case = `1`) %>% 
+    dplyr::mutate(N = Control + Case)
+}
+
+
+glm_by_group_df <- function(data, group, exposure, formula_txt) {
+  
+  tmp_group <- data %>%
+    group_by(studyname)
+  
+  tmp_results_beta <- do(tmp_group, tidy(glm(as.formula(formula_txt), data = . , family = 'binomial')))
+  tmp_results_ci   <- do(tmp_group, confint_tidy(glm(as.formula(formula_txt), data = . , family = 'binomial')))
+  
+  tmp_results <- bind_cols(tmp_results_beta, tmp_results_ci) %>%
+    ungroup %>% 
+    dplyr::filter(term == get_expr(exposure)) %>% 
+    dplyr::select(-studyname1)
+  
+  tmp_results
+}
+
+
+meta_fp <- function(counts_df, results_df, title) {
+  
+  tmp_meta <- meta.summaries(results_df$estimate, results_df$std.error, method = 'random')
+  tmp_meta_b_ci <- c(tmp_meta[[3]], tmp_meta[[3]]-(tmp_meta[[4]]*1.96), tmp_meta[[3]]+(tmp_meta[[4]]*1.96))
+  
+  tmp_fp <- dplyr::select(results_df, estimate, conf.low, conf.high)
+  tmp_fp <- rbind(rep(NA, 3), tmp_fp, rep(NA, 3), tmp_meta_b_ci)
+  
+  tmp_label_summary <- c("Summary", sum(counts_df$N), sum(counts_df$Case), round(tmp_meta[[3]], 2), round(tmp_meta[[4]], 3), round(exp(tmp_meta[[3]]), 2), round(tmp_meta[[5]][2], 4))
+  
+  
+  tmp_label <- inner_join(counts_df, results_df, by = 'studyname') %>% 
+    mutate(Study = as.character(studyname), 
+           OR = round(exp(estimate), 2),
+           Pvalue = round(p.value, 4),
+           SE = round(std.error, 3),
+           beta = round(estimate, 2)) %>% 
+    dplyr::select(Study, N, Case, beta, SE, OR, Pvalue)
+  
+  tmp_label2 <- rbind(colnames(tmp_label), tmp_label, rep(NA, 7), tmp_label_summary)
+
+  rmeta::forestplot(label=tmp_label2,
+             as.numeric(tmp_fp$estimate), as.numeric(tmp_fp$conf.low), as.numeric(tmp_fp$conf.high), 
+             is.summary = c(T, rep(F, nrow(tmp_label2)-2), T), 
+             col=meta.colors(box="royalblue",line="darkblue",zero='gray0', summary="royalblue"), 
+             clip=c(-1.5,1.5), 
+             xlog=T, 
+             xlab='logOR',
+             zero=0, title(main = title, line = 0))
+  mtext(paste(get_expr(exposure), '\n', "het.pval=", formatC(tmp_meta$het[3], format='e', digits=2)), side = 1, line = 1)
+}
+```
+
+
+# List of Variables
+- aspirin - aspirin use @ ref time  
+- aspirinyrs - aspirin, years taken (any time?)  
+- nsaids - non-aspirin NSAIDS use @ ref time  
+- nsaidsyrs - NSAIDS, years taken (any time?)  
+- aspirin_ever - aspirin, ever used regularly  
+- nsaids_ever - NSAIDS, ever used regularly  
+- aspirin_nsaids_ever - Aspirin and/or NSAIDS, ever used regularly?  
+<br>
+- asp_ref - regular aspirin/NSAID use @ ref time (NO if aspirin OR nsaids == no)  
+- asp_ref2 - regular aspirin/NSAID use @ ref time (NO if aspirin AND nsaids == no)  
+  - [note - asp_ref vs asp_ref2 N = 1771]  
+- aspyrs_ref - regular aspirin/NSAID use @ ref time, duration  
+
+
+
+------
+
+
+# Counts {.tabset}
+
+## aspirin
+```{r counts_aspirin, message=F, echo=T, warning=F, tidy=T, cache=T}
+kable(
+  rbind(getCounts(gxe_set, 'studyname', 'aspirin'),
+        getCounts(gxe_set,  exposure = 'aspirin'))) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+```
+## nsaids
+```{r counts_nsaids, message=F, echo=T, warning=F, tidy=T, cache=T}
+kable(
+  rbind(getCounts(gxe_set, 'studyname', 'nsaids'),
+        getCounts(gxe_set,  exposure = 'nsaids'))) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+```
+## asp_ref
+```{r counts_asp_ref, message=F, echo=T, warning=F, tidy=T, cache=T}
+kable(
+  rbind(getCounts(gxe_set, 'studyname', 'asp_ref'),
+        getCounts(gxe_set,  exposure = 'asp_ref'))) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+```
+
+## asp_ref2
+```{r counts_asp_ref2, message=F, echo=T, warning=F, tidy=T, cache=T}
+kable(
+  rbind(getCounts(gxe_set, 'studyname', 'asp_ref2'),
+        getCounts(gxe_set,  exposure = 'asp_ref2'))) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+```
+
+
+
+
+
+
+
+# Tabulation {.tabset}
+
+## aspirin
+```{r simple_tabs_aspirin, message=F, echo=T, warning=F, tidy=T, cache=T}
+attach(gxe_set)
+table(aspirin_ever, aspirin, useNA = 'ifany')
+table(aspirinyrs_b, aspirin, useNA = 'ifany')
+table(aspirinyrs_b, aspirin_ever, useNA = 'ifany')
+table(aspirin, aspirin_ever)
+detach(gxe_set)
+```
+
+## nsaids
+```{r simple_tabs_nsaids, message=F, echo=T, warning=F, tidy=T, cache=T}
+attach(gxe_set)
+table(nsaids_ever, nsaids, useNA = 'ifany')
+table(nsaidsyrs_b, nsaids, useNA = 'ifany')
+table(nsaidsyrs_b, nsaids_ever, useNA = 'ifany')
+table(nsaids, nsaids_ever)
+detach(gxe_set)
+```
+
+## asp_ref
+```{r simple_tabs_asp_ref, message=F, echo=T, warning=F, tidy=T, cache=T}
+attach(gxe_set)
+table(asp_ref, asp_ref2)
+table(aspyrs_ref_b, asp_ref, useNA = 'ifany')
+table(aspyrs_ref_b, asp_ref2, useNA = 'ifany')
+detach(gxe_set)
+```
+
+## aspirin_nsaids_ever 
+```{r simple_tabs_aspirin_nsaids_ever, message=F, echo=T, warning=F, tidy=T, cache=T}
+attach(gxe_set)
+table(aspirin_nsaids_ever)
+detach(gxe_set)
+```
+
+# Bar Plots {.tabset}
+
+
+## aspirin
+```{r barplots_aspirin, message=F, echo=T, warning=F, tidy=T, cache=T, fig.height=16, fig.width=11}
+p <- dplyr::select(gxe_set, outc, studyname, aspirin) %>% 
+  mutate(aspirin = factor(aspirin, labels = c("NA", "No", "Yes")),
+         outc = factor(outc, labels = c("Case", "Control"))) %>% 
+  group_by(studyname)
+
+
+ggplot(data=p, aes(x=outc)) + 
+  geom_bar(aes(fill = aspirin), position = 'fill') + 
+  theme_bw() + 
+	theme(
+		panel.grid.major.x = element_blank(),
+		panel.grid.minor.x = element_blank()) +
+	scale_fill_manual(values = c("black", "cyan", "red")) + 
+  facet_wrap( ~ studyname, ncol = 5)
+
+```
+
+## nsaids
+```{r barplots_nsaids, message=F, echo=T, warning=F, tidy=T, cache=T, fig.height=16, fig.width=11}
+p <- dplyr::select(gxe_set, outc, studyname, nsaids) %>% 
+  mutate(nsaids = factor(nsaids, labels = c("NA", "No", "Yes")),
+         outc = factor(outc, labels = c("Case", "Control"))) %>% 
+  group_by(studyname)
+
+
+ggplot(data=p, aes(x=outc)) + 
+  geom_bar(aes(fill = nsaids), position = 'fill') + 
+  theme_bw() + 
+	theme(
+		panel.grid.major.x = element_blank(),
+		panel.grid.minor.x = element_blank()) +
+	scale_fill_manual(values = c("black", "cyan", "red")) + 
+  facet_wrap( ~ studyname, ncol = 5)
+
+```
+
+## asp_ref
+```{r barplots_asp_ref, message=F, echo=T, warning=F, tidy=T, cache=T, fig.height=16, fig.width=11}
+p <- dplyr::select(gxe_set, outc, studyname, asp_ref) %>% 
+  mutate(asp_ref = factor(asp_ref, labels = c("NA", "No", "Yes")),
+         outc = factor(outc, labels = c("Case", "Control"))) %>% 
+  group_by(studyname)
+
+
+ggplot(data=p, aes(x=outc)) + 
+  geom_bar(aes(fill = asp_ref), position = 'fill') + 
+  theme_bw() + 
+	theme(
+		panel.grid.major.x = element_blank(),
+		panel.grid.minor.x = element_blank()) +
+	scale_fill_manual(values = c("black", "cyan", "red")) + 
+  facet_wrap( ~ studyname, ncol = 5)
+
+```
+
+# Table 1 {.tabset}
+
+```{r tableone_setup, message=F, echo=T, warning=F, tidy=F, cache=T}
+numeric_vars <- c("age_ref_imp", "fiber", "calcium_tot", "fruit", "vegetable", "redmeat", "procmeat", "bmi")
+
+df <- gxe_set %>%
+  mutate_at(numeric_vars, as.numeric) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male')),
+         educ = ifelse(educ == "", NA, educ),
+         educ = fct_shift(factor(educ, labels = c("< 8th grade", "High School", "Some College", "College/Grad"))),
+         alcoholc = fct_shift(factor(alcoholc, labels = c("N/A", ">28g/d", "1-28g/d", "nondrinker")), 1),
+         smoke = fct_shift(factor(smoke, labels = c("N/A", "Former smoke", "Never smoker", "Smoker")),1),
+         famhx1 = fct_shift(factor(famhx1, labels = c("N/A", "No", "Yes")), 1),
+         asp_ref = fct_shift(factor(asp_ref, labels = c("N/A", "No", "Yes")), 1),
+         aspirin = fct_shift(factor(aspirin, labels = c("N/A", "No", "Yes")), 1),
+         nsaids = fct_shift(factor(nsaids, labels = c("N/A", "No", "Yes")), 1))
+
+label(df$age_ref_imp) <- "Age"
+label(df$fiber) <- "Fiber Intake"
+label(df$calcium_tot) <- "Total Calcium Intake"
+label(df$fruit) <- "Fruit Intake"
+label(df$vegetable) <- "Vegetable Intake"
+label(df$redmeat) <- "Redmeat Intake"
+label(df$procmeat) <- "Processed Meat Intake"
+label(df$sex) <- "Sex"
+label(df$alcoholc) <- "Alcohol Intake"
+label(df$smoke) <- "Smoking"
+label(df$famhx1) <- "Family History of CRC"
+label(df$folate_totqc2) <- "Total Folate"
+label(df$educ) <- "Education"
+label(df$bmi) <- "BMI"
+label(df$asp_ref) <- "Regular Aspirin/NSAID use"
+label(df$aspirin) <- "Regular Aspirin use"
+label(df$nsaids) <- "Regular NSAID use"
+
+my.render.cont <- function(x) {
+  with(stats.apply.rounding(stats.default(x), digits=2),
+       c("", "Mean (SD)"=sprintf("%s (&plusmn; %s)", MEAN, SD)))
+}
+my.render.cat <- function(x) {
+  c("", sapply(stats.default(x),
+               function(y) with(y, sprintf("%d (%0.0f %%)", FREQ, PCT))))
+}
+
+```
+
+
+## aspirin
+```{r tableone_aspirin, message=F, echo=T, warning=F, tidy=F, cache=T}
+table1(~ age_ref_imp + sex + educ + alcoholc + smoke + bmi + famhx1 + calcium_tot + fruit + vegetable + redmeat + procmeat + nsaids | aspirin ,
+       data=df,
+       render.continuous=my.render.cont, 
+       render.categorical=my.render.cat)
+```
+<br>
+
+## nsaids
+```{r tableone_nsaids, message=F, echo=T, warning=F, tidy=F, cache=T}
+table1(~ age_ref_imp + sex + educ + alcoholc + smoke + bmi + famhx1 + calcium_tot + fruit + vegetable + redmeat + procmeat + aspirin | nsaids ,
+       data=df,
+       render.continuous=my.render.cont, 
+       render.categorical=my.render.cat)
+```
+<br>
+
+## asp_ref
+```{r tableone_asp_ref, message=F, echo=T, warning=F, tidy=F, cache=T}
+table1(~ age_ref_imp + sex + educ + alcoholc + smoke + bmi + famhx1 + calcium_tot + fruit + vegetable + redmeat + procmeat + aspirin + nsaids | asp_ref, 
+       data=df, 
+       render.continuous=my.render.cont, 
+       render.categorical=my.render.cat)
+```
+<br>
+
+
+# Meta Analysis (Yi) {.tabset}
+
+## aspirin  
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/NSAID/working/yi_shiny_aspirin_FP.png)  
+
+## aspirin_ever  
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/NSAID/working/yi_shiny_aspirinever_FP.png)   
+
+## nsaids  
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/NSAID/working/yi_shiny_nsaids_FP.png)  
+
+## nsaids_ever  
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/NSAID/working/yi_shiny_nsaidsever_FP.png)  
+
+## asp_ref  
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/NSAID/working/yi_shiny_asp_ref_FP.png)  
+
+
+# Meta Analysis (AK) {.tabset}
+
+Add additional plots as requested
+
+## asp_ref
+```{r fp_asp_ref, message=F, echo=T, warning=F, tidy=F, cache=T, dependson='setup', fig.width = 8, fig.height = 13.5}
+exclude_studies <- c("MOFFITT", "NFCCR_1", "NGCCS", "GALEON", "ColoCare_1", "ESTHER_VERDI")
+covariates <- c("age_ref_imp", "sex")
+exposure <- quo(asp_ref)
+formula_txt <- paste0("outc ~ ", paste(covariates, collapse = "+"), "+", get_expr(exposure))
+
+df <- gxe_set %>% 
+  dplyr::filter(!!exposure != "",
+                !studyname %in% exclude_studies) %>% 
+  mutate(outc = factor(ifelse(outc == "Case", 1, 0)),
+         sex = ifelse(sex == "Female", 0, 1),
+         age_ref_imp = as.numeric(age_ref_imp),
+         studyname = factor(studyname), 
+         !!exposure := ifelse(!!exposure == "Yes", 1, 0)) %>% # dplyr uses := to dynamically assign variables.. 
+  dplyr::select(outc, !!exposure, 'studyname', covariates) %>% 
+  dplyr::filter(complete.cases(.))
+#table(df$studyname)
+
+r_counts <- getCounts_outc(data = df, group = 'studyname')
+r_glm <- glm_by_group_df(data = df, group = 'studyname', exposure = exposure, formula_txt = formula_txt)
+meta_fp(r_counts, r_glm, title= 'Aspirin/NSAID use @ ref time \nModel: outc~age_ref_imp+sex+asp_ref')
+
+```
+
+
+## asp_ref (no ukb)
+```{r fp_asp_ref_ss1, message=F, echo=T, warning=F, tidy=F, cache=T, dependson='setup', fig.width = 8, fig.height = 13.5}
+exclude_studies <- c("MOFFITT", "NFCCR_1", "NGCCS", "GALEON", "ColoCare_1", "ESTHER_VERDI", "UKB_1")
+covariates <- c("age_ref_imp", "sex")
+exposure <- quo(asp_ref)
+formula_txt <- paste0("outc ~ ", paste(covariates, collapse = "+"), "+", get_expr(exposure))
+
+df <- gxe_set %>% 
+  dplyr::filter(!!exposure != "",
+                !studyname %in% exclude_studies) %>% 
+  mutate(outc = factor(ifelse(outc == "Case", 1, 0)),
+         sex = ifelse(sex == "Female", 0, 1),
+         age_ref_imp = as.numeric(age_ref_imp),
+         studyname = factor(studyname), 
+         !!exposure := ifelse(!!exposure == "Yes", 1, 0)) %>% # dplyr uses := to dynamically assign variables.. 
+  dplyr::select(outc, !!exposure, 'studyname', covariates) %>% 
+  dplyr::filter(complete.cases(.))
+#table(df$studyname)
+
+r_counts <- getCounts_outc(data = df, group = 'studyname')
+r_glm <- glm_by_group_df(data = df, group = 'studyname', exposure = exposure, formula_txt = formula_txt)
+meta_fp(r_counts, r_glm, title= 'Aspirin/NSAID use @ ref time \nModel: outc~age_ref_imp+sex+asp_ref\n(exclude UKB_1)')
+
+```
+
+## aspirin
+```{r fp_aspirin, message=F, echo=T, warning=F, tidy=F, cache=T, dependson='setup', fig.width = 8, fig.height = 13.5}
+exclude_studies <- c("MOFFITT", "NFCCR_1", "NGCCS", "GALEON", "ColoCare_1", "ESTHER_VERDI")
+covariates <- c("age_ref_imp", "sex")
+exposure <- quo(aspirin)
+formula_txt <- paste0("outc ~ ", paste(covariates, collapse = "+"), "+", get_expr(exposure))
+
+df <- gxe_set %>% 
+  dplyr::filter(!!exposure != "",
+                !studyname %in% exclude_studies) %>% 
+  mutate(outc = factor(ifelse(outc == "Case", 1, 0)),
+         sex = ifelse(sex == "Female", 0, 1),
+         age_ref_imp = as.numeric(age_ref_imp),
+         studyname = factor(studyname), 
+         !!exposure := ifelse(!!exposure == "Yes", 1, 0)) %>% # dplyr uses := to dynamically assign variables.. 
+  dplyr::select(outc, !!exposure, 'studyname', covariates) %>% 
+  dplyr::filter(complete.cases(.)) # complete case only (for counts)
+#table(df$studyname)
+
+r_counts <- getCounts_outc(data = df, group = 'studyname')
+r_glm <- glm_by_group_df(data = df, group = 'studyname', exposure = exposure, formula_txt = formula_txt)
+meta_fp(r_counts, r_glm, title= 'Aspirin use @ ref time \nModel: outc~age_ref_imp+sex+aspirin')
+
+```
+
+## nsaids
+```{r fp_nsaids, message=F, echo=T, warning=F, tidy=F, cache=T, dependson='setup', fig.width = 8, fig.height = 13.5}
+exclude_studies <- c("MOFFITT", "NFCCR_1", "NGCCS", "GALEON", "ColoCare_1", "ESTHER_VERDI")
+covariates <- c("age_ref_imp", "sex")
+exposure <- quo(nsaids)
+formula_txt <- paste0("outc ~ ", paste(covariates, collapse = "+"), "+", get_expr(exposure))
+
+df <- gxe_set %>% 
+  dplyr::filter(!!exposure != "",
+                !studyname %in% exclude_studies) %>% 
+  mutate(outc = factor(ifelse(outc == "Case", 1, 0)),
+         sex = ifelse(sex == "Female", 0, 1),
+         age_ref_imp = as.numeric(age_ref_imp),
+         studyname = factor(studyname), 
+         !!exposure := ifelse(!!exposure == "Yes", 1, 0)) %>% # dplyr uses := to dynamically assign variables.. 
+  dplyr::select(outc, !!exposure, 'studyname', covariates) %>% 
+  dplyr::filter(complete.cases(.)) # complete case only (for counts)
+#table(df$studyname)
+
+r_counts <- getCounts_outc(data = df, group = 'studyname')
+r_glm <- glm_by_group_df(data = df, group = 'studyname', exposure = exposure, formula_txt = formula_txt)
+meta_fp(r_counts, r_glm, title= 'NSAID use @ ref time \nModel: outc~age_ref_imp+sex+nsaids')
+
+```
+
+
+# Analysis Plan GxEScanR
+
+[GxE Analysis Plan - NSAIDS](https://docs.google.com/document/d/1Wh_jP8MmBUFnZ_RpmpWvybYM0aZl3RIKYnmLL3ywJ-w/edit?usp=sharing)
+
+
+
+
+

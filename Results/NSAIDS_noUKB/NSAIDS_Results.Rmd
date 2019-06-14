@@ -1,0 +1,411 @@
+---
+title: "FIGI NSAID (asp_ref) GxE Analysis"
+# bibliography: /home/mak/Dropbox/library.bib
+output: 
+  html_document:
+    css: ./rds/styles_rmarkdown.css
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: united
+---
+
+<!-- Use this to make window large in html file -->
+<style type="text/css">
+.main-container {
+  max-width: 1500px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
+```{r setup, echo = F, message = F, cache = F}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(data.table)
+library(broom)
+library(table1)
+library(kableExtra)
+library(rlang)
+library(rmeta)
+library(qqman) 
+library(DT)
+library(htmltools)
+library(sjPlot)
+# source("GxEScan_Pipeline_Results_Functions.R")
+```
+
+----
+
+# asp_ref
+
+Enter some information about the asp_ref variable.. maybe a link to the mapping document (google drive) etc. 
+
+more text here
+
+more text here  
+<br>
+
+
+# FIGI GxE Set (N = 102,792)
+```{r gxeset, echo = T, cache = F}
+#-----------------------------------------------------------------------------#
+# Create gxe_set, the FIGI GxE subset N = 102,792
+#
+#-----------------------------------------------------------------------------#
+# see script called 'FIGI_EpiData01b_epidata_v2.2.R'
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData")
+
+# create GxE subset (N = 102,792 as of 04/24/2019)
+gxe_set <- figi %>% 
+	filter(drop == 0 & gxe == 1)
+
+```
+
+## Cases/Controls counts {.tabset}
+```{r counts_functions, echo = T, cache = F}
+
+# wrapper to get counts by case/control + exposures
+# always double check variable coding, NAs should be first level in factor variables
+getCounts <- function(data, group, exposure, outcome) {
+  
+  # quote variables
+  group_quo <- enquo(group)
+  exposure_quo <- enquo(exposure)
+  outcome_quo <- enquo(outcome)
+  
+  # formula for dcast function
+  dcastFormula = as.formula(paste0(quo_name(group_quo), "~", quo_name(outcome_quo), "+", quo_name(exposure_quo)))
+  
+  # get totals first
+  countsTotal <- data %>% 
+    dplyr::group_by(!! outcome_quo) %>% 
+    dplyr::select(!! exposure_quo, !! outcome_quo) %>%
+    dplyr::count(!! exposure_quo) %>%
+    dplyr::mutate(tot = sum(n),
+                  pct = round(100*(n/tot), 1),
+                  n_pct = paste0(n, " (", pct, ")"),
+                  !! group_quo := "Total") %>% dplyr::select(-n, -pct) %>% ungroup() %>%
+    reshape2::dcast(dcastFormula, fill = "", value.var = 'n_pct')
+  
+  # get counts by group
+  countsGroup <- data %>%
+    dplyr::group_by(!! group_quo, !! outcome_quo) %>%
+    dplyr::select(!! group_quo, !! exposure_quo, !! outcome_quo) %>%
+    dplyr::count(!! exposure_quo) %>%
+    dplyr::mutate(tot = sum(n),
+                  pct = round(100*(n/tot), 1),
+                  n_pct = paste0(n, " (", pct, ")")) %>% dplyr::select(-n, -pct) %>% ungroup() %>%
+    reshape2::dcast(dcastFormula, fill = "", value.var = 'n_pct')
+  
+  results <- rbind(countsGroup, countsTotal)
+}
+
+sketch = htmltools::withTags(table(
+  class = 'display',
+  thead(
+    tr(
+      th(rowspan = 2, 'study_gxe'),
+      th(colspan = 3, 'Cases'),
+      th(colspan = 3, 'Controls')
+    ),
+    tr(
+      lapply(rep(c('NA', 'No', 'Yes'), 2), th)
+    )
+  )
+))
+
+
+```
+
+
+### asp_ref
+```{r counts_asp_ref, echo = T, warning = F, tidy = T, message=F, cache = T}
+df <- getCounts(gxe_set, study_gxe, asp_ref, outc) 
+
+datatable(df, rownames = F,  container = sketch, caption = "asp_ref counts by study/outcome - n (%)", options = list(pageLength = 100))
+```
+<br>
+
+### aspirin
+```{r counts_aspirin, echo=T, warning = F, tidy = T, message=F, cache = T}
+df <- getCounts(gxe_set, study_gxe, aspirin, outc)
+
+datatable(df, rownames = F,  container = sketch, caption = "aspirin counts by study/outcome - n (%)", options = list(pageLength = 100))
+```
+<br>
+
+
+
+## Plots {.tabset}
+```{r plots_functions, message = F, echo = F, warning = F}
+
+# Convert exposure + outcome variables to factors
+df <- gxe_set %>% 
+	mutate(outc = factor(outc, labels = c("Case", "Control")),
+				 asp_ref = factor(asp_ref, exclude = NULL, labels = c("NA", "No", "Yes" )),
+				 aspirin = factor(aspirin, exclude = NULL, labels = c("NA", "No", "Yes" )),
+				 nsaids = factor(nsaids, exclude = NULL, labels = c("NA", "No", "Yes" ))) %>% 
+  dplyr::select(outc, study_gxe, asp_ref, aspirin, nsaids)
+
+# wrapper for plotting BARPLOTS
+getBarPlots <- function(data, group, exposure, outcome) {
+  
+  # quote variables
+  group_quo <- enquo(group)
+  exposure_quo <- enquo(exposure)
+  outcome_quo <- enquo(outcome)
+  
+  # create a temporary grouped dataset
+  cov <- data %>%
+    dplyr::select(!! outcome_quo, !! group_quo, !! exposure_quo) %>%
+    group_by(!! group_quo)
+  
+  p <- ggplot(data = cov, aes(x = !! outcome_quo)) +
+    geom_bar(aes(fill = !! exposure_quo), position = 'fill') +
+    theme_bw() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()) +
+  # barplot_colors + 
+  facet_wrap(group_quo, ncol = 8)
+}
+
+
+```
+
+### asp_ref
+```{r barplots_asp_ref, message=F, echo=T, warning=F, tidy=T, cache=T, fig.height=16, fig.width=13}
+p <- getBarPlots(df, study_gxe, asp_ref, outc)
+p
+```
+<br>
+
+### aspirin
+```{r barplots_aspirin, message=F, echo=T, warning=F, tidy=T, cache=T, fig.height=16, fig.width=13}
+p <- getBarPlots(df, study_gxe, aspirin, outc)
+p
+```
+<br>
+
+------
+
+# Analysis Dataset
+
+Document analytical decisions based on distribution of exposure + initial meta analyses results  
+- drop studies if NSAIDs not available  
+- drop studies if case-only  
+- (if other studies should be removed note them here)  
+
+(consider re-doing counts table + barplots after subsetting dataset)  
+
+```{r analysis_set, message=F, echo=F, warning=F}
+
+# get list of studies that have asp_ref available for both cases and controls 
+df <- filter(gxe_set, asp_ref != "")
+keepStudies <- getCounts(df, study_gxe, asp_ref, outc) %>% 
+  filter_all(., all_vars(. != ""))
+keepStudies <- keepStudies[,1]
+
+# create analysis dataset
+# make sure variables are properly formatted
+gxe_set_nsaids <- gxe_set %>% 
+  filter(study_gxe %in% keepStudies) %>% 
+   mutate(outcome = factor(outc, labels = c("Control", "Case")),
+          age_ref_imp = as.numeric(age_ref_imp),
+          sex = factor(sex), 
+          asp_ref = factor(asp_ref, labels = c("NA","No","Yes")))
+
+label(gxe_set_nsaids$age_ref_imp) <- "Age"
+label(gxe_set_nsaids$sex) <- "Sex"
+label(gxe_set_nsaids$asp_ref) <- "Regular Aspirin/NSAID use"
+label(gxe_set_nsaids$outcome) <- "Outcome (CRC)"
+
+```
+
+## Table 1a {.tabset}
+
+Descriptive statistics by case/control status
+
+
+### asp_ref
+```{r table1a_asp_ref, echo=T, warning = F, tidy = T, message=F, cache=T}
+my.render.cont <- function(x) {
+  with(stats.apply.rounding(stats.default(x), digits=2),
+       c("", "Mean (SD)"=sprintf("%s (&plusmn; %s)", MEAN, SD)))
+}
+my.render.cat <- function(x) {
+  c("", sapply(stats.default(x),
+               function(y) with(y, sprintf("%d (%0.0f %%)", FREQ, PCT))))
+}
+
+table1(~ age_ref_imp + sex + asp_ref | outcome ,
+       data=gxe_set_nsaids,
+       render.continuous=my.render.cont,
+       render.categorical=my.render.cat)
+```
+<br>
+
+
+
+## Table 1b {.tabset}
+
+Descriptive statistics by exposure categories
+
+### asp_ref
+```{r table1b_asp_ref, echo=T, warning = F, tidy = T, message=F, cache=T}
+my.render.cont <- function(x) {
+  with(stats.apply.rounding(stats.default(x), digits=2),
+       c("", "Mean (SD)"=sprintf("%s (&plusmn; %s)", MEAN, SD)))
+}
+my.render.cat <- function(x) {
+  c("", sapply(stats.default(x),
+               function(y) with(y, sprintf("%d (%0.0f %%)", FREQ, PCT))))
+}
+
+table1(~ age_ref_imp + sex + outcome | asp_ref ,
+       data=gxe_set_nsaids,
+       render.continuous=my.render.cont,
+       render.categorical=my.render.cat)
+```
+<br>
+
+
+
+## Meta Analysis {.tabset}
+```{r metaanalysis_functions, message=F, echo=T, warning=F}
+
+df <- gxe_set_nsaids %>% 
+	mutate(outc_01 = ifelse(outc == "Case", 1, 0),
+				 age_ref_imp = as.numeric(age_ref_imp),
+				 sex = ifelse(sex == "Female", 1, 0),
+				 asp_ref = ifelse(asp_ref == "Yes", 1, ifelse(asp_ref == "No", 0, NA)),
+				 aspirin = ifelse(aspirin == "Yes", 1, ifelse(aspirin == "No", 0, NA)),
+				 nsaids = ifelse(nsaids == "Yes", 1, ifelse(nsaids == "No", 0, NA)),
+				 study_gxe_f = factor(study_gxe))
+
+
+
+
+# Functions
+
+# get counts by outc (for label portion of forest plot)
+getCounts_outc <- function(data, group, exposure, outcome, ...) {
+	
+	group_quo <- enquo(group)
+	exposure_quo <- enquo(exposure)
+	outcome_quo <- enquo(outcome)
+	covars_quo <- enexprs(...)
+	
+	tmp_counts <- data %>% 
+		dplyr::select(!! outcome_quo, !! exposure_quo, !!group_quo, !!! covars_quo) %>% 
+		filter(complete.cases(.)) %>% # probably doing it in another step, but why not do it again
+		group_by(!! group_quo)
+	
+	tmp_counts <- tmp_counts %>% 
+		dplyr::group_by(!! outcome_quo, !! group_quo) %>% 
+		dplyr::summarize(count = n()) %>% 
+		tidyr::spread(key = !! outcome_quo, value = count) %>% 
+		dplyr::mutate(N = Control + Case)
+	tmp_counts
+}
+
+
+# get summary statistics by grouping variable
+# `...` means covariates (just list them in the function call)
+glm_by_group_df <- function(data, group, exposure, outcome, ...) {
+	
+	group_quo <- enquo(group)
+	exposure_quo <- enquo(exposure)
+	outcome_quo <- enquo(outcome)
+	covars_quo <- enexprs(...) # it's like enquos, but it doesn't capture the environment...
+	
+	glm_formula = as.formula(paste(quo_name(outcome_quo), "~", quo_name(exposure_quo), "+", paste(covars_quo, collapse = " + ")))
+
+	tmp_group <- data %>% 
+		dplyr::select(!! outcome_quo, !! exposure_quo, !!group_quo, !!! covars_quo) %>% 
+		filter(complete.cases(.)) %>% # probably doing it in another step, but why not do it again
+		group_by(!! group_quo)
+	
+	tmp_results_beta <- do(tmp_group, tidy(glm(glm_formula, data = . , family = 'binomial')))
+	tmp_results_ci   <- do(tmp_group, confint_tidy(glm(glm_formula, data = . , family = 'binomial')))
+	tmp_results <- bind_cols(tmp_results_beta, tmp_results_ci) %>% 
+		ungroup %>%
+		dplyr::filter(term == quo_name(exposure_quo)) %>% 
+		dplyr::select(-c(paste0(quo_name(group_quo), 1)))
+	# tmp_results
+}
+
+# take the previous results and perform meta analysis + forestplot
+meta_fp <- function(counts_df, results_df, group, title) {
+	
+	group_quo <- enexpr(group)
+	
+	tmp_meta <- meta.summaries(results_df$estimate, results_df$std.error, method = 'random')
+	tmp_meta_b_ci <- c(tmp_meta[[3]], tmp_meta[[3]]-(tmp_meta[[4]]*1.96), tmp_meta[[3]]+(tmp_meta[[4]]*1.96))
+	tmp_fp <- dplyr::select(results_df, estimate, conf.low, conf.high)
+	tmp_fp <- rbind(rep(NA, 3), tmp_fp, rep(NA, 3), tmp_meta_b_ci)
+	tmp_label_summary <- c("Summary", sum(counts_df$N), sum(counts_df$Case), round(tmp_meta[[3]], 2), round(tmp_meta[[4]], 3), round(exp(tmp_meta[[3]]), 2), round(tmp_meta[[5]][2], 4))
+	tmp_label <- inner_join(counts_df, results_df, by = quo_name(group_quo)) %>% 
+		mutate(Study = as.character(!! group_quo),
+					 OR = round(exp(estimate), 2),
+					 Pvalue = round(p.value, 4),
+					 SE = round(std.error, 3),
+					 beta = round(estimate, 2)) %>%
+		dplyr::select(Study, N, Case, beta, SE, OR, Pvalue)
+	tmp_label2 <- rbind(colnames(tmp_label), tmp_label, rep(NA, 7), tmp_label_summary)
+	rmeta::forestplot(label=tmp_label2,
+										as.numeric(tmp_fp$estimate), as.numeric(tmp_fp$conf.low), as.numeric(tmp_fp$conf.high),
+										is.summary = c(T, rep(F, nrow(tmp_label2)-2), T),
+										col=meta.colors(box="royalblue",line="darkblue",zero='gray0', summary="royalblue"),
+										clip=c(-1.5,1.5),
+										xlog=T,
+										xlab='logOR',
+										zero=0, title(main = title, line = 0))
+	mtext(paste(results_df$term[1], '\n', "het.pval=", formatC(tmp_meta$het[3], format='e', digits=2)), side = 1, line = 1)
+}
+
+
+```			 
+				 
+### asp_ref
+```{r metafp_asp_ref, message=F, echo=T, warning=F, tidy=F, cache=T, fig.width = 8, fig.height = 13.5, fig.align = 'center'}
+x <- getCounts_outc(data = df, group = study_gxe, exposure = asp_ref, outcome = outc, age_ref_imp, sex)
+y <- glm_by_group_df(data = df, group = study_gxe, exposure = asp_ref, outcome = outc_01, age_ref_imp, sex)
+z <- meta_fp(x, y, study_gxe, title = "Regular aspirin/NSAID use at referent time, definition 1\nModel: outc~asp_ref+age_ref_imp+sex")
+```
+
+<div align="center">
+```{r mega_asp_ref, message=F, echo=T, warning=F, tidy=F, cache=T}
+m1 <- glm(outc_01 ~ asp_ref + age_ref_imp + sex + study_gxe_f, data = df, family = binomial(link='logit'))
+tab_model(m1, terms = "asp_ref", title = "MEGA analysis results\nModel:outc~asp_ref+age_ref_imp_+sex+study_gxe")
+``` 
+</div>
+<br>
+
+### aspirin
+```{r metafp_aspirin, message=F, echo=T, warning=F, tidy=F, cache=T, fig.width = 8, fig.height = 13.5, fig.align = 'center'}
+x <- getCounts_outc(data = df, group = study_gxe, exposure = aspirin, outcome = outc, age_ref_imp, sex)
+y <- glm_by_group_df(data = df, group = study_gxe, exposure = aspirin, outcome = outc_01, age_ref_imp, sex)
+z <- meta_fp(x, y, study_gxe, title = "Regular aspirin use at referent time\nModel: outc~aspirin+age_ref_imp+sex")
+```
+
+<div align="center">
+```{r mega_aspirin, message=F, echo=T, warning=F, tidy=F, cache=T}
+m1 <- glm(outc_01 ~ aspirin + age_ref_imp + sex + study_gxe_f, data = df, family = binomial(link='logit'))
+tab_model(m1, terms = "aspirin", title = "MEGA analysis results\nModel:outc~aspirin+age_ref_imp_+sex+study_gxe")
+``` 
+</div>
+<br>
+
+
+# GxEScanR Results
+
+add manhattan plots + qq plots for various results... 
+
+
+## G Main Effects
+
+

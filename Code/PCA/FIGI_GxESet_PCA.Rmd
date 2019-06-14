@@ -1,0 +1,489 @@
+---
+title: "FIGI GxE Principal Component Analysis"
+bibliography: /home/rak/Dropbox/library.bib
+output: 
+  html_document
+  #word_document:
+   #reference_docx: word_styles.docx
+---
+
+
+
+<!-- --- -->
+<!-- title: "FIGI GxE Set Principal Components Results" -->
+<!-- bibliography: /home/rak/Dropbox/library.bib -->
+<!-- output:  -->
+<!--   html_document: -->
+<!--     #css: FIGI_GxESet_styles_rmarkdown.css -->
+<!--     code_folding: hide -->
+<!--     toc: true -->
+<!--     toc_float: true -->
+<!--     toc_depth: 2 -->
+<!--     theme: united -->
+<!-- --- -->
+
+
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+# Goals
+* Principal Component Analysis of FIGI data. Two data subsets:
+    + GWAS Set N = 138,572
+    + GxE Set N = 102,792
+    + (Include 1000 Genomes samples for plotting super-population clusters)
+* Estimate kinship coefficients, identify duplicate samples / crytic relatedness
+
+# Steps
+
+## Obtain random sample of SNPs for PCA
+1. Subset SNPs from *corect_oncoarray* imputation batch (N = 36,621) based on the following criteria:
+    + Rsq > 0.99
+    + MAF > 0.05
+    + (Exclude multi-allelic markers for simplicity)
+2. from step 1, ensure SNPs overlap with 1000 Genomes reference panel markers. See *HRC.r1-1.GRCh37.wgs.mac5.sites.tab* for matching rsIDs
+3. from step 2, randomly sample 30K SNPs -- R set.seed(2018)
+
+## Extract markers from HRC/1000G files
+
+Perform this for each imputation batch / chromosome file:  
+
+```{bash, eval=F}
+# HRC Imputed VCF files
+vcftools --gzvcf batch1_chr1.vcf.gz --positions snplist.txt --recode --out output.vcf
+
+# 1000G Plink files
+plink --vcf output.vcf --double-id --snps-only --biallelic-only --keep-allele-order --make-bed --out output.bed/bim/fam
+```
+
+## Merge chromosome files
+```{bash, eval=F}
+
+# merge chromosomes
+plink --merge-list list_of_chromosome_bed_files.txt --make-bed --out imputation_batch.bed/bim/fam
+
+# merge all imputation batches
+plink --merge-list list_of_imputationbatch_bed_files.txt --make-bed --out final.bed/bim/fam
+
+# create GWAS/GxE subsets, with/without 1000G samples (N = 2,504)
+plink --bfile final --keep FIGI_GwasSet --make-bed --out FIGI_GwasSet.bed/bim/fam
+plink --bfile final --keep FIGI_GxESet --make-bed --out FIGI_GxESet.bed/bim/fam
+plink --bfile FIGI_GwasSet.bed/bim/fam --bmerge KGP --make-bed --out FIGI_GwasSet_KGP.bed/bim/fam
+plink --bfile FIGI_GxESet.bed/bim/fam --bmerge KGP --make-bed --out FIGI_GxESet_KGP.bed/bim/fam
+
+# PCA with plink2 (https://www.cog-genomics.org/plink/2.0/)
+plink2 --bfile FIGI_GwasSet     --pca 20 approx --out FIGI_GwasSet
+plink2 --bfile FIGI_GwasSet_KGP --pca 20 approx --out FIGI_GwasSet_KGP
+plink2 --bfile FIGI_GxESet      --pca 20 approx --out FIGI_GxESet
+plink2 --bfile FIGI_GxESet_KGP  --pca 20 approx --out FIGI_GxESet_KGP
+
+# IBD with king (http://people.virginia.edu/~wc9c/KING/manual.html)
+king -b FIGI_GwasSet.bed --cpus 8 --related --degree 2 --prefix FIGI_GwasSet
+king -b FIGI_GxESet.bed --cpus 8 --related --degree 2 --prefix FIGI_GxESet
+```
+
+
+------
+
+# Results
+
+```{r libraries, include=F}
+library(data.table)
+library(tidyverse)
+library(kableExtra)
+library(plotly)
+library(qqman)
+library(gridExtra)
+library(cowplot)
+library(broom)
+```
+
+```{r data, cache = T}
+# Load data (created in another script)
+rm(list = ls())
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData")
+
+# GxE set
+gxe_set <- figi %>%
+  filter(drop == 0 & gxe == 1)
+
+# PCA Results
+pc30k <- fread("~/data/PCA/190506/FIGI_GxESet_KGP_pc20_190430.eigenvec", skip = 1,
+               col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20)))) %>% 
+  mutate(vcfid = IID)
+
+df_tmp <- full_join(gxe_set, pc30k, by="vcfid") %>% 
+  dplyr::select(vcfid, outc, race_self, study_gxe, study_site, study, platform, paste0(rep("PC", 20), seq(1,20)))
+
+# add 1000G sample info for plotting
+kgp_samples <- fread("integrated_call_samples_v3.20130502.ALL.panel.fix", stringsAsFactors = F) %>%
+  dplyr::rename(vcfid = sample)
+
+# final data.frame
+df <- full_join(df_tmp, kgp_samples, by = "vcfid") %>% 
+  mutate(race_self = factor(race_self, labels = c("Unknown", "AI_AN", "Asian", "Black", "NH_PI", "Other", "White")),
+         group = factor(replace(super_pop, is.na(super_pop), 'FIGI'),
+                        levels=c("FIGI","AFR", "AMR", "EAS", "EUR", "SAS")))
+```
+
+
+## Pairwise Plots (PC1-5)
+
+```{r pairwise_setup, message=F, echo=F, warning=F, cache=T}
+plot_pc_pairs <- function(pc, npc) {
+  xpc <- paste0("PC", pc)
+  ypc <- paste0("PC", npc)
+
+  ggplot(data = df, aes(eval(parse(text = xpc)), eval(parse(text = ypc)), color = group)) +
+    geom_point(alpha = 0.5) +
+    labs(x = xpc,
+         y = ypc,
+         title = paste0(xpc, " vs. ", ypc)) +
+    scale_colour_manual(values=c("gold", "red", "black", "purple", "green", "royalblue")) +
+    theme_classic() +
+    theme(legend.key.size = unit(0.15, 'inches'))
+}
+```
+
+### PC1
+```{r pairwise_plots_pc1, message=F, echo=F, warning=F, tidy=T, fig.width=7.5, fig.height = 6, cache=T, dependson="pairwise_setup"}
+pc_list <- as.list(2:5)
+x <- lapply(pc_list, plot_pc_pairs, pc=1)
+plot_grid(x[[1]], x[[2]], x[[3]], x[[4]], cols = 2)
+```
+
+### PC2
+```{r pairwise_plots_pc2, message=F, echo=F, warning=F, tidy=T, fig.width=7.5, fig.height = 6, cache=T, dependson="pairwise_setup"}
+pc_list <- as.list(3:5)
+x <- lapply(pc_list, plot_pc_pairs, pc=2)
+plot_grid(x[[1]], x[[2]], x[[3]], cols = 2)
+```
+
+### PC3
+```{r pairwise_plots_pc3, message=F, echo=F, warning=F, tidy=T, fig.width=7.5, fig.height = 3, cache=T, dependson="pairwise_setup"}
+pc_list <- as.list(4:5)
+x <- lapply(pc_list, plot_pc_pairs, pc=3)
+plot_grid(x[[1]], x[[2]], cols = 2)
+```
+
+### PC4
+```{r pairwise_plots_pc4, message=F, echo=F, warning=F, tidy=T, fig.width=7.5, fig.height = 3, cache=T, dependson="pairwise_setup"}
+pc_list <- as.list(5)
+x <- lapply(pc_list, plot_pc_pairs, pc=4)
+plot_grid(x[[1]], cols = 2)
+```
+
+### PC4 by Country (excluding USA)
+```{r, echo = F, fig.show='hold', out.width = "50%", fig.align = "default"}
+ggdraw() + draw_image("/home/rak/Dropbox/FIGI/Results/asp_ref_190518/figures/tmp_pca_pc1_p2_country.png")
+ggdraw() + draw_image("/home/rak/Dropbox/FIGI/Results/asp_ref_190518/figures/tmp_pca_pc1_p3_country.png")
+ggdraw() + draw_image("/home/rak/Dropbox/FIGI/Results/asp_ref_190518/figures/tmp_pca_pc1_p4_country.png")
+```
+
+## PC Adjustment Selection
+
+### Scree Plot
+```{r scree_plot, echo=F, warning=F, message=F, cache=T}
+
+eigenval <- fread("~/data/PCA/190506/FIGI_GxESet_pc20_190430.eigenval")
+eigenval$PC <- seq(1,20)
+eigenvalTotal <- sum(eigenval$V1)
+pct <- round((eigenval$V1 / eigenvalTotal) * 100, 1)
+cumpct <- round(cumsum(pct), 1)
+eigenval$PC_pct <- pct
+eigenval$PC_pct_cumsum <- cumpct
+
+# plot PC vs Eigenvalue
+ggplot(eigenval, aes(PC, V1)) +
+  geom_point() + geom_line() + theme_bw() +
+  ggtitle("PC vs Eigenvalue") +
+  labs(x = "Principal Component", y = "Eigenvalue")
+
+# plot PC vs Eigenvalue Percentage
+# Including average Eigenvalue Percentage across all PCs
+avg_eigenvalPct <- mean(eigenval$PC_pct)
+
+ggplot(eigenval, aes(PC, PC_pct)) +
+  geom_point() + geom_line() + theme_bw() +
+  ggtitle("PC vs Eigenvalue Pct") +
+  labs(x = "Principal Component", y = "Eigenvalue Pct") +
+  geom_hline(yintercept = avg_eigenvalPct, color = 'red')
+```
+
+### Cumulative Pct
+```{r cumulative_pct, message=F, echo=F, warning=F, cache=T}
+df <- eigenval %>%
+  rename(EigenvalPct = PC_pct,
+         EigenvalPctCum = PC_pct_cumsum) %>%
+  dplyr::select(-V1) %>%
+  gather(key = group, value, -PC)
+
+ggplot(df, aes(PC, value) ) +
+  geom_point() +
+  geom_line(aes(linetype = group)) +
+  theme_bw() +
+  theme(legend.position = 'bottom', legend.text=element_text(size=14)) +
+  labs(x = "Principal Component", y = "Eigenval Proportion") +
+  scale_linetype_discrete(name = "", labels = c("EigenvalPct", "Cumulative EigenvalPct")) +
+  geom_text(aes(label=ifelse(value > 40, as.character(value), ''), vjust = -3))
+```
+
+### Broken Stick
+```{r broken_stick, message=F, echo=F, warning=F, cache=T}
+p = 20
+z <- rep(1, p) / seq(1, p)
+g <- cumsum(rev(z)) / p
+
+df1 <- eigenval %>%
+  mutate(group = "EigenvalPct") %>%
+  dplyr::select(group, PC, PC_pct)
+
+df2 <- data.frame(group = "BrokenStick Rule",
+                  PC = seq(1,20),
+                  PC_pct = rev(100*g))
+
+df3 <- rbind(df1, df2)
+
+
+ggplot(df3, aes(PC, PC_pct) ) +
+  geom_point() +
+  geom_line(aes(linetype = group)) +
+  theme_bw() +
+  labs(x = "Principal Component", y = "Eigenvalue Percentage") +
+  theme(legend.position = 'bottom', legend.text=element_text(size=14))
+```
+
+
+<!-- ## Regression Comparison -->
+<!-- ```{r regression_comparison, message=F, echo=F, warning=F, cache=T} -->
+<!-- # I think a better idea is to get some markers with maf < 0.001, < 0.01, < 0.1, common markers, run some GLM.  -->
+<!-- # in addition to some of the GWAS top hits -->
+<!-- ``` -->
+
+------
+
+# Quality Control
+
+## 30,000 PCA SNPs - Rsq/MAF values by Imputation Batch {.tabset}
+```{r maf_rsq_setup, message=F, echo=F, warning=F, cache=T}
+# rsq_wrapper <- function(batch) {
+#   
+#   # 30K random markers selected for PCA calculation. Addded ref/alt info to reduce headache with reach + ukbiobank
+#   sample30k_edit <- fread("~/data/PCA/FIGI_PC_Backbone_Sample_30K_edit.txt", header = F, col.names = "id")
+#   
+#   # read files, filter the 30K markers
+#   fread_wrapper <- function(x) fread(x) %>%  mutate(id = paste(SNP, `REF(0)`, `ALT(1)`, sep = ":")) %>% filter(id %in% sample30k_edit$id)
+#   sample30_info <- lapply(list.files(paste0("/home/rak/data/HRC_InfoFile/", batch), full.names = T, pattern = "chr"), fread_wrapper)
+#   
+#   # rbind, convert vars to numeric
+#   sample30_info_df <- do.call(rbind, sample30_info) %>% 
+#     dplyr::mutate(x = seq(1, 30000), 
+#                   Rsq = as.numeric(Rsq), 
+#                   MAF = as.numeric(MAF))
+# 
+#   # saveRDS
+#   saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", batch, ".rds"))
+#   }
+
+## use wrapper to create RDS objects of the 30K markers for each imputation batch (only run once, documenting here)
+## plot Rsq + MAF
+# rsq_wrapper("axiom_acs_aus_nf")
+# rsq_wrapper("axiom_mecc_cfr_ky")
+# rsq_wrapper("ccfr_1m_1mduo_reimpute")
+# rsq_wrapper("ccfr_omni")
+# rsq_wrapper("corect_oncoarray")
+# rsq_wrapper("corsa_axiom")
+# rsq_wrapper("cytosnp_comb")
+# rsq_wrapper("initial_comb_datasets")
+# rsq_wrapper("mecc")
+# rsq_wrapper("newfoundland_omniquad")
+# rsq_wrapper("omni_comb")
+# rsq_wrapper("omniexpress_exomechip")
+# rsq_wrapper("oncoarray_to_usc")
+# rsq_wrapper("plco_3")
+
+# handle these slightly different because the 'snp' variable already contains REF/ALT info, no need to paste like I did for the other batches. 
+# (it's a simple fix for ukbiobank)
+# (reach has all sorts of issues that I believe I handled before...specifically it has headers placed randomly throughout the info files)
+
+## UKBIOBANK
+  # fread_wrapper <- function(x) fread(x)  %>% filter(SNP %in% sample30k_edit$id)
+  # sample30_info <- lapply(list.files(paste0("/home/rak/data/HRC_InfoFile/", "ukbiobank"), full.names = T, pattern = "chr"), fread_wrapper)
+  # 
+  # # rbind, convert vars to numeric
+  # sample30_info_df <- do.call(rbind, sample30_info) %>%
+  #   dplyr::mutate(x = seq(1, 30000),
+  #                 Rsq = as.numeric(Rsq),
+  #                 MAF = as.numeric(MAF))
+  # 
+  # # saveRDS
+  # saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", "ukbiobank", ".rds"))
+
+## REACH (using an 'info' file derived direction from the VCF file i.e. wrayner vcfparse.pl script))
+  # fread_wrapper <- function(x) fread(x) %>%
+  #   filter(ID %in% sample30k_edit$id) %>% 
+  #   separate(INFO, sep = ";", into = c('AF', 'MAF', 'Rsq', 'EmpRsq')) %>% 
+  #   dplyr::select(-EmpRsq) %>% 
+  #   mutate(AF = str_remove(AF, "AF="),
+  #          MAF = str_remove(MAF, "MAF="),
+  #          Rsq = str_remove(Rsq, "R2="))
+  # 
+  # sample30_info <- lapply(list.files(paste0("/media/work/FIGI/IC/reach"), full.names = T, pattern = "chr"), fread_wrapper)
+  # 
+  # sample30_info_df <- do.call(rbind, sample30_info) %>%
+  #   dplyr::mutate(x = seq(1, 30000),
+  #                 Rsq = as.numeric(Rsq),
+  #                 MAF = as.numeric(MAF))
+  #saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", "reach", ".rds"))
+
+
+
+
+# plotting wrapper
+rsq_plot <- function(df) {
+  
+  ggplot(data = df, aes(x, Rsq)) +
+    geom_point() +
+    theme_bw() +
+    #scale_y_continuous(breaks=seq(0,1,0.1)) +
+    ylim(0,1) + ggtitle("Imputation Rsq values")
+} 
+
+maf_plot <- function(df) {
+  
+  Nsnps = length(df[which(df$MAF < 0.05), "MAF"])
+  
+  ggplot(data = df, aes(x, MAF)) +
+    geom_point() +
+    theme_bw() +
+    #scale_y_continuous(breaks=seq(0,1,0.1)) +
+    ylim(0,0.1) + 
+    ggtitle(paste0("MAF 0-10% (", Nsnps, " out of 30K SNPs < 5%)"))
+}
+
+maf_count <- function(df) {
+  tmp <- filter(df, MAF < 0.05)
+  
+}
+
+```
+
+### axiom_acs_aus_nf
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_axiom_acs_aus_nf.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### axiom_mecc_cfr_ky
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_axiom_mecc_cfr_ky.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### ccfr_1m_1mduo_reimpute
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_ccfr_1m_1mduo_reimpute.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### ccfr_omni
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_ccfr_omni.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### corect_oncoarray
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_corect_oncoarray.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### corsa_axiom
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_corsa_axiom.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### cytosnp_comb
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_cytosnp_comb.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### initial_comb_datasets
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_initial_comb_datasets.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### mecc
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_mecc.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### newfoundland_omniquad
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_newfoundland_omniquad.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### omni_comb
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_omni_comb.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### omniexpress_exomechip
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_omniexpress_exomechip.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### oncoarray_to_usc
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_oncoarray_to_usc.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### plco_3
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_plco_3.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### reach
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_reach.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+### ukbiobank
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_ukbiobank.rds")
+rsq_plot(df)
+maf_plot(df)
+```
+
+
+<!-- ## Stephanie - plotting manhattan of each PC vs SNP (get a bird’s eye view of association between each SNP and PCs to gauge contribution from loci to a particular PC) -->

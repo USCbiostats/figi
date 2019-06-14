@@ -1,0 +1,178 @@
+---
+title: "GxEScanR Results"
+subtitle: "NSAID/Aspirin (asp_ref)"
+author: "Andre Kim"
+date: "2019/02/04 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+library(kableExtra)
+library(tidyverse)
+library(data.table)
+options(htmltools.dir.version = FALSE)
+```
+
+# asp_ref
+- N = 72438
+- Model Covariates: age (imputed), sex, PC1-10, studyname (platform/study)
+---
+
+class: left, middle
+# asp_ref G Main Effects
+```{r, out.width = "90%", echo = F}
+knitr::include_graphics("./figures/GxEScanR_asp_ref_chiSqG_qq.png")
+```
+---
+
+# asp_ref G Main Effects
+<!-- <center> G Main Effects Results <br> -->
+<!-- outcome ~ dose+Gdosage+age_ref_imp+sex+studyname+pc1-10+asp_ref  </center> -->
+Green = Literature, Red = Huygue 2019
+```{r, out.width = "100%", echo = F}
+knitr::include_graphics("./figures/results_G_asp_ref_sex_age_pcs_studyname_N72438.txt.mh1.png")
+```
+---
+
+# asp_ref G Main Effects
+```{r, out.width = "100%", echo = F}
+tmp <- readRDS("asp_ref_G_tophits_table.rds")
+kable(tmp, digits = 80) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left', font_size = 9) %>% 
+  scroll_box(width = "100%", height = "500px")
+```
+---
+
+# asp_ref GxE results
+```{r, out.width = "90%", echo = F}
+knitr::include_graphics("./figures/GxEScanR_asp_ref_chiSqGxE_qq.png")
+```
+---
+
+# asp_ref GxE results
+<center> GxNSAID Results <br>
+outcome ~ Gdosage*asp_ref+age_ref_imp+sex+studyname+pc1-10  </center>
+```{r, out.width = "100%", echo = F}
+knitr::include_graphics("./figures/results_GxE_asp_ref_sex_age_pcs_studyname_N72438.txt.mh.png")
+```
+---
+
+# asp_ref GxE results
+<center> GxNSAID Results <br>
+outcome ~ Gdosage*asp_ref+age_ref_imp+sex+studyname+pc1-10  </center>
+```{r, out.width = "100%", echo = F}
+tmp <- fread("/home/rak/Dropbox/ncsnp_18324.txt") %>% 
+  dplyr::select(-ID, -SNP) %>% 
+  mutate(Chromosome = as.numeric(gsub("chr", "", Chromosome))) %>% 
+  arrange(Chromosome)
+kable(tmp, digits = 80) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left', font_size = 8) %>% 
+  scroll_box(width = "100%", height = "400px")
+```
+---
+
+# asp_ref 2DF results
+```{r, out.width = "90%", echo = F}
+knitr::include_graphics("./figures/GxEScanR_asp_ref_chiSq2df_qq.png")
+```
+---
+
+# asp_ref 2DF results
+<!-- <center> GxNSAID Results <br> -->
+<!-- outcome ~ Gdosage*asp_ref+age_ref_imp+sex+studyname+pc1-10  </center> -->
+Green = Literature, Red = Huygue 2019, Orchid = GxE Results (10 SNPs)
+```{r, out.width = "100%", echo = F}
+knitr::include_graphics("./figures/results_2DF_asp_ref_sex_age_pcs_studyname_N72438.txt.mh.png")
+```
+---
+
+# CHECKS
+1. Dosage values are identical between VCF and BinaryDosage files (including UKBIOBANK)  
+
+2. GxEScanR vs GLM
+
+.pull-left[
+Table
+```{r, echo = F}
+tmp <- readRDS("results_G_GLM_chr8only.rds")
+kable(tmp, digits = 80) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left', font_size = 8) %>% 
+  scroll_box(width = "100%", height = "350px")
+```
+]
+
+.pull-right[
+Plot
+```{r , echo = F}
+plot(log(tmp$P_gxescan), log(tmp$P_glm))
+```
+
+]
+---
+
+
+# CHECKS GxE Results
+1. GxEScanR vs GLM
+
+.pull-left[
+Table
+```{r, echo = F}
+tmp <- readRDS("results_GxE_GLM.rds")
+kable(tmp, digits = 80) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left', font_size = 8) %>% 
+  scroll_box(width = "100%", height = "300px")
+```
+]
+
+.pull-right[
+Plot
+```{r , echo = F}
+plot(log(tmp$P.GxE_gxescan), log(tmp$P.GxE_glm))
+```
+
+]  
+
+---
+
+
+# sex
+- N = 101171
+- Model Covariates: age (imputed), PC1-10, studyname (platform/study)
+---
+
+# sex G Main Effects
+```{r, out.width = "90%", echo = F}
+knitr::include_graphics("./figures/GxEScanR_sex_chiSqG_qq.png")
+```
+---
+
+# sex G Main Effects
+<!-- <center> G Main Effects Results <br> -->
+<!-- outcome ~ dose+Gdosage+age_ref_imp+sex+studyname+pc1-10+asp_ref  </center> -->
+Green = Literature, Red = Huygue 2019
+```{r, out.width = "100%", echo = F}
+knitr::include_graphics("./figures/results_G_sex_age_pcs_studyname_N101171.txt.mh.png")
+```
+---
+
+# sex GxE results
+```{r, out.width = "90%", echo = F}
+knitr::include_graphics("./figures/GxEScanR_sex_chiSqGxE_qq.png")
+```
+---
+
+# sex GxE results
+<center> GxNSAID Results <br>
+outcome ~ Gdosage*asp_ref+age_ref_imp+sex+studyname+pc1-10  </center>
+```{r, out.width = "100%", echo = F}
+knitr::include_graphics("./figures/results_GxE_sex_age_pcs_studyname_N101171.txt.mh.png")
+```
+---
+

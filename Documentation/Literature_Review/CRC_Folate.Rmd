@@ -1,0 +1,198 @@
+---
+title: "Literature Review - CRC + Folate"
+bibliography: /Users/mak/Dropbox/library.bib
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style type="text/css">
+h1 { /* Header 1 */
+  font-size: 22px;
+}
+h2 { /* Header 2 */
+    font-size: 18px;
+}
+h3 { /* Header 2 */
+    font-size: 14px;
+}
+hr {
+  border: 1px solid #000;
+}
+</style>
+
+
+# Folate (Vit B9)
+Not endogenously produced, must be obtained from diet. 
+
+Broadly speaking, folate donates one-carbon units to pathways involved in methylation, DNA maintenance. S-adenosylmethionine is a universal methyl donor, and is created in a folate dependent cycle <font color="red">[Abbenhardt 2014]</font>. Other vitamins play a role in this pathway - deficiencies lead to increased cancer risk. 
+
+Might be more protective in pre-neoplastic processes - supplementation after cancer may accelerate progression <font color="red">[Kim 2004]</font>
+
+Optimal Dose to confer protective effect? ~400-500 micrograms/day <font color="red">[Giovannucci 2002 #29 - Kim 2001]</font>  
+
+All these studies - cannot eliminate confounding with protective factors that are associated with folateintake. There are reasons to believe that confounding is not driving these associations (interaction between MTHFR and alcohol/etc, adjustment for dietary factors, similar results in other studies / countries). Mendelian randomization? 
+
+## Metabolic Pathways  
+![](/Users/mak/Dropbox/code/LitReviews/images/img_folate_pathway.png){ width=100% }  
+<font color="red">[Green 2017]</font>
+
+Lack of folate leads to decreased levels of thymidine, disproportionate incorporation of uracil in DNA, more change of chromosome breaks <font color="red">[Giovannucci 2002]</font>
+
+Low folate levels may induce DNA hypomethylation -> influence DNA integrity and stability. Low folate also associated with failure to methylate uridylate to thymidylate, and the resulting imbalance in nucleotide pools can result in increased single and double strand breaks. But, high folate could also promote CRC cancer once precursor lesions have developed - increase rate of survival of neoplastic cells. <font color="red">[Figueiredo 2013]</font>
+
+If methionine levels drop, S-adenosyl-homocysteine levels rise, stimulating MTHFR to produce more Methyl-H4-folate from 5,10-methylene-H4-folate. If folate levels are also low, may influence methylation reactions. Aberrant methylation increases cancer risk <font color="red">[Giovannucci 2002]</font>
+
+MTHFR
+- 'rate-limiting' enzyme in folic acid metabolism - 5,10-methylenetetrahydrofolate acid into 
+ 5-methyltetrahydrofolate acid, which is a major circulating form of folate acid <font color="red">[Gong 2018]</font>
+- well known functional polymorphism (C677T) reduces enzyme activity among homozygous TT (akin to low folate in effect). But interaction studies are inconclusive <font color="red">[Giovannucci 2002]</font>  
+
+- Interacting factors <font color="red">[Giovannucci 2002]</font>
+	- methionine - supplemental intake can either influence methylation or free up folate for other pathways. inconclusive results when studied by itself
+	- alcohol - alcohol impairs hematopoiesis. increases induction of megaloblastic anemia ("an anemia that results from inhibition of DNA synthesis during red blood cell production") in subjects fed low folate diet (makes sense). Also, acetaldehyde may inactivate MTHFR or inhibit methionine synthase, leading to depletion of 5,10-methylene-H4-folate (not thymidine synthesis - see chart). Alcohol can also decrease folate levels by inhibiting absorption in intestines. 
+	- try to remember that when people say methyl-rich/poor they mean alcohol+folate levels. 
+
+
+## Some Epi Studies
+- Folate (dietary, blood level) & Adenomas
+	- Health Professionals Followup Study
+	- Nurses' Health Study
+	- UNC
+	- USC
+	- Spain
+- Folate & CRC (CC)
+	- Spain
+	- New York
+	- Italy
+	- Washington State
+	- US
+	- France
+- Folate & CRC (Prospective)
+	- ATBCS
+	- HPFUS
+	- NHS
+	- NHANES
+
+
+# Mendelian Randomization
+
+## Concepts
+- three assumptions [@Burgess2015]:
+	1. genetic variant is associated with exposure 
+	2. genetic variant is NOT associated with any confounder of exposure-outcome relationship
+	3. genetic variant is NOT associated with outcome via any other pathway other than through exposure (no pleiotropy)
+
+IV can be derived from separate dataset, even if they're both meta-analyses. The only important thing is that the two data sets are from the same underlying population.
+
+Bias in case of a weak IV is bias towards the null. 
+
+Testing assumptions:
+- Z-X: is it biologically plausible (keep in mind that not all hits are within genetic regions)
+- Z-W: can test for each confounder individually, of course can't account for unknown/unmeasured confounder. Can also use GWAS catalogues for common confounders. a few more things - need to consider multiple testing. Also, if exposure is causal to confounder, assumptions are NOT violated. usually - have two sets of covariates, one that's conservative and one that is liberal. 
+- population stratification - see @Burgess2015 appendix. 
+
+
+
+## Application in a two sample mendelian randomization
+Two methods available - inverse-variance weighted, and likelihood-based. if precise IV, both give same answer, but otherwise likelihood-based is preferable. 
+
+Recall that in this study, CCFR samples were used for biomarker, which means they overlap with the main study? If that's the case, coefficients Xk (association between genetic and exposure) and Yk (association between genetic and outcome) will be correlated, and need to consider bivariate model of (Xk, Yk) for each genetic variant [@Burgess2013]. 
+	(basically, overlapping samples are a headache but not unsurmountable)
+
+
+# Notes For Analysis
+- figure out if samples are overlapping, and if so which
+
+
+<br><br><br><br><br><br><br><br><br><br>
+
+
+
+# Folate Epi Studies
+
+## [@Moazzen2017] - folate and crc meta-analysis
+- TBD
+
+## [@Mason2017] - update on folate and crc (review). refer to this paper often
+- introduction  
+	- lots to unpack. oral folate has more evidence of protective effect than serum levels (which may be modified by smoking and obesity). also, only natural folic acid might confer protection, not supplemental. Folate effect may also be modified by other vitamins (b12, etc). Also possible that transgeneration effects such that folate intake among moms affects children's future cancer risk. lastly, dual effect of folate - inadequate and excessive intake can increase risk, while adequate levels decrease it. There's also folate genetics and crc (see @Figueiredo2013)
+- background
+	- folate has strongest effect among heavy drinkers - alcohol inhibits folate metabolism 
+	- 500mcg per day confers maximal effect (but this is for any folate, doesn't differentiate between dietary and supplemental)
+	- strong biological explanation for folate/crc association - folate is critical co-factor in both biological methylation and nucleotide synthesis (Ciappio and Mason, 2010). also wnt and p53 pathways. 
+	- evidence suggests methylation is NOT a mechanism for this assoc
+	- folate supplemtation might be beneficial if you're deficient, but not if you already have adequate levels. 
+- 1-carbon vitamins
+- overly abundant folate intake
+	- hyperproliferation. one mechanism is that neoplastic cells need to divide, so having lots of folate around might help that. other possibilities - supplemental folate is pro-inflammatory in colonic mucosa. so say you're predisposed to CRC, or already have neoplastic foci, then supp folate could accelerate tumor growth. but hard to say, not all studies consistently show this. 
+	- note that it's really easy to over intake folate - lots of foods in the US are fortified. 
+	- folic acid (as opposed to natural folate) might be problematic as well because of different metabolic pathways. 
+
+## [@Figueiredo2013] - folate genetics and colorectal neoplasia REVIEW
+- review of folate genetic studies. IMPORTANT - refer to references for other reviews too. It's a meta analysis plus report on individual studies if they found interesting things
+- **MTHFR**
+	- results for adenoma are inconclusive - make sure note source of study population (sigmoidoscopies, what side of colon is being captured etc
+	- rs1801131 - borderline inverse association with CRC
+	- rs1801133 - minor allele consistent protective for CRC. few studies stratified by tumor location or dietary/lifestyle factors. one study did, seems that effects are strongest among smokers, ever drinkers, and bmi between 18.5-24.9
+- MTR/MTRR
+	- MTR rs1805087 - borderline inverse association. decreased risk for NHW, slightly increased for Asians
+	- MTRR rs1801394 - no effect in meta analysis
+- CBS
+	- no strong effect in most studies. not as commonly studied. Figueiredo found association with adenoma risk however (rs1801181)
+- folate/b12 uptake genes
+	- TCNII rs1801198 - inverse association for CIMP+ colon cancer
+	- RFC1 rs1051266 - no effect
+	- GCPII rs61886492 - no effect
+- DNA synthesis
+	- SHMT - no strong effect
+	- TYMS - no strong effect
+	- MTHFD1 - no strong effect
+- Discussion
+	- MTHFR has strong evidence. involved in thymidine synthesis, meaning "suggesting that pro-mutagenic misincorporation of uracil into DNA might be a more important consequence of aberrant folate metabolism, in terms of the risk of col- orectal tumorigenesis, than alterations in the abundance of methyl groups available for DNA methylation"... "reduced MTHFR activ- ity would increase the availability of 5,10-methylene THF by channeling less ofit toward homocysteine remethylation (and away from thymidylate synthesis)"
+- [remember to look up these common SNPs on FIGI data, check for GxE directly why not]
+
+## [@Kantor2014a] - GxE between GWAS hits and Es
+- Methods  
+	- harmonization: 'common data elements'. dietary folate intake only, quartiles (sex and study specific, coding correspond to median value of those groups). after combining datasets, they scaled to 500mcg/day. Note, for some variables only categories are available do they also did binary coding to be able to include those samples. 
+	- stats: to get an idea of how to model an E, for example, they did LRT to compare e.g. categorical vs categorical modeled continuously. for GxE - empirical bayes shrinkage method (weighted sum of the case-only test and the traditional case-control method. p value adjustment was via permutation - each analysis performed 2000 times using permuted case-control status, then applying westfall and young step-down procedure to get adj p value. 
+
+
+## [@Gibson2011] - pre and post fortification intake of folate and risk of crc in US (prospective cohort)
+- Intro
+	- note that intake is more strongly associated with CRC than blood levels! (biomarker issues, measurement, etc - see ref 4, 7, 8)
+- Methods
+	- energy adjustment - they did for diet (residual method), but not for supplemental
+	- btw - to test for non-linear association: restricted cubic splines? they saw plateau effect for highest levels of folate intake 
+	- can do folate distribution by different variables like a table 1
+- Results
+	- interactions - sex (inverse assoc in men only), alcohol (inverse assoc in drinks only!). no difference by colon vs rectal, but difference in distal vs proximal (stronger in distal)
+- Discussion
+	- [is there a way to see when people started folate supplementation? more likely to have polyps (and see increase in risk) after 60?]
+	- folate has long latency period for protective effect. needs to be lifelong good diet
+	
+
+
+
+
+
+# Revisit Methods papers
+[@Mukherjee2008]
+- 
+
+
+<br><br><br><br><br><br><br><br><br><br>
+
+
+
+
+# References
+
+

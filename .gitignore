@@ -1,0 +1,13 @@
+# Blacklist everything
+*
+
+# Whitelist all directories
+!*/
+!.gitignore
+
+# files
+!*.R
+!*.Rmd
+!*.md
+!*.sh
+!*.css

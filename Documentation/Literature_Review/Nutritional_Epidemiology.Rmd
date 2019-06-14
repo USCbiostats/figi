@@ -1,0 +1,46 @@
+---
+title: "Nutritional Epidemiology"
+bibliography: /Users/mak/Dropbox/Projects/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: "cosmo"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style type="text/css">
+h1 { /* Header 1 */
+  font-size: 22px;
+  font-weight: bold;
+}
+h2 { /* Header 2 */
+  font-size: 20px;
+  font-weight: bold;
+}
+h3 { /* Header 3 */
+  font-size: 18px;
+  font-weight: bold;
+}
+hr {
+  border: 1px solid #000;
+}
+</style>
+
+
+# 14 - Genetics in Dietary Analyses
+
+Ways of applying genetics in nutritional epi  
+
+SNPs, how genetic variation can lead to differences in susceptibility to dietary effects in a population and why interation is important - "personalized nutrition" e.g. in CHD + cholesterol  
+
+Goes on to discuss GWAS, and how most significant SNPs have poor predictive value. Genetic risk score is one way to address it - if using for GxE, the risk score should ideally incorporate markers in relevant pathways, which is hard if the goal is to formulate hypotheses. Also talks about the importance of replication, which is far more difficult in GxDiet studies (too many heterogeneous factors). Similar issues in meta-analyses    
+
+Mendelian randomization - genotype can alter behavior, absorption, metabolism of a dietary factor, or modify receptor response to the factor. Using genetics to establish causation of dietary factors. Also machine learning methods to incorporate multiple markers in an mendelian randomization context e.g. kernel machine logistic regression (see Shui 2012 vitamin D)  
+
+Last point is in regards to using genetics to characterize outcomes (genotype tumor DNA, clustering 

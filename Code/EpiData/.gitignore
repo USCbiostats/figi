@@ -1,0 +1,4 @@
+*.eigenvec
+*.Rmd
+*.html
+.Rproj.user

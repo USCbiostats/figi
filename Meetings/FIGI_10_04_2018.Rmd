@@ -1,0 +1,139 @@
+---
+title: "FIGI - 10/04/2018"
+bibliography: /Users/mak/Dropbox/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: "cosmo"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style type="text/css">
+h1 { /* Header 1 */
+  font-size: 24px;
+  font-weight: bold;
+}
+h2 { /* Header 2 */
+    font-size: 18px;
+    font-weight: bold;
+}
+h3 { /* Header 2 */
+    font-size: 14px;
+    font-weight: bold;
+}
+hr {
+  border: 1px solid #000;
+}
+</style>
+
+
+# EPACTS vs GxEScanR
+
+## Info
+| . | . |
+|---|---|
+| N | 32,720 (19,818 cases, 12,902 controls)  |
+|Snps N | 50,151|
+|Node | hpc3321 (2.4 GHz Xeon, 32GB memory) |
+|.BDose size | 4.1G |
+|.vcf.gz size | 3.3G |
+|EPACTS |  **2:04** |
+|GxEScan | **1:09** (divided by 4.x?) |
+
+## Z Scores
+
+```{r results='asis', message = F, echo = F, warning = F}
+library(tidyverse)
+library(data.table)
+
+setwd("~/Desktop/")
+
+gxescan <- fread("corect_oncoarray_chr22_50k.out") %>% 
+	mutate(MARKER_ID1 = paste(SNP, paste(A2, A1, sep = '/'), SNP, sep = "_"),
+				 MARKER_ID2 = paste(SNP, paste(A1, A2, sep = '/'), SNP, sep = "_")) %>% 
+	dplyr::select(MARKER_ID1, MARKER_ID2, zG)
+
+epacts <- fread("corect_oncoarray_chr22_50k_epacts_results.epacts") %>% 
+	dplyr::select(MARKER_ID, ZSTAT)
+
+# Join
+x <- inner_join(gxescan, epacts, by = c('MARKER_ID1'='MARKER_ID'))
+y <- inner_join(gxescan, epacts, by = c('MARKER_ID2'='MARKER_ID'))
+z <- bind_rows(x, y)    
+
+plot(abs(z$zG), abs(z$ZSTAT), ylab = 'EPACTS Z Score', xlab = 'GxEScanR Z Score') # exact same answers
+
+```
+
+Pros and Cons:  
+- EPACTS: supports tabix indexed vcf.gz files natively, but memory requirements are not very clear, requires large amount for big N. Merging of vcf.gz are very slow  
+- GxEScanR: requires uncompressed VCF for conversion, compression not as 'efficient' as vcf.gz. Much faster G/GxE scans compared to EPACTS. Low memory requirements
+
+
+# Study Heterogeneity
+
+## NSAID (outc ~ age_ref + sex + asp_ref)
+
+```{r results='asis', message = F, echo = F, warning = F}
+library(kableExtra)
+
+x <- readRDS("~/Desktop/tmp.rds")
+
+kable(x) %>%
+	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+
+```
+
+## Regress study design on estimates
+
+```
+Call:
+lm(formula = estimate ~ design, data = results2, weights = w)
+
+Weighted Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.118023 -0.009751  0.012649  0.038518  0.219363 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -0.76715    0.03709 -20.681  < 2e-16 ***
+design1      0.64223    0.07584   8.468 1.04e-10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.05425 on 43 degrees of freedom
+Multiple R-squared:  0.6251,	Adjusted R-squared:  0.6164 
+F-statistic:  71.7 on 1 and 43 DF,  p-value: 1.042e-10
+```
+
+
+# To Do
+- Study Heterogeneity
+	- in progress
+	
+- Post-imputation analysis (NSAID, Alcohol)
+	- replicate NSAID
+	- alcohol in progress
+
+- GxEScanR **
+	- indexed BDose
+	- study/platform adjustment (modify algorithm to accomodate > 20 covariates)
+	
+- Analyses - GetSNPChunk + R GLM on chr22:
+	- adjust by platform only
+	- adjust by study + platform
+	- include common CRC Es to the model
+	- compare PC1-4 vs PC1-10
+
+
+# DO THIS
+John - development branch has beeen updated - now supports VCF files (GetVCFInfo or something). returns a bdinfo like list (w/ minor changes), you can pass that off to get SNPvalues 
+- can you test this - find a small VCF for chromosome 22, extract it, run VCF things on it, then get the table etc. compare that with binary dosage version, make sure they're identical. they SHOULD be identical (for the sample of subjects)
+

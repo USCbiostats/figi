@@ -1,0 +1,180 @@
+---
+title: "FIGI GxHeight Results - 11/20/2018"
+bibliography: /home/rak/Dropbox/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: "cosmo"
+---
+	
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style type="text/css">
+	h1 { /* Header 1 */
+			font-size: 24px;
+		font-weight: bold;
+	}
+h2 { /* Header 2 */
+		font-size: 18px;
+	font-weight: bold;
+}
+h3 { /* Header 2 */
+		font-size: 14px;
+	font-weight: bold;
+}
+hr {
+	border: 1px solid #000;
+}
+</style>
+
+
+# Outcome counts
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_outcome_barplot.png)
+<br>
+
+# Height Distribution
+
+## All CaseControl + Cohort Studies
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_boxplot.png)
+<br>
+
+## By study design
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_boxplot_caco.png){ width=49% } ![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_boxplot_cohort.png){ width=49% }  
+<br>
+
+## By country
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_boxplot_usa.png){ width=49% } ![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_boxplot_other.png){ width=49% }  
+<br>
+
+
+## Sex
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_violin_studydesign.png)
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_violin_country.png)
+
+-------
+
+# Meta Analysis
+
+## Forestplot
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_fp_caco_cohort.png)  
+
+
+#### Estimated heterogeneity variance: 6.6e-05  p= 0
+<br>
+
+## Funnelplot
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/working/figi_postharm_height_funnelplot.png)  
+
+#### outlier = Corsa_1
+<br>
+
+
+# Heterogeneity by study factors
+
+## Meta-regression steps:
+1) Fit regression models (outcome ~ age_ref + sex + PC1-10 + exposure) for each studyname
+2) Fit inverse variance weighted linear model on regression estimates (e.g. `estimates ~ study_design`)
+<br>
+
+## Study design (CC = 0, Cohort = 1)
+
+```{r , message = F, echo = F, warning = F}
+#------ Assemble Counts Table ------#
+library(tidyverse)
+library(broom)
+library(data.table)
+library(ggplot2)
+library(kableExtra)
+
+r_glm <- readRDS("~/Dropbox/code/FIGI_PostHarmonization/working/height_heterogeneity_studydesign.rds")
+
+# kable(r_glm) %>%
+# 	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+# Meta regression
+w <- (r_glm$std.error)^2
+x <- lm(estimate ~ study_design, data = r_glm, weights = w)
+
+# Summary
+results <- tidy(x) %>% filter(term == "study_design")
+kable(results) %>%
+	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+```
+
+### USA vs. Others (Other = 0, USA = 1)
+
+```{r , message = F, echo = F, warning = F}
+#------ Assemble Counts Table ------#
+library(tidyverse)
+library(broom)
+library(data.table)
+library(ggplot2)
+library(kableExtra)
+
+r_glm <- readRDS("~/Dropbox/code/FIGI_PostHarmonization/working/height_heterogeneity_usa.rds")
+
+# kable(r_glm) %>%
+# 	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+# Meta regression
+w <- (r_glm$std.error)^2
+x <- lm(estimate ~ country, data = r_glm, weights = w)
+
+# Summary
+results <- tidy(x) %>% filter(term == "country")
+kable(results) %>%
+	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+
+```
+
+
+# GxEScanR Results
+
+## Details
+SNPs = 5,491,858 (MAF > 5%)  
+Cases = 38,751  
+Controls = 40,702  
+Covariates = age_ref + sex + PC1-10 (complete case only)  
+Excluded UKB
+<br>
+
+
+## Runtimes
+```{r , message = F, echo = F, warning = F}
+#------ Assemble Counts Table ------#
+library(tidyverse)
+library(broom)
+library(data.table)
+library(ggplot2)
+library(kableExtra)
+
+runtimes <- read.csv("~/Dropbox/code/_working/gxescanr_height_runtimes.csv")
+kable(runtimes) %>%
+	kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+```
+
+## Marginal G
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_zG_qq.png)
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_zG_mh.png)
+
+## GxHeight
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_zGxE_qq.png)
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_zGxE_mh.png)
+
+## GxHeight - Joint G,GxE (2df)
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_chi2df_qq.png)
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_chi2df_mh.png)
+
+## G|Height - Cases Only
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_z_Case_qq.png)
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_z_Case_mh.png)
+
+## G|Height - Controls Only
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_z_Ctrl_qq.png)
+![](/home/rak/Dropbox/code/_working/GxEScanR_GxHeight_z_Ctrl_mh.png)

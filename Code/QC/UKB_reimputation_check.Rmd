@@ -1,0 +1,181 @@
+---
+title: "UKB re-imputation checks"
+output: 
+  html_document:
+    theme: united
+  #word_document:
+   #reference_docx: word_styles.docx
+---
+
+Remember that in a GxNSAIDS scan performed for the in-person GECCO meeting, there were 10 significant 'hits'. Upon closer inspection of those markers, I found that UKB had very different allele frequencies compared to the other study populations. We decided to remove UKB from the scan for presentation at the meeting, and to re-impute UKB on the Michigan Imputation Server for consistency.  
+
+Keith performed the imputation, and now we're revising those 10 markers to make sure results look more reasonable, using the same data version from the original GxNSAIDS scan.  
+
+Some details:  
+- Subset N = 72,438  
+- Model: outcome ~ genetic dosage * asp_ref + age + sex + PC1-10 + studyname  
+
+# Original Results (GLM)
+```{r, include=F}
+library(tidyverse)
+library(data.table)
+library(qqman)
+library(R.utils)
+library(lmtest)
+library(kableExtra)
+library(broom)
+library(purrr)
+```
+
+
+```{r cov_file, include=T, message=F, cache=T}
+# covariate file
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_181120.RData")
+pc30k <- fread("~/data/PCA/181120/FIGI_GwasSet_181120.eigenvec", skip = 1, 
+               col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20))))
+
+cov <- Epi %>%
+  filter(drop == 0 & gxe == 1) %>% 
+  inner_join(pc30k, by = c('vcfid' = 'IID')) %>% 
+  mutate(outcome = ifelse(outc == "Case", 1, 0),
+         age_ref_imp = as.numeric(age_ref_imp),
+         sex = ifelse(sex == "Female", 0, 1),
+         studyname = ifelse(studyname %in% c("NFCCR_1", "NFCCR_2"), "NFCCR", studyname),
+         studyname = ifelse(studyname == "Colo2&3", "Colo23", studyname),
+         asp_ref = ifelse(asp_ref == "Yes", 1, ifelse(asp_ref == "No", 0, NA))) %>% 
+  mutate(V2 = ifelse(V2 == "ccfr_1m_1mduo", "ccfr_1m_1mduo_reimpute", V2)) %>% 
+  dplyr::select(vcfid, outcome, age_ref_imp, sex, studyname, paste0(rep("PC", 10), seq(1,10)), asp_ref, V2, platform) %>% 
+  filter(complete.cases(.))
+
+exclude_studies <- c("ColoCare_1", "ESTHER_VERDI", "GALEON", "MOFFITT") # case-only studies.. 
+cov <- filter(cov, !studyname %in% exclude_studies)
+
+# incorporate 10 markers
+# (extracted long time ago)
+snps <- dplyr::select(cov, vcfid)
+for(chr in c(2,3,6,7,10, 16, 17, 18, 21, 22)) {
+  x <- as.data.frame(readRDS(paste0("/home/rak/Dropbox/FIGI/Results/aspref_sex_age_pc10_studyname/extract/GxEScanR_GxE_sig_loci_extract_chr", chr, ".rds"))) %>% rownames_to_column(var = 'vcfid')
+  snps <- inner_join(snps, x, by = 'vcfid')
+}
+df <- inner_join(cov, snps, by = "vcfid")
+```
+
+
+```{r original_glm, tidy=T, cache=T}
+# function definitions
+glm_func <- function(y) glm(outcome ~ y * asp_ref + age_ref_imp + sex + PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + studyname, data = df, family = binomial)
+glm_func_base <- function(y) glm(outcome ~ y + asp_ref + age_ref_imp + sex + PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + studyname, data = df, family = binomial)
+run_lrtest <- function(x,y) lrtest(x, y)
+
+# run GLM + lrtest
+basemodel <- map(df[ , 19:28], function(x) glm_func_base(x))
+intmodel <- purrr::map(df[,19:28], function(x) glm_func(x))
+results_gxe <- mapply(run_lrtest, basemodel, intmodel, SIMPLIFY = F)
+
+results_gxe_out <- do.call(rbind, results_gxe) %>%
+  tibble::rownames_to_column('SNP') %>%
+  filter(!is.na(Chisq)) %>%
+  mutate(SNP = gsub('.{2}$', '', SNP))
+
+kable(results_gxe_out) %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+```
+
+
+# Allele Frequencies
+```{r original_afs, out.width=c('50%', '50%'), fig.show='hold', echo = F, dpi = 300}
+
+af_studyname <- df %>% 
+  group_by(studyname) %>% 
+  summarise_at(c("2:4964187", "3:98981063",  "6:138017298", "7:99995536",  "10:3001065",  "16:79591072", "17:18528708", "18:3780526",  "21:34169318", "22:40651008"), funs( sum(.) / n() / 2))
+
+snplist <- c("2:4964187", "3:98981063", "6:138017298", "7:99995536", "10:3001065", "16:79591072", "17:18528708", "18:3780526", "21:34169318", "22:40651008")
+
+for(snp in snplist[1:10]) {
+  plot(af_studyname[, snp, drop = T], ylab = snp, xlab = "studyname", cex = 0.9, xaxt='n')
+}
+
+```
+
+
+# Re-imputed UKB genotypes
+```{r cov_file_reimpute, include=T, message=F, warning=F, results=F, cache=T}
+# read re-imputed genotypes (vcfR)
+library(vcfR)
+files <- list.files("~/ukbiobank_check/", pattern = "ukbiobank_chr", full.names = T)
+
+tmp_ukb <- lapply(files, read.vcfR)
+tmp_ukb2 <- lapply(tmp_ukb, function(x) vcfR2tidy(x, single_frame = T, info_fields = c("CHROM", "POS"), format_fields = c("DS"))[[1]] %>% mutate(ID = paste(CHROM, POS, sep = ":")))
+
+ukb <- lapply(tmp_ukb2, function(x) dcast(x, Indiv ~ ID, value.var = "gt_DS") %>% dplyr::rename(vcfid = Indiv) %>% dplyr::select(vcfid, everything()))
+ukb <- Reduce(function(x, y) inner_join(x, y, by = 'vcfid'), ukb)
+
+
+subset_ukb <- filter(cov, studyname == "UKB_1") %>%
+  inner_join(ukb, by = "vcfid")
+subset_rest <- filter(cov, studyname != "UKB_1") %>% 
+  inner_join(snps, by = "vcfid")
+
+df <- rbind(subset_ukb, subset_rest)
+
+```
+
+
+
+```{r reimpute_glm, tidy=T, cache=T}
+# function definitions
+glm_func <- function(y) glm(outcome ~ y * asp_ref + age_ref_imp + sex + PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + studyname, data = df, family = binomial)
+glm_func_base <- function(y) glm(outcome ~ y + asp_ref + age_ref_imp + sex + PC1 + PC2 + PC3 + PC4 + PC5 + PC6 + PC7 + PC8 + PC9 + PC10 + studyname, data = df, family = binomial)
+run_lrtest <- function(x,y) lrtest(x, y)
+
+# run GLM + lrtest
+basemodel <- map(df[ , 19:28], function(x) glm_func_base(x))
+intmodel <- purrr::map(df[,19:28], function(x) glm_func(x))
+results_gxe <- mapply(run_lrtest, basemodel, intmodel, SIMPLIFY = F)
+
+results_gxe_out <- do.call(rbind, results_gxe) %>%
+  tibble::rownames_to_column('SNP') %>%
+  filter(!is.na(Chisq)) %>%
+  mutate(SNP = gsub('.{2}$', '', SNP))
+
+kable(results_gxe_out) %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = 'left')
+```
+
+
+
+# Allele Frequencies
+```{r reimpute_afs, out.width=c('50%', '50%'), fig.show='hold', echo = F, dpi = 300}
+
+af_studyname <- df %>% 
+  group_by(studyname) %>% 
+  summarise_at(c("2:4964187", "3:98981063",  "6:138017298", "7:99995536",  "10:3001065",  "16:79591072", "17:18528708", "18:3780526",  "21:34169318", "22:40651008"), funs( sum(.) / n() / 2))
+
+snplist <- c("2:4964187", "3:98981063", "6:138017298", "7:99995536", "10:3001065", "16:79591072", "17:18528708", "18:3780526", "21:34169318", "22:40651008")
+
+for(snp in snplist[1:10]) {
+  plot(af_studyname[, snp, drop = T], ylab = snp, xlab = "studyname", cex = 0.9, xaxt='n', ylim=c(0,1))
+}
+
+```
+
+
+
+<!-- \pagebreak -->
+
+<!-- Looks like UKBIOBANK has some markers with flipped coding. I checked SNPs on the original files I received from FH and the codes for Reference/Alternate Alleles are consistent with the other imputation batches, so there's no obvious indication that there's a flip (except for the allele frequencies being very different..). -->
+
+<!-- Although I don't have all the HRC Info files yet (Keith is working on sending them), judging by the files I do have, all but 1 of these (2:4964187) would not have survived an imputation quality filter based on Rsq values. -->
+
+<!-- Next I checked Allele Frequencies for all UKBIOBANK SNPs, and compared them with corect_oncoarray batch (largest batch, with N = 36621). Before plotting, I filtered any markers that are rare in BOTH imputation batches (MAF > 0.05), and kept only markers that have greater than 100% change in AAF between the two imputation batches. -->
+
+<!-- ```{r, out.width='100%',  echo = F} -->
+<!-- knitr::include_graphics("./figures/AAF_Comparison_Chr1-4.png") -->
+<!-- knitr::include_graphics("./figures/AAF_Comparison_Chr5-8.png") -->
+<!-- knitr::include_graphics("./figures/AAF_Comparison_Chr9-12.png") -->
+<!-- knitr::include_graphics("./figures/AAF_Comparison_Chr13-16.png") -->
+<!-- knitr::include_graphics("./figures/AAF_Comparison_Chr17-20.png") -->
+<!-- knitr::include_graphics("./figures/AAF_Comparison_Chr21-22.png") -->
+<!-- ``` -->
+
+<!-- Fortunately, there are only a handful of SNPs that appear "flipped", but would be difficult to discern if the allele frequences are > ~ 0.4. -->

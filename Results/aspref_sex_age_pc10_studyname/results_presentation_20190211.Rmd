@@ -1,0 +1,146 @@
+---
+title: "GxEScanR Results"
+subtitle: "NSAID/Aspirin (asp_ref)"
+author: "Andre Kim"
+date: "2019/02/04 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+library(kableExtra)
+library(tidyverse)
+library(data.table)
+options(htmltools.dir.version = FALSE)
+```
+
+# asp_ref
+- N = 72438
+- Model Covariates: age (imputed), sex, PC1-10, studyname (platform/study)
+---
+
+# asp_ref GxE results
+```{r, out.width = "90%", echo = F}
+knitr::include_graphics("./figures/GxEScanR_asp_ref_chiSqGxE_qq.png")
+```
+---
+
+# asp_ref GxE results
+<center> GxNSAID Results <br>
+outcome ~ Gdosage*asp_ref+age_ref_imp+sex+studyname+pc1-10  </center>
+```{r, out.width = "100%", echo = F}
+knitr::include_graphics("./figures/results_GxE_asp_ref_sex_age_pcs_studyname_N72438.txt.mh.png")
+```
+---
+
+# Chromosome 2 (2:4964187)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr2.4.46-5.46mb.pdf")
+```
+---
+
+# Chromosome 3 (3:98981063)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr3.98.48-99.48mb.pdf")
+```
+---
+
+# Chromosome 6 (6:138017298)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr6.137.52-138.52mb.pdf")
+```
+---
+
+# Chromosome 7 (7:99995536)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr7.99.5-100.5mb.pdf")
+```
+---
+
+# Chromosome 10 (10:3001065)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr10.2.5-3.5mb.pdf")
+```
+---
+
+# Chromosome 16 (16:79591072)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr16.79.09-80.09mb.pdf")
+```
+---
+
+# Chromosome 17 (17:18528708)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr17.18.03-19.03mb.pdf")
+```
+---
+
+# Chromosome 18 (18:3780526)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr18.3.28-4.28mb.pdf")
+```
+---
+
+# Chromosome 21 (21:34169318)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr21.33.67-34.67mb.pdf")
+```
+---
+
+# Chromosome 22 (22:40651008)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/EUR.chr22.40.15-41.15mb.pdf")
+```
+---
+
+# ALT allele frequency in subset
+##  (N = 72438)
+<br>
+```{r, out.width = "100%", out.height = "100%", echo = F}
+# one time use code, delete soon 
+df <- readRDS("~/df.rds")
+kable(df %>%summarise_at(c("2:4964187", "3:98981063",  "6:138017298", "7:99995536",  "10:3001065"), function(x) sum(x)/144876))
+
+
+
+kable(df %>%summarise_at(c("16:79591072", "17:18528708", "18:3780526",  "21:34169318", "22:40651008"), function(x) sum(x)/144876))
+
+```
+---
+
+
+
+
+# asp_ref G Main Effects
+```{r, out.width = "90%", echo = F}
+knitr::include_graphics("./figures/GxEScanR_asp_ref_chiSqG_qq.png")
+```
+---
+
+# asp_ref G Main Effects
+<!-- <center> G Main Effects Results <br> -->
+<!-- outcome ~ dose+Gdosage+age_ref_imp+sex+studyname+pc1-10+asp_ref  </center> -->
+Green = Literature, Red = Huygue 2019
+```{r, out.width = "100%", echo = F}
+knitr::include_graphics("./figures/results_G_asp_ref_sex_age_pcs_studyname_N72438.txt.mh1.png")
+```
+---
+
+# Chromosome 8 (8:128413305)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/G_Marginal_EUR.chr8.127.91-128.91mb.pdf")
+```
+---
+
+
+# Chromosome 8 (8:128413305)
+```{r, out.width = "100%", out.height = "100%", echo = F}
+knitr::include_graphics("./locuszoom_GxE/G_Marginal_EUR.chr8.128.31-128.51mb.pdf")
+```
+---
