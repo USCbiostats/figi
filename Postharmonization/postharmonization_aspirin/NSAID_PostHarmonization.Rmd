@@ -222,3 +222,5 @@ fit3 <- glm(outcome ~ asp_ref+age_ref_imp+sex+PC1, x, family = 'binomial')
 
 stargazer(fit1, fit2, fit3, type = 'html', single.row = T)
 ```
+
+

@@ -153,3 +153,5 @@ F-statistic:  71.7 on 1 and 43 DF,  p-value: 1.042e-10
 John - development branch has beeen updated - now supports VCF files (GetVCFInfo or something). returns a bdinfo like list (w/ minor changes), you can pass that off to get SNPvalues 
 - can you test this - find a small VCF for chromosome 22, extract it, run VCF things on it, then get the table etc. compare that with binary dosage version, make sure they're identical. they SHOULD be identical (for the sample of subjects)
 
+
+ 

@@ -1,0 +1,286 @@
+---
+title: "FIGI Folate Post Harmonization"
+bibliography: /home/rak/Dropbox/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    css: styles_rmarkdown.css
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: united
+---
+```{r presetup, echo=F, include=F, cache=T}
+rm(list = ls())
+Epi <- readRDS("~/git/DATA/FIGI_EpiData_rdata/FIGI_Genotype_Epi_181120_EpiOnly.rds")
+```
+
+```{r setup, echo=F, include=F, cache=T}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(table1)
+library(kableExtra)
+library(data.table)
+
+gxe_set <- Epi %>% 
+  filter(drop == 0 & gxe == 1) %>% 
+  mutate(age_ref = as.numeric(age_ref),
+         sex = as.factor(sex),
+         energytot = as.numeric(energytot),
+         bmi = as.numeric(bmi),
+         folate_tot = as.numeric(folate_tot),
+         folate_tot_400 = folate_tot / 400,
+         folate_totqc2 = as.numeric(folate_totqc2),
+         folate_diet = as.numeric(folate_diet),
+         folate_diet_400 = folate_diet / 400,
+         folate_dietqc2 = as.numeric(folate_dietqc2),
+         folate_sup = as.numeric(folate_sup),
+         folate_sup_400 = folate_sup / 400,
+         folate_diet400qcm = as.numeric(folate_diet400qcm), 
+         folate_tot_400nd = 1000*(folate_tot_400 / energytot), 
+         folate_diet_400nd = 1000*(folate_diet_400 / energytot),
+         folate_sup_400nd = 1000*(folate_sup_400 / energytot), 
+         studyname = ifelse(studyname %in% c("HPFS_1", "HPFS_2"), "HPFS_1_2", studyname),
+         studyname = ifelse(studyname %in% c("NHS_1", "NHS_2"), "NHS_1_2", studyname),
+         outcome = ifelse(outc == "Case", 1, 0),
+         sex = ifelse(sex == "Female", 0, 1)) %>% 
+  dplyr::select(vcfid, studyname, outc, outcome, age_ref, sex, energytot, starts_with('folate'), alcoholc, smoke, famhx1, educ, bmi, asp_ref)
+```
+
+# Harmonization 
+(Recommended daily value = 400 mcg/day)  
+
+__Dietary Folate__  
+- prior fortification: mcg natural food folate  
+- after fortification: mcg natural food folate + 1.7 * mcg folic acid from fortified foods  
+
+__Supplemental Folate__  
+- folic acid from supplements (single or multivitamins)  
+- for studies with binary variables (regular user yes/no), assume 400mcg/day or 400mcg/tablets  
+
+__Total Folate__  
+- Total = mcg dietary folate + 1.7 folic acid from supplements  
+<br>
+
+## energytot distribution
+```{r energytot_basic_stats, message=F, echo=T, warning=F, tidy=F, cache=T}
+hist(gxe_set$energytot)
+summary(gxe_set$energytot)
+quantile(gxe_set$energytot, probs = seq(0,1,0.05), na.rm = T)
+```
+
+## Folate Distribution
+```{r folate_tot_basic_stats, message=F, echo=T, warning=F, tidy=F, cache=T}
+hist(gxe_set$folate_tot_400)
+summary(gxe_set$folate_tot_400)
+quantile(gxe_set$folate_tot_400, probs = seq(0,1,0.05), na.rm = T)
+```
+
+
+
+# Tables
+## Outcomes table {.tabset}
+
+### All studyname
+```{r tableone_outcomes_all, message=F, echo=T, warning=F, tidy=F, cache=T}
+df <- readRDS("./working/counts_table.rds") 
+  # mutate(pct_miss = cell_spec(pctmiss, "html", color = ifelse(pct_miss >= 10, "red", "black")))
+
+kable(df, format = 'html', escape = F) %>%
+  kable_styling("hover", bootstrap_options = "striped", full_width = F, position = 'left') 
+  # scroll_box(width = "800px", height = "500px")
+```
+<br>
+
+
+### Clean
+```{r tableone_outcomes_fol, message=F, echo=T, warning=F, tidy=F, cache=T}
+df <- readRDS("./working/counts_table.rds") %>% 
+  filter(!is.na(pctmiss_folate_tot)) %>% arrange(pctmiss_energytot)
+  # mutate(pct_miss = cell_spec(pctmiss, "html", color = ifelse(pct_miss >= 10, "red", "black")))
+
+kable(df, format = 'html', escape = F) %>%
+  kable_styling("hover", bootstrap_options = "striped", full_width = F, position = 'left') 
+  # scroll_box(width = "800px", height = "500px")
+```
+<br>
+
+## Distribution of covariates by folate_totqc2
+```{r tableone_folate_totqc2, message=F, echo=T, warning=F, tidy=F, cache=T}
+# Table 1
+numeric_vars <- c("age_ref", "fiber", "calcium_tot", "fruit", "vegetable", "redmeat", "procmeat", "bmi")
+epidat <- Epi %>% 
+  filter(drop == 0 & gxe == 1) %>% 
+  mutate_at(numeric_vars, as.numeric) %>% 
+  mutate(sex = factor(sex, labels = c('Female', 'Male')),
+         educ = ifelse(educ == "", NA, educ),
+         educ = fct_shift(factor(educ, labels = c("< 8th grade", "High School", "Some College", "College/Grad"))),
+         alcoholc = fct_shift(factor(alcoholc, labels = c("N/A", ">28g/d", "1-28g/d", "nondrinker")), 1),
+         smoke = fct_shift(factor(smoke, labels = c("N/A", "Former smoke", "Never smoker", "Smoker")),1),
+         famhx1 = fct_shift(factor(famhx1, labels = c("N/A", "No", "Yes")), 1),
+         asp_ref = fct_shift(factor(asp_ref, labels = c("N/A", "No", "Yes")), 1),
+         folate_totqc2 = factor(folate_totqc2, labels = c("N/A", "Q1", "Q2", "Q3", "Q4")))
+         #folate_totqc2 = factor(folate_totqc2, labels = c("Q1", "Q2", "Q3", "Q4")))
+
+label(epidat$age_ref) <- "Age"
+label(epidat$fiber) <- "Fiber Intake"
+label(epidat$calcium_tot) <- "Total Calcium Intake"
+label(epidat$fruit) <- "Fruit Intake"
+label(epidat$vegetable) <- "Vegetable Intake"
+label(epidat$redmeat) <- "Redmeat Intake"
+label(epidat$procmeat) <- "Processed Meat Intake"
+label(epidat$sex) <- "Sex"
+label(epidat$alcoholc) <- "Alcohol Intake"
+label(epidat$smoke) <- "Smoking"
+label(epidat$famhx1) <- "Family History of CRC"
+label(epidat$folate_totqc2) <- "Total Folate"
+label(epidat$educ) <- "Education"
+label(epidat$bmi) <- "BMI"
+label(epidat$asp_ref) <- "Regular Aspirin/NSAID use"
+
+# render 
+my.render.cont <- function(x) {
+  with(stats.apply.rounding(stats.default(x), digits=2), 
+       c("", "Mean (SD)"=sprintf("%s (&plusmn; %s)", MEAN, SD)))
+}
+my.render.cat <- function(x) {
+  c("", sapply(stats.default(x), 
+               function(y) with(y, sprintf("%d (%0.0f %%)", FREQ, PCT))))
+}
+table1(~ age_ref + sex + educ + alcoholc + smoke + bmi + famhx1 + asp_ref + calcium_tot + fruit + vegetable + redmeat + procmeat | folate_totqc2 , 
+       data=epidat,
+       render.continuous=my.render.cont, render.categorical=my.render.cat)
+```
+<br>
+
+## Distribution of folate variables by alcohol intake (categorical)
+```{r tableone_alcohol, message=F, echo=T, warning=F, tidy=F, cache=T}
+# Table 1
+numeric_vars <- c("folate_tot_400", "folate_diet_400", "folate_sup_400")
+epidat <- gxe_set %>%  
+  mutate_at(numeric_vars, as.numeric) %>% 
+  mutate(sex = factor(sex, labels = c('Female', 'Male')),
+         alcoholc = fct_shift(factor(alcoholc, labels = c("N/A", ">28g/d", "1-28g/d", "nondrinker")), 1),
+         smoke = fct_shift(factor(smoke, labels = c("N/A", "Former smoke", "Never smoker", "Smoker")),1),
+         famhx1 = fct_shift(factor(famhx1, labels = c("N/A", "No", "Yes")), 1),
+         #folate_totqc2 = factor(folate_totqc2, labels = c("N/A", "Q1", "Q2", "Q3", "Q4"))
+         folate_totqc2 = factor(folate_totqc2, labels = c("Q1", "Q2", "Q3", "Q4")),
+         folate_dietqc2 = factor(folate_dietqc2, labels = c("Q1", "Q2", "Q3", "Q4")))
+
+label(epidat$folate_tot_400) <- "Total Folate"
+label(epidat$folate_diet_400) <- "Dietary Folate"
+label(epidat$folate_sup_400) <- "Supplemental Folate"
+label(epidat$folate_totqc2) <- "Total Folate (Q4)"
+label(epidat$folate_dietqc2) <- "Dietary Folate (Q4)"
+label(epidat$alcoholc) <- "Alcohol Intake"
+
+
+# render 
+my.render.cont <- function(x) {
+  with(stats.apply.rounding(stats.default(x), digits=2), 
+       c("", "Mean (SD)"=sprintf("%s (&plusmn; %s)", MEAN, SD)))
+}
+my.render.cat <- function(x) {
+  c("", sapply(stats.default(x), 
+               function(y) with(y, sprintf("%d (%0.0f %%)", FREQ, PCT))))
+}
+table1(~ folate_tot_400 + folate_diet_400 + folate_sup_400 + folate_totqc2 + folate_dietqc2 | alcoholc , 
+       data=epidat,
+       render.continuous=my.render.cont, render.categorical=my.render.cat)
+```
+<br>
+
+# Meta Analyses
+
+## Folate - Study Design {.tabset}
+
+### folate_tot_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_tot_400_tidymeta.png)
+
+### folate_diet_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_diet_400_tidymeta.png)
+
+### folate_sup_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_sup_400_tidymeta.png)
+
+### folate_totqc2
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_totqc2_tidymeta.png)
+
+### folate_dietqc2
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_dietqc2_tidymeta.png)
+
+### folate_diet400qcm
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_diet400qcm_tidymeta.png)
+
+<!-- ## Folate(ND) - Study Design {.tabset} -->
+### folate_tot_400nd
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_tot_400nd_tidymeta.png)
+
+### folate_diet_400nd
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_diet_400nd_tidymeta.png)
+
+### folate_sup_400nd
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_sup_400nd_tidymeta.png)
+ 
+ 
+## Folate - Country {.tabset}
+
+### folate_tot_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_tot_400_country_tidymeta.png)
+
+### folate_diet_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_diet_400_country_tidymeta.png)
+
+### folate_sup_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_sup_400_country_tidymeta.png)
+
+### folate_totqc2
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_totqc2_country_tidymeta.png)
+
+### folate_dietqc2
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_dietqc2_country_tidymeta.png)
+
+### folate_diet400qcm
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_diet400qcm_country_tidymeta.png)
+
+
+## Folate - Fortification {.tabset}
+
+### folate_tot_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_tot_400_fortification_tidymeta.png)
+
+### folate_diet_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_diet_400_fortification_tidymeta.png)
+
+### folate_sup_400
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_sup_400_fortification_tidymeta.png)
+
+### folate_totqc2
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_totqc2_fortification_tidymeta.png)
+
+### folate_dietqc2
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_dietqc2_fortification_tidymeta.png)
+
+### folate_diet400qcm
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/figi_postharm_folate_diet400qcm_fortification_tidymeta.png)
+
+# Analysis Plan GxEScanR
+![](/home/rak/Dropbox/code/FIGI_PostHarmonization/Folate/working/chart.png)
+<br>
+
+https://github.com/USCbiostats/BinaryDosage  
+https://github.com/USCbiostats/GxEScanR
+
+```{r gxescan_ex, message=F, echo=T, warning=F, tidy=F, cache=T}
+results <- fread("~/figi_gxescan/height/results_height_N86286_20181106_chr22.out")
+
+kable(head(results, 10)) %>%
+kable_styling(bootstrap_options = "striped", full_width = F, position = 'left') %>% 
+  scroll_box(width = "800px", height = "500px")
+
+```
+
+
+
+
