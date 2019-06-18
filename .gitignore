@@ -10,6 +10,7 @@ Meetings/
 !/Code_hpcc/
 #!/Code_hpcc/*
 !/Postharmonization/
+!/Postharmonization/*
 !/Results/
 #!/Results/*
 !.gitignore

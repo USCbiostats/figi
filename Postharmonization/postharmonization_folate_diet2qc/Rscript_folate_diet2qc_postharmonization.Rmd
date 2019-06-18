@@ -1,5 +1,5 @@
 ---
-title: "FIGI NSAID aspirin postharmonization"
+title: "FIGI folate_diet_qc2 postharmonization"
 bibliography: /home/rak/Dropbox/library.bib
 output: 
   #pdf_document:
@@ -54,14 +54,15 @@ cov <- figi %>%
          age_ref_imp = as.numeric(age_ref_imp),
          sex = ifelse(sex == "Female", 0, 1),
          study_gxe = ifelse(study_gxe == "Colo2&3", "Colo23", study_gxe),
-         aspirin = ifelse(aspirin == "Yes", 1, ifelse(asp_ref == "No", 0, NA)))
+         energytot = as.numeric(energytot), 
+         folate_dietqc2 = as.numeric(folate_dietqc2)) # need to be careful = easiest when it's numerical
 
 ```
 
 
 # BoxPlots {.tabset}
-```{r, echo = F, message = F, cache = T, fig.height=16, fig.width=13}
-createBarPlot(cov, outcome, aspirin, c(NA, 0, 1), c("NA", "No", "Yes"), c("black", "cyan", "red"))
+```{r, echo = F, message = F, cache = T, fig.height=18, fig.width=13}
+createBarPlot(cov, outcome, folate_dietqc2, c(NA,4,3,2,1), c("NA", "4", "3", "2", "1"), c( "black", "red", "green", "cyan", "purple"))
 
 ```
 <br><br><br>
@@ -71,21 +72,21 @@ createBarPlot(cov, outcome, aspirin, c(NA, 0, 1), c("NA", "No", "Yes"), c("black
 
 ## Overall
 ```{r, echo = F, message = F, cache = F}
-varlist <- c("age_ref_imp", "sex", "education", "smoke", "bmi", "famhx1", "aspirin", "calcium_tot", "fruit", "vegetable", "redmeat", "procmeat")
-varlistCat <- c("sex", "education", "smoke", "famhx1", "aspirin")
-createTable1(cov, outcome, aspirin, varlist, varlistCat) 
+varlist <- c("age_ref_imp", "sex", "education", "smoke", "bmi", "famhx1", "calcium_tot", "fruit", "vegetable", "redmeat", "procmeat")
+varlistCat <- c("sex", "education", "smoke", "famhx1", "folate_dietqc2")
+createTable1(cov, outcome, folate_dietqc2, varlist, varlistCat) 
 ```
 <br><br><br>
 
 ## cancer_site_sum1 = 'colon'
 ```{r, echo = F, message = F, cache = F}
-createTable1(cov %>% filter(cancer_site_sum1 == "colon" | outcome == 0), outcome, aspirin, varlist, varlistCat)
+createTable1(cov %>% filter(cancer_site_sum1 == "colon" | outcome == 0), outcome, folate_dietqc2, varlist, varlistCat)
 ```
 <br><br><br>
 
 ## cancer_site_sum1 = 'rectal'
 ```{r, echo = F, message = F, cache = F}
-createTable1(cov %>% filter(cancer_site_sum1 == "rectal" | outcome == 0), outcome, aspirin, varlist, varlistCat)
+createTable1(cov %>% filter(cancer_site_sum1 == "rectal" | outcome == 0), outcome, folate_dietqc2, varlist, varlistCat)
 ```
 <br><br><br>
 
@@ -96,9 +97,11 @@ createTable1(cov %>% filter(cancer_site_sum1 == "rectal" | outcome == 0), outcom
 
 ## All tumor sites
 ```{r, echo = F, message = F, cache = T, fig.height=13, fig.width=13}
-x <- getCounts_byOutcome(cov, outcome, aspirin)
-y <- getGLM_byGroup(cov, outcome, aspirin, c("age_ref_imp", "sex"))
-run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outcome~aspirin+age_ref_imp+sex") 
+meta_covars <- c("age_ref_imp", "sex", "energytot")
+
+x <- getCounts_byOutcome(cov, outcome, folate_dietqc2)
+y <- getGLM_byGroup(cov, outcome, folate_dietqc2, meta_covars)
+run_meta_analysis_create_forestplot(x, y, paste0("Dietary folate intake (Q4) \nModel: outcome~folate_dietqc2+", paste(meta_covars, collapse = "+")))
 ```
 <br><br><br>
 
@@ -106,9 +109,9 @@ run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outco
 ```{r, echo = F, message = F, cache = T, fig.height=13, fig.width=13}
 tmp <- cov %>% filter(cancer_site_sum1 == "colon" | outcome == 0)
 
-x <- getCounts_byOutcome(tmp, outcome, aspirin)
-y <- getGLM_byGroup(tmp, outcome, aspirin, c("age_ref_imp", "sex"))
-run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outcome~aspirin+age_ref_imp+sex")
+x <- getCounts_byOutcome(tmp, outcome, folate_dietqc2)
+y <- getGLM_byGroup(tmp, outcome, folate_dietqc2, meta_covars)
+run_meta_analysis_create_forestplot(x, y, paste0("Dietary folate intake (Q4) \nModel: outcome~folate_dietqc2+", paste(meta_covars, collapse = "+")))
 ```
 <br><br><br>
 
@@ -116,8 +119,8 @@ run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outco
 ```{r, echo = F, message = F, cache = T, fig.height=13, fig.width=13}
 tmp <- cov %>% filter(cancer_site_sum1 == "rectal" | outcome == 0)
 
-x <- getCounts_byOutcome(tmp, outcome, aspirin)
-y <- getGLM_byGroup(tmp, outcome, aspirin, c("age_ref_imp", "sex"))
-run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outcome~aspirin+age_ref_imp+sex")
+x <- getCounts_byOutcome(tmp, outcome, folate_dietqc2)
+y <- getGLM_byGroup(tmp, outcome, folate_dietqc2, meta_covars)
+run_meta_analysis_create_forestplot(x, y, paste0("Dietary folate intake (Q4) \nModel: outcome~folate_dietqc2+", paste(meta_covars, collapse = "+")))
 ```
 <br><br><br>

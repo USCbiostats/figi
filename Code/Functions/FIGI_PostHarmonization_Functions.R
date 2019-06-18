@@ -12,9 +12,9 @@ createBarPlot <- function(data, outcome, exposure, flevels, flabels, fcolors) {
   exposure_quo <- enquo(exposure)
   
   data <- data %>%
-    dplyr::mutate(!! exposure_quo := factor(!! exposure_quo, exclude = NULL, levels = flevels, labels = flabels)) %>% 
-    dplyr::select(!! outcome_quo, study_gxe, !! exposure_quo) %>%
-    group_by(study_gxe)
+    dplyr::mutate(!! exposure_quo := factor(!! exposure_quo, exclude = NULL, levels = flevels, labels = flabels)) # %>%
+    # dplyr::select(!! outcome_quo, study_gxe, !! exposure_quo) %>%
+    # group_by(study_gxe)
 
   ggplot(data=data, aes(x=outcome)) +
     geom_bar(aes(fill = !! exposure_quo), position = 'fill') +
@@ -25,10 +25,6 @@ createBarPlot <- function(data, outcome, exposure, flevels, flabels, fcolors) {
     scale_fill_manual(values = fcolors) +
     facet_wrap(vars(study_gxe), ncol = 5)
 }
-
-# x <- createBarPlot(cov, outcome, aspirin, c(NA, 0, 1), c("NA", "No", "Yes"), c( "black", "cyan", "red"))
-
-
 
 
 # ------ Create Tables (Table 1) ------
