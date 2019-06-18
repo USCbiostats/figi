@@ -47,7 +47,8 @@ createTable1 <- function(data, outcome, exposure, covariates, covarCat) {
   # make sure categorical variables are FACTORS
   data <- data %>%
     dplyr::filter(!is.na(!! exposure_quo)) %>%
-    dplyr::mutate(table1_outcome = factor(!! outcome_quo, levels = c(0,1,2), labels=c("Control", "Treatment", "P-value"))) %>%
+    dplyr::mutate(table1_outcome = factor(!! outcome_quo, levels = c(0,1,2), labels=c("Control", "Case", "P-value"))) %>%
+    dplyr::mutate_at(., setdiff(covariates, covarCat), as.numeric) %>% 
     dplyr::mutate_at(., covarCat, as.factor)
 
   my.render.cont <- function(x) {

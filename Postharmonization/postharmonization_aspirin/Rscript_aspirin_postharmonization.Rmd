@@ -56,19 +56,6 @@ cov <- figi %>%
          study_gxe = ifelse(study_gxe == "Colo2&3", "Colo23", study_gxe),
          aspirin = ifelse(aspirin == "Yes", 1, ifelse(asp_ref == "No", 0, NA)))
 
-# filter is.na(aspirin), but not other variables
-# catVars <- c("outcome", "aspirin", "sex", "study_gxe")
-# df <- cov %>% 
-#   filter(!is.na(aspirin)) %>% 
-#   mutate(outcome_table1 = factor(outcome, levels = c(0,1,2), labels=c("Control", "Treatment", "P-value"))) %>% 
-#   mutate_at(., catVars, as.factor)
-# 
-# drops <- data.frame(table(df$study_gxe, df$outcome)) %>% 
-#   filter(Freq == 0)
-# exclude_studies <- as.vector(unique(drops$Var1))
-# 
-# df <- filter(df, !(study_gxe %in% exclude_studies))
-
 ```
 
 
@@ -83,20 +70,22 @@ createBarPlot(cov, outcome, aspirin, c(NA, 0, 1), c("NA", "No", "Yes"), c( "blac
 # Tables {.tabset}
 
 ## Overall
-```{r, echo = F, message = F, cache = T}
-createTable1(cov, outcome, aspirin, c("sex", "age_ref_imp"), c("sex"))
+```{r, echo = F, message = F, cache = F}
+varlist <- c("age_ref_imp", "sex", "education", "smoke", "bmi", "famhx1", "aspirin", "calcium_tot", "fruit", "vegetable", "redmeat", "procmeat")
+varlistCat <- c("sex", "education", "smoke", "famhx1", "aspirin")
+createTable1(cov, outcome, aspirin, varlist, varlistCat) 
 ```
 <br><br><br>
 
 ## cancer_site_sum1 = 'colon'
-```{r, echo = F, message = F, cache = T}
-createTable1(cov %>% filter(cancer_site_sum1 == "colon" | outcome == 0), outcome, aspirin, c("sex", "age_ref_imp"), c("sex"))
+```{r, echo = F, message = F, cache = F}
+createTable1(cov %>% filter(cancer_site_sum1 == "colon" | outcome == 0), outcome, aspirin, varlist, varlistCat)
 ```
 <br><br><br>
 
 ## cancer_site_sum1 = 'rectal'
-```{r, echo = F, message = F, cache = T}
-createTable1(cov %>% filter(cancer_site_sum1 == "rectal" | outcome == 0), outcome, aspirin, c("sex", "age_ref_imp"), c("sex"))
+```{r, echo = F, message = F, cache = F}
+createTable1(cov %>% filter(cancer_site_sum1 == "rectal" | outcome == 0), outcome, aspirin, varlist, varlistCat)
 ```
 <br><br><br>
 
