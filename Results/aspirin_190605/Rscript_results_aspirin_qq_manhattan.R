@@ -34,7 +34,7 @@ gxe <- gxe_all %>%
   filter(ID %in% rsq_filter$ID)
 
 
-# output results for LD clumping
+# output chiSqGxE results for LD clumping
 calculate_pval <- function(data, statistic, df) {
   data$P <- pchisq(data[,statistic], df = df, lower.tail = F)
   data
@@ -48,6 +48,28 @@ for(chr in 1:22) {
 
 }
 
+
+
+# LD Clump Results
+gxe_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/NSAIDS/aspirin_190528/aspirin_chiSqGxE_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
+
+gxe_ld <- gxe %>% 
+  filter(ID %in% gxe_ldclumped$SNP)
+
+
+# ----- testing ------ #
+# output results for LD clumping chiSqG (to compare manhattan plots)
+for(chr in 1:22) {
+  out <- calculate_pval(gxe, 'chiSqG', df = 1) %>%
+    filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
+    dplyr::select(SNP, P)
+  write.table(out, file = paste0("/media/work/tmp/Plink_aspirin_ldclump_chiSqG_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
+}
+
+gxe_chiSqG_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/NSAIDS/aspirin_190528/aspirin_chiSqG_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
+
+gxe_ld <- gxe %>% 
+  filter(ID %in% gxe_chiSqG_ldclumped$SNP)
 
 
 
@@ -69,6 +91,11 @@ create_qqplot(gxe, 'chiSqG', df = 1)
 # Manhattan Plot
 create_manhattanplot(gxe, 'chiSqG', df = 1)
 
+# Manhattan Plot
+create_manhattanplot(gxe_ld, 'chiSqG', df = 1)
+
+
+
 #-----------------------------------------------------------------------------#
 # GxE results ----
 #-----------------------------------------------------------------------------#
@@ -80,6 +107,13 @@ create_manhattanplot(gxe, 'chiSqGxE', df = 1)
 # single hit on chr6, almost significant actual peak looking on chr1
 tmp <- gxe %>% 
   filter(chiSqGxE > 20)
+
+# ------ Clumped results ------ #
+x <- gxe %>% 
+  filter(ID %in% gxe_ldclumped$SNP)
+
+create_manhattanplot(x, 'chiSqGxE', df = 1)
+
 
 #-----------------------------------------------------------------------------#
 # 2DF results ----
@@ -129,10 +163,7 @@ create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 15, sta
 
 
 # test plotting only ld clumped results
-x <- gxe %>% 
-  filter(ID %in% gxe_ldclumped$SNP)
-
-tmp <- format_2step_data(data = x, 'chiSqG', 5, 0.05)
+tmp <- format_2step_data(data = gxe_ld, 'chiSqG', 5, 0.05)
 create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqG')
 
 #-----------------------------------------------------------------------------#
@@ -145,10 +176,7 @@ create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 15, sta
 
 
 # test plotting only ld clumped results
-x <- gxe %>% 
-  filter(ID %in% gxe_ldclumped$SNP)
-
-tmp <- format_2step_data(data = x, 'chiSqGE', 5, 0.05)
+tmp <- format_2step_data(data = gxe_ld, 'chiSqGE', 5, 0.05)
 create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqGE')
 
 
@@ -162,10 +190,7 @@ create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 15, sta
 
 
 # test plotting only ld clumped results
-x <- gxe %>% 
-  filter(ID %in% gxe_ldclumped$SNP)
-
-tmp <- format_2step_data(data = x, 'chiSqEDGE', 5, 0.05)
+tmp <- format_2step_data(data = gxe_ld, 'chiSqEDGE', 5, 0.05)
 create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqEDGE')
 
 

@@ -1,18 +1,5 @@
 # Blacklist everything
-*
-!*/ # white list recursively, re-exclude Documentation and Meetings:
-Documentation/
-Meetings/
-
-# Whitelist directories
-!/Code/
-!/Code/*
-!/Code_hpcc/
-#!/Code_hpcc/*
-!/Postharmonization/
-!/Postharmonization/*
-!/Results/
-#!/Results/*
+*.*
 !.gitignore
 
 # files
@@ -23,4 +10,8 @@ Meetings/
 !*.md
 !*.sh
 !*.css
-.Rproj.user
+
+# black list some folders again
+/Meetings
+/Documentation
+**/*_cache

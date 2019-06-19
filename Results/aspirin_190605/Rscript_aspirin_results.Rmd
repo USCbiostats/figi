@@ -1,5 +1,5 @@
 ---
-title: "FIGI NSAID aspirin postharmonization"
+title: "FIGI Analysis - aspirin"
 bibliography: /home/rak/Dropbox/library.bib
 output: 
   #pdf_document:
@@ -13,6 +13,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 
 <style type="text/css">
 .main-container {
@@ -121,3 +122,5 @@ y <- getGLM_byGroup(tmp, outcome, aspirin, c("age_ref_imp", "sex"))
 run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outcome~aspirin+age_ref_imp+sex")
 ```
 <br><br><br>
+
+
