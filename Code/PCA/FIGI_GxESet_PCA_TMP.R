@@ -1,5 +1,7 @@
 #=============================================
 # Create PC plots
+#
+# Misc plots including by country etc. 
 #=============================================
 library(dplyr)
 library(data.table)
@@ -103,8 +105,8 @@ df <- full_join(df_tmp, kgp_samples, by = "vcfid") %>%
 ggplot(data = df, aes(PC1, PC2, color = Country)) +
   geom_point(alpha = 0.5) +
   labs(x = "PC1",
-       y = "PC4",
-       title = "PC1 vs PC4") + 
+       y = "PC2",
+       title = "PC1 vs PC2") + 
   theme_classic() +
   theme(legend.key.size = unit(0.15, 'inches')) + scale_x_reverse()
 ggsave("figures/tmp_pca_pc1_p2_country.png", width = 6, height = 4)
@@ -114,8 +116,8 @@ ggsave("figures/tmp_pca_pc1_p2_country.png", width = 6, height = 4)
 ggplot(data = df, aes(PC1, PC3, color = Country)) +
   geom_point(alpha = 0.5) +
   labs(x = "PC1",
-       y = "PC4",
-       title = "PC1 vs PC4") + 
+       y = "PC3",
+       title = "PC1 vs PC3") + 
   theme_classic() +
   theme(legend.key.size = unit(0.15, 'inches')) + scale_x_reverse()
 ggsave("figures/tmp_pca_pc1_p3_country.png", width = 6, height = 4)

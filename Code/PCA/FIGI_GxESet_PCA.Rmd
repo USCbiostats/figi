@@ -2,9 +2,9 @@
 title: "FIGI GxE Principal Component Analysis"
 bibliography: /home/rak/Dropbox/library.bib
 output: 
-  html_document
-  #word_document:
-   #reference_docx: word_styles.docx
+  #html_document
+  word_document:
+   reference_docx: word_styles.docx
 ---
 
 
@@ -180,9 +180,9 @@ plot_grid(x[[1]], cols = 2)
 
 ### PC4 by Country (excluding USA)
 ```{r, echo = F, fig.show='hold', out.width = "50%", fig.align = "default"}
-ggdraw() + draw_image("/home/rak/Dropbox/FIGI/Results/asp_ref_190518/figures/tmp_pca_pc1_p2_country.png")
-ggdraw() + draw_image("/home/rak/Dropbox/FIGI/Results/asp_ref_190518/figures/tmp_pca_pc1_p3_country.png")
-ggdraw() + draw_image("/home/rak/Dropbox/FIGI/Results/asp_ref_190518/figures/tmp_pca_pc1_p4_country.png")
+ggdraw() + draw_image("figures/tmp_pca_pc1_p2_country.png")
+ggdraw() + draw_image("figures/tmp_pca_pc1_p3_country.png")
+ggdraw() + draw_image("figures/tmp_pca_pc1_p4_country.png")
 ```
 
 ## PC Adjustment Selection

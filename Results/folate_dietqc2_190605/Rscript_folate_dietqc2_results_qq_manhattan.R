@@ -1,8 +1,7 @@
 #=============================================================================#
-# NSAIDS - aspirin Results
-# 06/01/2019
+# Folate - folate_dietqc2 Results
+# 05/18/2019
 # 
-# Filter by Weighted Average Rsq (until another solution is devised)
 # Generate Plots
 # Implement 2-step methods
 #=============================================================================#
@@ -11,11 +10,8 @@ library(data.table)
 library(qqman)
 library(EasyStrata)
 rm(list = ls())
-source("~/Dropbox/FIGI/Code/Functions/GxEScan_PostHoc_Analyses.R")
-
 
 # annotations
-# (right now, I only use this df to ensure that these markers stay in plot after filtering by P < 0.05)
 fh_annotations <- fread("~/data/Annotations/crc_gwas_125k_indep_signals_95_EasyStrata_LDBased.tsv") %>% 
   mutate(SNP = paste(Chr, Pos, sep = ":"))
 
@@ -23,8 +19,9 @@ fh_annotations <- fread("~/data/Annotations/crc_gwas_125k_indep_signals_95_EasyS
 rsq_filter <- readRDS("~/data/HRC_InfoFile_Merged/HRC_WtAvgRsq_HRCRefPanelMAFs.rds") %>% 
   filter(Rsq_avg > 0.8)
 
-# results
-gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/NSAIDS/aspirin_190528/", full.names = T, pattern = "results_GxE_aspirin_sex_age_pc3_studygxe_66485_binCovT_chr"), fread, stringsAsFactors = F)) %>% 
+# read in results
+# calculate chiSqEDGE and chiSq3df statistics
+gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/folate/folate_dietqc2/", full.names = T, pattern = "results_GxE_folate_dietqc2_sex_age_pc3_energytot_studygxe_52447_binCovF_chr"), fread, stringsAsFactors = F)) %>% 
   mutate(ID = paste(SNP, Reference, Alternate, sep = ":"),
          chiSqEDGE = chiSqG + chiSqGE,
          chiSq3df = chiSqG + chiSqGxE + chiSqGE) %>% 
@@ -33,54 +30,33 @@ gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/NSAIDS/aspiri
 gxe <- gxe_all %>% 
   filter(ID %in% rsq_filter$ID)
 
-
-# output chiSqGxE results for LD clumping
-calculate_pval <- function(data, statistic, df) {
-  data$P <- pchisq(data[,statistic], df = df, lower.tail = F)
-  data
-}
-
-for(chr in 1:22) {
-  out <- calculate_pval(gxe, 'chiSqGxE', df = 1) %>%
-    filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
-    dplyr::select(SNP, P)
-  write.table(out, file = paste0("/media/work/tmp/Plink_aspirin_ldclump_chiSqGxE_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
-
-}
-
+# output results for LD clumping
+# calculate_pval <- function(data, statistic, df) {
+#   data$P <- pchisq(data[,statistic], df = df, lower.tail = F)
+#   data
+# }
+# 
+# for(chr in 1:22) {
+#   out <- calculate_pval(gxe, 'chiSqGxE', df = 1) %>% 
+#     filter(Chromosome == chr) %>% mutate(SNP = ID) %>% 
+#     dplyr::select(SNP, P)
+#   write.table(out, file = paste0("/media/work/tmp/Plink_clump_chiSqGxE_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
+#   
+# }
 
 
 # LD Clump Results
-gxe_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/NSAIDS/aspirin_190528/aspirin_chiSqGxE_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
+plink_ld <- do.call(rbind, lapply(list.files("~/data/Results/folate/folate_dietqc2/folate_dietqc2_chiSqGxE_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
 
 gxe_ld <- gxe %>% 
-  filter(ID %in% gxe_ldclumped$SNP)
+  filter(ID %in% plink_ld$SNP)
 
-
-# ----- testing ------ #
-# output results for LD clumping chiSqG (to compare manhattan plots)
-for(chr in 1:22) {
-  out <- calculate_pval(gxe, 'chiSqG', df = 1) %>%
-    filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
-    dplyr::select(SNP, P)
-  write.table(out, file = paste0("/media/work/tmp/Plink_aspirin_ldclump_chiSqG_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
-}
-
-gxe_chiSqG_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/NSAIDS/aspirin_190528/aspirin_chiSqG_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
-
-gxe_ld <- gxe %>% 
-  filter(ID %in% gxe_chiSqG_ldclumped$SNP)
-
-
-
-#-------------------------------------#
-# convenience (labels, titles etc)
-# VERY IMPORTANT TO DEFINE THESE !!!
-# (CLEAN ENVIRONMENT BEFORE RUNNING!)
-#-------------------------------------#
+# convenience global variables (plot labels, titles, filenames, etc)
 global_N <- unique(gxe$Subjects)
-global_covs <- c("age_ref_imp", "sex", "study_gxe", "PC1-3")
-global_E <- "aspirin"
+global_covs <- c("age_ref_imp", "sex", "study_gxe", "PC1-3", "energytot")
+global_E <- "folate_dietqc2"
+source("~/Dropbox/FIGI/Code/Functions/GxEScan_PostHoc_Analyses.R")
+
 
 
 #-----------------------------------------------------------------------------#
@@ -90,11 +66,6 @@ global_E <- "aspirin"
 create_qqplot(gxe, 'chiSqG', df = 1)
 # Manhattan Plot
 create_manhattanplot(gxe, 'chiSqG', df = 1)
-
-# Manhattan Plot
-create_manhattanplot(gxe_ld, 'chiSqG', df = 1)
-
-
 
 #-----------------------------------------------------------------------------#
 # GxE results ----
@@ -107,13 +78,6 @@ create_manhattanplot(gxe, 'chiSqGxE', df = 1)
 # single hit on chr6, almost significant actual peak looking on chr1
 tmp <- gxe %>% 
   filter(chiSqGxE > 20)
-
-# ------ Clumped results ------ #
-x <- gxe %>% 
-  filter(ID %in% gxe_ldclumped$SNP)
-
-create_manhattanplot(x, 'chiSqGxE', df = 1)
-
 
 #-----------------------------------------------------------------------------#
 # 2DF results ----
@@ -158,40 +122,33 @@ create_manhattanplot(gxe, 'chiSqCase', df = 1)
 #-----------------------------------------------------------------------------#
 # D|G 2-step Kooperberg ----
 #-----------------------------------------------------------------------------#
-tmp <- format_2step_data(data = gxe, 'chiSqG', 5, 0.05)
-create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 15, statistic = 'chiSqG')
+gxe_normal <- format_2step_data(data = gxe, 'chiSqG', 5, 0.05)
+create_2step_weighted_plot(gxe_normal, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqG')
 
-
-# test plotting only ld clumped results
-tmp <- format_2step_data(data = gxe_ld, 'chiSqG', 5, 0.05)
-create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqG')
+# ld clumped results
+gxe_twostep_ld <- format_2step_data(data = gxe_ld, 'chiSqG', 5, 0.05)
+create_2step_weighted_plot(gxe_twostep_ld, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqG')
 
 #-----------------------------------------------------------------------------#
 # G|E 2-step Murcray ----
 #-----------------------------------------------------------------------------#
-tmp <- format_2step_data(data = gxe, 'chiSqGE', 5, 0.05)
-create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 15, statistic = 'chiSqGE')
+gxe_normal <- format_2step_data(data = gxe, 'chiSqGE', 5, 0.05)
+create_2step_weighted_plot(gxe_normal, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqGE')
 
-
-
-
-# test plotting only ld clumped results
-tmp <- format_2step_data(data = gxe_ld, 'chiSqGE', 5, 0.05)
-create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqGE')
-
-
+# ld clumped results
+gxe_twostep_ld <- format_2step_data(data = gxe_ld, 'chiSqGE', 5, 0.05)
+create_2step_weighted_plot(gxe_twostep_ld, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqGE')
 
 
 #-----------------------------------------------------------------------------#
 # EDGE 2-step Gauderman ----
 #-----------------------------------------------------------------------------#
-tmp <- format_2step_data(data = gxe, 'chiSqEDGE', 5, 0.05)
-create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 15, statistic = 'chiSqEDGE')
+gxe_normal <- format_2step_data(data = gxe, 'chiSqEDGE', 5, 0.05)
+create_2step_weighted_plot(gxe_normal, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqEDGE')
 
-
-# test plotting only ld clumped results
-tmp <- format_2step_data(data = gxe_ld, 'chiSqEDGE', 5, 0.05)
-create_2step_weighted_plot(tmp, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqEDGE')
+# ld clumped results
+gxe_twostep_ld <- format_2step_data(data = gxe_ld, 'chiSqEDGE', 5, 0.05)
+create_2step_weighted_plot(gxe_twostep_ld, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqEDGE')
 
 
 #-----------------------------------------------------------------------------#
@@ -246,9 +203,11 @@ fam <- fread("~/final.tfam") %>%
 # simply removed them all. 
 # code got lost because of rstudio crash, but easily write again. 
 
-  # results
-  
-  wtfff <- fread("~/wtfff.results")
 
+
++-
+# results
+
+wtfff <- fread("~/wtfff.results")
 
 

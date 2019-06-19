@@ -74,15 +74,19 @@ calculate_pval_miami <- function(data, statistic1, statistic2, df1, df2) {
 
 # dumb little helper functions for plot titles and file names
 # NOTE SAVE LOCATION
-write_plot_filename <- function(statistic) {
-  return(paste0("figures/QQ_Plot_", statistic, "_", global_E, "_", paste0(global_covs, collapse = "_"), "_N_", global_N, ".png"))
+# all arguments should be quote (Std evaluation...)
+write_plot_filename <- function(data, statistic) {
+  return(paste0("figures/QQ_Plot_", data, "_", statistic, "_", global_E, "_", paste0(global_covs, collapse = "_"), "_N_", global_N, ".png"))
 }
-write_easystrata_filename <- function(statistic) {
-  return(paste0(paste("/media/work/tmp/EasyStrata", statistic, global_E, paste0(global_covs, collapse = "_"), "N", global_N, sep = "_"), ".txt"))
+
+write_easystrata_filename <- function(data, statistic) {
+  return(paste0(paste("/media/work/tmp/EasyStrata", data, statistic, global_E, paste0(global_covs, collapse = "_"), "N", global_N, sep = "_"), ".txt"))
 }
-write_easystrata_filename_ecf <- function(statistic) {
-  return(paste0(paste("files/EasyStrata", statistic, global_E, paste0(global_covs, collapse = "_"), "N", global_N, sep = "_"), ".ecf"))
+
+write_easystrata_filename_ecf <- function(data, statistic) {
+  return(paste0(paste("files/EasyStrata", data, statistic, global_E, paste0(global_covs, collapse = "_"), "N", global_N, sep = "_"), ".ecf"))
 }
+
 write_plot_title <- function(statistic) {
   gxescan_tests <- c(paste0("G Main Effects Results (N = ", global_N, ")\noutc ~ G+", paste0(global_covs, collapse = "+"),"+", global_E), 
                      paste0("GxE Results (N = ", global_N, ")\noutc ~ G*", global_E, "+", paste0(global_covs, collapse = "+")),
@@ -95,13 +99,16 @@ write_plot_title <- function(statistic) {
   return(gxescan_tests[statistic])
 }
 
-# write_plot_filename("chiSqGxE")
+write_plot_filename("gxe", "chiSqGxE")
+write_easystrata_filename("gxe", "chiSqGxE")
+write_easystrata_filename_ecf("gxe", "chiSqGxE")
 # write_plot_title("chiSqG")
 # write_plot_title("chiSqGxE")
 # write_plot_title("chiSq2df")
 # write_plot_title("chiSqGE")
 # write_plot_title("chiSqCase")
 # write_plot_title("chiSqControl")
+
 
 # qq plot function
 create_qqplot <- function(data, statistic, df) {
@@ -113,20 +120,20 @@ create_qqplot <- function(data, statistic, df) {
   
   # calculate p value
   # calculate lambda
-  data <- calculate_pval(data, statistic, df)
-  lambda <- round( (median(qchisq(1-data[,'P'], df)) / qchisq(0.5, df)), 4)
+  tmpdata <- calculate_pval(data, statistic, df)
+  lambda <- round( (median(qchisq(1-tmpdata[,'P'], df)) / qchisq(0.5, df)), 4)
   
   # calculate lambda1000
-  cases <- unique(data[, 'Cases'])
-  controls <- unique(data[, 'Subjects']) - unique(data[, 'Cases'])
+  cases <- unique(tmpdata[, 'Cases'])
+  controls <- unique(tmpdata[, 'Subjects']) - unique(tmpdata[, 'Cases'])
   total <- cases + controls
   cases1000 <- (cases/total) * 1000
   controls1000 <- (controls/total) * 1000
   lambda1000 <- 1 + (lambda - 1) * ( (1/cases + 1/controls) / (1/(2*cases1000) + 1/(2*controls1000))) 
   
   # plotting function
-  png(write_plot_filename(statistic), height = 720, width = 1280)
-  qqman::qq(data[, 'P'], 
+  png(write_plot_filename(deparse(substitute(data)), statistic), height = 720, width = 1280)
+  qqman::qq(tmpdata[, 'P'], 
             xlab = "Expected -log10(p)", 
             ylab = "Observed -log10(p)",
             main = write_plot_title(statistic),
@@ -152,23 +159,23 @@ create_manhattanplot <- function(data, statistic, df) {
   
   # format data for easystrata (just be consistent)
   # remember 'calculate_pval' creates variable 'P'
-  data <- calculate_pval(data, statistic, df)
+  tmpdata <- calculate_pval(data, statistic, df)
 
   # need to write results to table. using same location for now (temporary directory in /media/work)
-  data_easystrata <- data %>%
+  data_easystrata <- tmpdata %>%
     mutate(annot = ifelse(SNP %in% fh_annotations$SNP, 1, 0)) %>%
     filter(!(P > 0.05 & annot == 0)) %>%
     dplyr::rename(CHR = Chromosome,
                   BP = Location) %>%
     dplyr::select(ID, CHR, BP, P)
-  write.table(data_easystrata, file = write_easystrata_filename(statistic), quote = F, row.names = F, sep = '\t')
+  write.table(data_easystrata, file = write_easystrata_filename(deparse(substitute(data)), statistic), quote = F, row.names = F, sep = '\t')
 
   # create ecf file
   ecf1 <- paste0(getwd(), "/figures")
   ecf2 <- "ID;CHR;BP;P"
   ecf3 <- "character;numeric;numeric;numeric"
-  ecf4 <- write_easystrata_filename(statistic)
-  ecf_file_name <- write_easystrata_filename_ecf(statistic)
+  ecf4 <- write_easystrata_filename(deparse(substitute(data)), statistic)
+  ecf_file_name <- write_easystrata_filename_ecf(deparse(substitute(data)), statistic)
   source("/home/rak/Dropbox/FIGI/Code/Functions/Rscript_create_ecf.R", local = T) # edit script as necessary
 
   # run EasyStrata
@@ -184,23 +191,23 @@ create_miamiplot <- function(data, statistic1, statistic2, df1, df2) {
 
   # format data for easystrata (just be consistent)
   # remember 'calculate_pval' creates variable 'P'
-  data <- calculate_pval_miami(data, statistic1, statistic2, df1, df2)
+  tmpdata <- calculate_pval_miami(data, statistic1, statistic2, df1, df2)
   
   # need to write results to table. using same location for now (temporary directory in /media/work)
-  data_easystrata <- data %>% 
+  data_easystrata <- tmpdata %>% 
     mutate(annot = ifelse(SNP %in% fh_annotations$SNP, 1, 0)) %>% 
     filter(!((P1 > 0.05 | P2 > 0.05) & annot == 0)) %>% 
     dplyr::rename(CHR = Chromosome, 
                   BP = Location) %>% 
     dplyr::select(ID, CHR, BP, P1, P2)
-  write.table(data_easystrata, file = write_easystrata_filename(paste("MIAMI", statistic1, statistic2, sep = "_")), quote = F, row.names = F, sep = '\t')
+  write.table(data_easystrata, file = write_easystrata_filename(deparse(substitute(data)), paste("MIAMI", statistic1, statistic2, sep = "_")), quote = F, row.names = F, sep = '\t')
   
   # create ecf file
   ecf1 <- paste0(getwd(), "/figures")
   ecf2 <- "ID;CHR;BP;P1;P2"
   ecf3 <- "character;numeric;numeric;numeric;numeric"
-  ecf4 <- write_easystrata_filename(paste("MIAMI", statistic1, statistic2, sep = "_"))
-  ecf_file_name <- write_easystrata_filename_ecf(paste("MIAMI", statistic1, statistic2, sep = "_"))
+  ecf4 <- write_easystrata_filename(deparse(substitute(data)), paste("MIAMI", statistic1, statistic2, sep = "_"))
+  ecf_file_name <- write_easystrata_filename_ecf(deparse(substitute(data)), paste("MIAMI", statistic1, statistic2, sep = "_"))
   source("/home/rak/Dropbox/FIGI/Code/Functions/Rscript_create_ecf_miami.R", local = T) # edit script as necessary
   
   # run EasyStrata
@@ -282,8 +289,8 @@ write_weighted_test_plot_title <- function(statistic) {
   return(gxescan_tests[statistic])
 }
 
-write_weighted_plot_filename <- function(statistic) {
-  return(paste0("figures/TwoStep_WeightedHypothesis_", statistic, "_", global_E, "_", paste0(global_covs, collapse = "_"), "_N_", global_N, ".png"))
+write_weighted_plot_filename <- function(data, statistic) {
+  return(paste0("figures/TwoStep_WeightedHypothesis_", data, "_", statistic, "_", global_E, "_", paste0(global_covs, collapse = "_"), "_N_", global_N, ".png"))
 }
 
 
@@ -333,7 +340,7 @@ create_2step_weighted_plot <- function(data, sizeBin0, alpha, binsToPlot, statis
   # CREATE PLOT
   head(glist[[1]]) # for reference
   
-  png(write_weighted_plot_filename(statistic), width = 1280, height = 720)
+  png(write_weighted_plot_filename(deparse(substitute(data)), statistic), width = 1280, height = 720)
   color <- rep(c("blue","olivedrab4"),100)
   plot(glist[[1]][,x], glist[[1]][,y], 
        col = "blue", 
