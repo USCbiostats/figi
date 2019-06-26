@@ -273,3 +273,130 @@ run_meta_analysis_create_forestplot <- function(counts_df, results_df, title) {
 # 
 # covars <- c("age_ref_imp", "sex", "smoke")
 # getMeta(df, 'asp_ref', covars = covars)
+
+
+
+
+
+#-----------------------------------------------------------------------------#
+# Extract dosages from BinaryDosage files ------
+#-----------------------------------------------------------------------------#
+
+# write simple wrapper that takes SNP IDs vector as input, spits out index location
+# do it by chromosome to avoid reading in RDS files over and over
+
+write_binarydosage_vcfid_filename <- function() {
+  return(paste0("files/GetSNPValues_", global_E, "_", paste0(global_covs, collapse = "_"), "_N_", global_N, "_vcfid"))
+}
+
+write_binarydosage_index_filename <- function(chr) {
+  return(paste0("files/GetSNPValues_", global_E, "_", paste0(global_covs, collapse = "_"), "_N_", global_N, "_chr", chr))
+}
+
+
+get_binarydosage_index <- function(snplist, chr) {
+  tmp_chr <- readRDS(paste0("/home/rak/data/BinaryDosage_InfoFile/FIGI_chr", chr, ".rds"))$SNPs %>% 
+    dplyr::mutate(ID = paste(Chromosome, Location, Reference, Alternate, sep = ":"))
+  out <- as.integer(which(tmp_chr$ID %in% snplist))
+  saveRDS(out, file = paste0(write_binarydosage_index_filename(chr), ".rds"), version = 2)
+}
+
+
+
+#-----------------------------------------------------------------------------#
+# Plot allele frequencies for top hits ------
+#-----------------------------------------------------------------------------#
+
+# you should do it by study_gxe, so need to merge covariate file with G dosages
+# generalize later, let's get it working first
+
+# covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")
+# dosages <- data.frame(readRDS("files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>% 
+#   rownames_to_column(var = 'vcfid')
+# posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid')
+# 
+# posthoc_df_maf <- posthoc_df %>% 
+#   group_by(study_gxe) %>% 
+#   summarise_at(vars(X5.40252294, X5.40273441), function(x) 0.5 - abs( (sum(x) / (2*nrow(.))) - 0.5))
+# 
+# ggplot(posthoc_df_maf) +
+#   geom_point(aes(y = study_gxe, x = X5.40252294))
+# 
+# 
+# ggplot(posthoc_df_maf) +
+#   geom_point(aes(y = study_gxe, x = X5.40252294)) + 
+#   theme_bw() + 
+#   xlim(0,0.5)
+#   # theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# 
+# aaf_X5.40252294 <- sum(posthoc_df$X5.40252294) / (2*nrow(posthoc_df))
+# 
+# 
+# reate_plotMAF_study_gxe <- function()
+
+
+
+
+
+#-----------------------------------------------------------------------------#
+# Meta analysis of GxE ------
+#-----------------------------------------------------------------------------#
+# run GLM by study_gxe
+# just use string formula_txt as input
+# make sure only variables that you need indicators for are FACTORS (otherwise just continuous)
+getGLM_byGroup_gxe <- function(data, outcome, exposure, genos, covars) {
+  
+  # data prep
+  tmp <- create_data_4_meta(data, !! enquo(outcome), !! enquo(exposure)) %>% 
+    group_by(study_gxe)
+
+  results_beta <- do(tmp, tidy(glm(as.formula(paste0(quo_name(enquo(outcome)), " ~ ", quo_name(enquo(exposure)), "*", quo_name(enquo(genos)), "+", paste(covars, collapse = "+"))), data = . , family = 'binomial')))
+  results_ci   <- do(tmp, confint_tidy(glm(as.formula(paste0(quo_name(enquo(outcome)), " ~ ", quo_name(enquo(exposure)), "*", quo_name(enquo(genos)), "+", paste(covars, collapse = "+"))), data = . , family = 'binomial')))
+  
+  results <- bind_cols(results_beta, results_ci) %>%
+    ungroup %>%
+    dplyr::filter(grepl(paste0(quo_name(enquo(exposure)), ":"), term)) %>%
+    dplyr::select(-study_gxe1)
+  results
+  
+}
+
+
+# take outputs from above to perform meta analysis and plot forest plots
+# just insert title yourself, make sure to include model
+run_meta_analysis_create_forestplot_gxe <- function(counts_df, results_df, title) {
+  
+  # run meta analysis (summary OR + ConfInt)
+  tmp_meta <- meta.summaries(results_df$estimate, results_df$std.error, method = 'random') # returns list object
+  tmp_meta_b_ci <- c(tmp_meta[[3]], tmp_meta[[3]]-(tmp_meta[[4]]*1.96), tmp_meta[[3]]+(tmp_meta[[4]]*1.96))
+  
+  # format forestplot text (counts, study specific ORs)
+  tmp_fp <- dplyr::select(results_df, estimate, conf.low, conf.high)
+  tmp_fp <- rbind(rep(NA, 3), tmp_fp, rep(NA, 3), tmp_meta_b_ci) # add meta summaries, need conf.int for forestplot
+  tmp_label_summary <- c("Summary", sum(counts_df$N), sum(counts_df$Case), round(tmp_meta[[3]], 2), round(tmp_meta[[4]], 3), round(tmp_meta[[5]][2], 4))
+  
+  tmp_label <- inner_join(counts_df, results_df, by = 'study_gxe') %>%
+    mutate(Study = as.character(study_gxe),
+           Pvalue = round(p.value, 4),
+           SE = round(std.error, 3),
+           beta = round(estimate, 2)) %>%
+    dplyr::select(Study, N, Case, beta, SE, Pvalue)
+  
+  
+  tmp_label2 <- rbind(colnames(tmp_label), tmp_label, rep(NA, 7), tmp_label_summary)
+  rmeta::forestplot(label=tmp_label2,
+                    as.numeric(tmp_fp$estimate), as.numeric(tmp_fp$conf.low), as.numeric(tmp_fp$conf.high),
+                    is.summary = c(T, rep(F, nrow(tmp_label2)-2), T),
+                    col=meta.colors(box="royalblue",line="darkblue",zero='gray0', summary="royalblue"),
+                    clip=c(-1.5,1.5),
+                    xlog=F,
+                    xlab='GxE Beta (CI)',
+                    zero=0, title(main = title, line = 0))
+  mtext(paste("het.pval=", formatC(tmp_meta$het[3], format='e', digits=2)), side = 1, line = 1)
+}
+
+# x <- getCounts_byOutcome(posthoc_df, outcome, aspirin)
+# y <- getGLM_byGroup_gxe(posthoc_df, outcome, aspirin, X5.40252294, c("age_ref_imp", "sex", "PC1", "PC2", "PC3"))
+# z <- run_meta_analysis_create_forestplot_gxe(x, y, "testing")
+  
+

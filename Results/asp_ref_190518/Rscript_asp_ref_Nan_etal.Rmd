@@ -1,0 +1,349 @@
+---
+title: "FIGI Analysis - NSAIDs/asp_ref replicate Nan 2015"
+bibliography: /home/rak/Dropbox/library.bib
+output: 
+  #pdf_document:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: "united"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
+```{r package_setup, include = F}
+library(tidyverse)
+library(data.table)
+library(ggplot2)
+library(qqman)
+library(table1)
+library(rmeta)
+library(rlang)
+library(broom)
+source("/home/rak/Dropbox/FIGI/Code/Functions/FIGI_PostHarmonization_Functions.R")
+```
+
+
+<!-- ```{r data_setup, include = F} -->
+<!-- pca <- "/home/rak/data/PCA/190506/FIGI_GxESet_KGP_pc20_190430.eigenvec" -->
+<!-- load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData") -->
+
+<!-- # slightly different from epiData scripts -->
+<!-- # keep it minimal:  -->
+<!-- # - filter drop/gxe -->
+<!-- # - only fix outcome, E, and 'colo2&3' study_gxe name -->
+<!-- # leave everything else to the functions -->
+<!-- pc30k <- fread(pca, skip = 1,  -->
+<!--                col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20)))) -->
+<!-- cov <- figi %>% -->
+<!--   filter(drop == 0 & gxe == 1) %>%  -->
+<!--   inner_join(pc30k, by = c('vcfid' = 'IID')) %>%  -->
+<!--   mutate(outcome = ifelse(outc == "Case", 1, 0), -->
+<!--          age_ref_imp = as.numeric(age_ref_imp), -->
+<!--          sex = ifelse(sex == "Female", 0, 1), -->
+<!--          study_gxe = ifelse(study_gxe == "Colo2&3", "Colo23", study_gxe), -->
+<!--          aspirin = ifelse(aspirin == "Yes", 1, ifelse(asp_ref == "No", 0, NA))) -->
+
+<!-- ``` -->
+
+
+# Nan 2015
+
+## The following studies were included:
+- CCFR
+- DACHS
+- DALS
+- HPFS
+- NHS
+- OFCCR *
+- PMH-CCFR *
+- PLCO
+- VITAL
+- WHI
+
+## Summary of studies
+![](figures/Nan2015_Table1.png)
+
+
+## Summary of studies in FIGI
+```{r, results = 'asis'}
+
+
+
+```
+
+## Statistical analyses
+
+### Covariates
+- age @ reference period
+- sex
+- center
+- PC1-3
+
+### Approach
+- meta-analysis of study logistic regression, fixed effects. Cochran test for heterogeneity p value. 
+- to test for GxE for aspirin, NSAIDs, or both (asp_ref), used conventional and case-only analyses. Assessed case-only assumption by examining correlation between genomewide SNPs and E variables using linear regression. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- # Postharmonization -->
+
+<!-- ## BoxPlots {.tabset} -->
+<!-- ```{r, echo = F, message = F, cache = T, fig.height=18, fig.width=13} -->
+<!-- createBarPlot(cov, outcome, aspirin, c(NA, 0, 1), c("NA", "No", "Yes"), c("black", "cyan", "red")) -->
+
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+
+<!-- ## Tables {.tabset} -->
+
+<!-- ### Overall -->
+<!-- ```{r, echo = F, message = F, cache = F} -->
+<!-- varlist <- c("age_ref_imp", "sex", "education", "smoke", "bmi", "famhx1", "aspirin", "calcium_tot", "fruit", "vegetable", "redmeat", "procmeat") -->
+<!-- varlistCat <- c("sex", "education", "smoke", "famhx1", "aspirin") -->
+<!-- createTable1(cov, outcome, aspirin, varlist, varlistCat)  -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+<!-- ### cancer_site_sum1 = 'colon' -->
+<!-- ```{r, echo = F, message = F, cache = F} -->
+<!-- createTable1(cov %>% filter(cancer_site_sum1 == "colon" | outcome == 0), outcome, aspirin, varlist, varlistCat) -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+<!-- ### cancer_site_sum1 = 'rectal' -->
+<!-- ```{r, echo = F, message = F, cache = F} -->
+<!-- createTable1(cov %>% filter(cancer_site_sum1 == "rectal" | outcome == 0), outcome, aspirin, varlist, varlistCat) -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+
+
+
+<!-- ## Meta Analyses {.tabset} -->
+
+<!-- ### All tumor sites -->
+<!-- ```{r, echo = F, message = F, cache = T, fig.height=13, fig.width=13} -->
+<!-- x <- getCounts_byOutcome(cov, outcome, aspirin) -->
+<!-- y <- getGLM_byGroup(cov, outcome, aspirin, c("age_ref_imp", "sex")) -->
+<!-- run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outcome~aspirin+age_ref_imp+sex")  -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+<!-- ### cancer_site_sum1 = 'colon' -->
+<!-- ```{r, echo = F, message = F, cache = T, fig.height=13, fig.width=13} -->
+<!-- tmp <- cov %>% filter(cancer_site_sum1 == "colon" | outcome == 0) -->
+
+<!-- x <- getCounts_byOutcome(tmp, outcome, aspirin) -->
+<!-- y <- getGLM_byGroup(tmp, outcome, aspirin, c("age_ref_imp", "sex")) -->
+<!-- run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outcome~aspirin+age_ref_imp+sex") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+<!-- ### cancer_site_sum1 = 'rectal' -->
+<!-- ```{r, echo = F, message = F, cache = T, fig.height=13, fig.width=13} -->
+<!-- tmp <- cov %>% filter(cancer_site_sum1 == "rectal" | outcome == 0) -->
+
+<!-- x <- getCounts_byOutcome(tmp, outcome, aspirin) -->
+<!-- y <- getGLM_byGroup(tmp, outcome, aspirin, c("age_ref_imp", "sex")) -->
+<!-- run_meta_analysis_create_forestplot(x, y, "aspirin use @ ref time \nModel: outcome~aspirin+age_ref_imp+sex") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+
+<!-- # Results -->
+
+<!-- ## Main Results (WtAvg Rsq > 0.8) {.tabset} -->
+
+<!-- ### chiSqG -->
+<!-- ```{r , echo=FALSE, out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/QQ_Plot_gxe_chiSqG_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- knitr::include_graphics("figures/EasyStrata_gxe_chiSqG_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.txt.mh.png") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### chiSqGxE -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/QQ_Plot_gxe_chiSqGxE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- knitr::include_graphics("figures/EasyStrata_gxe_chiSqGxE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.txt.mh.png") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### 2DF -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/QQ_Plot_gxe_chiSq2df_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- knitr::include_graphics("figures/EasyStrata_gxe_chiSq2df_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.txt.mh.png") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### 3DF -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/QQ_Plot_gxe_chiSq3df_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- knitr::include_graphics("figures/EasyStrata_gxe_chiSq3df_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.txt.mh.png") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### chiSqGE (QQ) -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/QQ_Plot_gxe_chiSqGE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- ``` -->
+<!-- <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### chiSqControl (QQ) -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/QQ_Plot_gxe_chiSqControl_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- ``` -->
+<!-- <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### chiSqCase -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/QQ_Plot_gxe_chiSqCase_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- knitr::include_graphics("figures/EasyStrata_gxe_chiSqCase_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.txt.mh.png") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### 2-Step (chiSqG) -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_chiSqG_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- ``` -->
+<!-- <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### 2-Step (chiSqGE) -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_chiSqGE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- ``` -->
+<!-- <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+<!-- ### 2-Step (chiSqEDGE) -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_chiSqEDGE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- ``` -->
+<!-- <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br> -->
+<!-- --------------------------------------------------------- -->
+
+
+<!-- ## Main Results (WtAvg Rsq > 0.8 + LD CLUMPING) {.tabset} -->
+
+<!-- ### chiSqG (P1<0.001, P2<0.1) -->
+<!-- ```{r , echo=FALSE, out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/EasyStrata_chiSqG_vs_chiSqG_ld_clumped.gif") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------- -->
+
+<!-- ### chiSqGxE 2-step (chiSqG) -->
+<!-- ```{r , echo=FALSE, out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_chiSqG_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------- -->
+
+<!-- ### chiSqGxE 2-step (chiSqGE) -->
+<!-- ```{r , echo=FALSE, out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_chiSqGE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------- -->
+
+<!-- ### chiSqGxE 2-step (chiSqEDGE) -->
+<!-- ```{r , echo=FALSE, out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_chiSqEDGE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.png") -->
+<!-- ``` -->
+<!-- <br><br><br> -->
+<!-- --------------- -->
+
+
+<!-- ## Regional Plots -->
+<!-- ```{r , echo=FALSE, out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/GxEScan_GxE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_190619_5_40273441.png") -->
+<!-- knitr::include_graphics("figures/GxEScan_GxE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_190619_5_40252294.png") -->
+
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+
+<!-- ## MAF by study_gxe -->
+<!-- ```{r, echo = F, out.width = '49%'} -->
+<!-- covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds") -->
+<!-- dosages <- data.frame(readRDS("files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>%  -->
+<!--   rownames_to_column(var = 'vcfid') -->
+<!-- posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') -->
+
+<!-- posthoc_df_maf <- posthoc_df %>%  -->
+<!--   group_by(study_gxe) %>%  -->
+<!--   summarise_at(vars(X5.40252294, X5.40273441), function(x) 0.5 - abs( (sum(x) / (2*nrow(.))) - 0.5)) -->
+
+<!-- ggplot(posthoc_df_maf) + -->
+<!--   geom_point(aes(y = study_gxe, x = X5.40252294)) +  -->
+<!--   theme_bw() +  -->
+<!--   xlim(0,0.5) -->
+
+
+<!-- ggplot(posthoc_df_maf) + -->
+<!--   geom_point(aes(y = study_gxe, x = X5.40273441)) +  -->
+<!--   theme_bw() +  -->
+<!--   xlim(0,0.5) -->
+
+
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+<!-- ## GxE estimates by study_gxe {.tabset} -->
+
+<!-- ### X5.40252294 -->
+<!-- ```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13} -->
+<!-- covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds") -->
+<!-- dosages <- data.frame(readRDS("files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>%  -->
+<!--   rownames_to_column(var = 'vcfid') -->
+<!-- posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') -->
+
+<!-- x <- getCounts_byOutcome(posthoc_df, outcome, aspirin) -->
+<!-- y <- getGLM_byGroup_gxe(posthoc_df, outcome, aspirin, X5.40252294, c("age_ref_imp", "sex", "PC1", "PC2", "PC3")) -->
+<!-- run_meta_analysis_create_forestplot_gxe(x, y, "GxE Estimates (aspirin use @ ref time) \nModel: outcome~G*aspirin+age_ref_imp+sex+PC1+PC2+PC3") -->
+<!-- ``` -->
+
+<!-- ### X5.40273441 -->
+<!-- ```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13} -->
+<!-- x <- getCounts_byOutcome(posthoc_df, outcome, aspirin) -->
+<!-- y <- getGLM_byGroup_gxe(posthoc_df, outcome, aspirin, X5.40273441, c("age_ref_imp", "sex", "PC1", "PC2", "PC3")) -->
+<!-- run_meta_analysis_create_forestplot_gxe(x, y, "GxE Estimates (aspirin use @ ref time) \nModel: outcome~G*aspirin+age_ref_imp+sex+PC1+PC2+PC3") -->
+<!-- ``` -->
+

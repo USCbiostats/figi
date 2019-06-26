@@ -12,7 +12,7 @@ library(qqman)
 library(EasyStrata)
 library(animation)
 rm(list = ls())
-source("~/Dropbox/FIGI/Code/Functions/GxEScan_PostHoc_Analyses.R")
+
 
 
 # annotations
@@ -57,7 +57,7 @@ gxe <- gxe_all %>%
 gxe_chiSqGxE_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/NSAIDS/aspirin_190528/aspirin_chiSqGxE_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
 
 gxe_chiSqGxE_ld <- gxe %>% 
-  filter(ID %in% gxe_ldclumped$SNP)
+  filter(ID %in% gxe_chiSqGxE_ldclumped$SNP)
 
 
 
@@ -72,10 +72,10 @@ gxe_chiSqGxE_ld <- gxe %>%
 #   write.table(out, file = paste0("/media/work/tmp/Plink_aspirin_ldclump_chiSqG_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
 # }
 
-gxe_chiSqG_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/NSAIDS/aspirin_190528/aspirin_chiSqG_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
-
-gxe_chiSqG_ld <- gxe %>% 
-  filter(ID %in% gxe_chiSqG_ldclumped$SNP)
+# gxe_chiSqG_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/NSAIDS/aspirin_190528/aspirin_chiSqG_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
+# 
+# gxe_chiSqG_ld <- gxe %>% 
+#   filter(ID %in% gxe_chiSqG_ldclumped$SNP)
 
 
 
@@ -87,6 +87,12 @@ gxe_chiSqG_ld <- gxe %>%
 global_N <- unique(gxe$Subjects)
 global_covs <- c("age_ref_imp", "sex", "study_gxe", "PC1-3")
 global_E <- "aspirin"
+source("~/Dropbox/FIGI/Code/Functions/GxEScan_PostHoc_Analyses.R")
+
+
+
+
+
 
 
 #-----------------------------------------------------------------------------#
@@ -260,11 +266,11 @@ gxe_twostep_ld <- format_2step_data(data = gxe_chiSqGxE_ld, 'chiSqG', 5, 0.05) %
   
 
   
-#--------------------------------------------------------#
+#-----------------------------------------------------------------------------#
 # locuszoom ------
 # there are several regions, we should focus on one at 
 # a time
-#--------------------------------------------------------#
+#-----------------------------------------------------------------------------#
 
 # Marginal G 
 
@@ -278,5 +284,45 @@ gxe_locuszoom <- gxe %>%
 write.table(gxe_locuszoom, file = "~/locuszoom/examples/GxEScanR_GxE_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485.txt", quote = F, row.names = F, sep = "\t")
 
   
-  
-  
+#-----------------------------------------------------------------------------#
+# Extract top hits dosages from binarydosage 
+#-----------------------------------------------------------------------------#
+# first take care of sample list (vcfid)
+# might want to move that to the top of the file.. 
+sample_list <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")[, 'vcfid']
+saveRDS(sample_list, file = paste0(write_binarydosage_vcfid_filename(), ".rds"), version = 2)
+
+
+# get SNPs of interest based on plots above - in this case, two-step data.table
+# (don't forget in this case the sig results was from clumped file)
+# do it by chromosome for now
+gxe_twostep <- format_2step_data(data = gxe_chiSqGxE_ld, 'chiSqG', 5, 0.05) 
+gxe_twostep_sig <- gxe_twostep[step2p < wt, ]
+
+get_binarydosage_index(gxe_twostep_sig$ID, 5)
+
+
+#-----------------------------------------------------------------------------#
+# Extract top hits dosages from binarydosage 
+#-----------------------------------------------------------------------------#
+covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")
+dosages <- data.frame(readRDS("files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>% 
+  rownames_to_column(var = 'vcfid')
+
+# need to merge in dosage info to the EpiData
+posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid')
+
+
+# then apply gxe only to dosage columns, with the same covariates used for gxescan
+
+
+
+# then compile information, create forest plot of betas CIs. 
+
+
+
+
+
+
+
+

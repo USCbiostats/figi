@@ -244,3 +244,52 @@ knitr::include_graphics("figures/GxEScan_GxE_aspirin_age_ref_imp_sex_study_gxe_P
 
 ```
 <br><br><br>
+
+
+## MAF by study_gxe
+```{r, echo = F, out.width = '49%'}
+covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")
+dosages <- data.frame(readRDS("files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>% 
+  rownames_to_column(var = 'vcfid')
+posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid')
+
+posthoc_df_maf <- posthoc_df %>% 
+  group_by(study_gxe) %>% 
+  summarise_at(vars(X5.40252294, X5.40273441), function(x) 0.5 - abs( (sum(x) / (2*nrow(.))) - 0.5))
+
+ggplot(posthoc_df_maf) +
+  geom_point(aes(y = study_gxe, x = X5.40252294)) + 
+  theme_bw() + 
+  xlim(0,0.5)
+
+
+ggplot(posthoc_df_maf) +
+  geom_point(aes(y = study_gxe, x = X5.40273441)) + 
+  theme_bw() + 
+  xlim(0,0.5)
+
+
+```
+<br><br><br>
+
+## GxE estimates by study_gxe {.tabset}
+
+### X5.40252294
+```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13}
+covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")
+dosages <- data.frame(readRDS("files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>% 
+  rownames_to_column(var = 'vcfid')
+posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid')
+
+x <- getCounts_byOutcome(posthoc_df, outcome, aspirin)
+y <- getGLM_byGroup_gxe(posthoc_df, outcome, aspirin, X5.40252294, c("age_ref_imp", "sex", "PC1", "PC2", "PC3"))
+run_meta_analysis_create_forestplot_gxe(x, y, "GxE Estimates (aspirin use @ ref time) \nModel: outcome~G*aspirin+age_ref_imp+sex+PC1+PC2+PC3")
+```
+
+### X5.40273441
+```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13}
+x <- getCounts_byOutcome(posthoc_df, outcome, aspirin)
+y <- getGLM_byGroup_gxe(posthoc_df, outcome, aspirin, X5.40273441, c("age_ref_imp", "sex", "PC1", "PC2", "PC3"))
+run_meta_analysis_create_forestplot_gxe(x, y, "GxE Estimates (aspirin use @ ref time) \nModel: outcome~G*aspirin+age_ref_imp+sex+PC1+PC2+PC3")
+```
+

@@ -2,9 +2,9 @@
 title: "FIGI Post-Imputation Quality Control"
 bibliography: /home/rak/Dropbox/library.bib
 output: 
-  html_document
-  #word_document:
-    #reference_docx: word_styles.docx
+  #html_document
+  word_document:
+    reference_docx: /home/rak/Dropbox/FIGI/Code/Functions/word_styles.docx
 ---
 
 <!-- FULL YAML IF NEED --- -->
@@ -20,13 +20,13 @@ output:
 <!--     theme: united -->
 <!-- --- -->
 
-<style type="text/css">
-.main-container {
-  max-width: 1800px !important;
-  margin-left: auto;
-  margin-right: auto;
-}
-</style>
+<!-- <style type="text/css"> -->
+<!-- .main-container { -->
+<!--   max-width: 1800px !important; -->
+<!--   margin-left: auto; -->
+<!--   margin-right: auto; -->
+<!-- } -->
+<!-- </style> -->
 
 
 # Goals
@@ -37,9 +37,23 @@ output:
 * html outputs from IC.pl script store in same folder as this file
 
 
-# Post Imputation
+# Rsq histogram
+```{r, echo = F, out.width="48%", fig.show = 'hold'}
+knitr::include_graphics(c("figures/INFO_histogram_axiom_acs_aus_nf.png", "figures/INFO_histogram_axiom_mecc_cfr_ky.png"))
+knitr::include_graphics(c("figures/INFO_histogram_ccfr_1m_1mduo_reimpute.png", "figures/INFO_histogram_ccfr_omni.png"))
+knitr::include_graphics(c("figures/INFO_histogram_corect_oncoarray.png", "figures/INFO_histogram_corsa_axiom.png"))
+knitr::include_graphics(c("figures/INFO_histogram_cytosnp_comb.png", "figures/INFO_histogram_initial_comb_datasets.png"))
+knitr::include_graphics(c("figures/INFO_histogram_mecc.png", "figures/INFO_histogram_newfoundland_omniquad.png"))
 
-## Rsq barplot
+knitr::include_graphics(c("figures/INFO_histogram_omni_comb.png", "figures/INFO_histogram_omniexpress_exomechip.png"))
+knitr::include_graphics(c("figures/INFO_histogram_oncoarray_to_usc.png", "figures/INFO_histogram_plco_3.png"))
+knitr::include_graphics(c("figures/INFO_histogram_reach.png", "figures/INFO_histogram_ukbiobank.png"))
+```
+
+
+
+
+# Rsq barplot
 ```{r setup, include=F}
 library(tidyverse)
 library(data.table)
@@ -109,3 +123,6 @@ ggplot(df, aes(Pct, batch_ss)) +
 ```
 
 
+# Tables
+
+# Compare measured vs imputed?
