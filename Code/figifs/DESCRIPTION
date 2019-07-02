@@ -1,0 +1,28 @@
+Package: figifs
+Type: Package
+Title: Personal package with useful functions for FIGI analysis
+Version: 0.1.0
+Author: Andre Kim
+Maintainer: Andre Kim <andreeki@usc.edu>
+Description: Functions to perform the following:
+    Calculate lambda/lambda1000
+    Create QQ Plots
+    Create Manhattan Plots
+    Create E main effects meta-analysis
+    Create bar/box plots of E var
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    arsenal,
+    broom,
+    dplyr,
+    ggplot2,
+    magrittr,
+    rlang,
+    meta,
+    metafor,
+    EasyStrata,
+    effects,
+    data.table
+RoxygenNote: 6.1.1

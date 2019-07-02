@@ -11,7 +11,7 @@ library(tidyverse)
 library(data.table)
 library(qqman)
 library(EasyStrata)
-library(animation)
+library(figifs)
 rm(list = ls())
 
 
@@ -30,7 +30,6 @@ gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/NSAIDS/asp_re
          chiSq3df = chiSqG + chiSqGxE + chiSqGE) %>% 
   filter(!duplicated(ID))
 
-
 gxe <- gxe_all %>% 
   filter(ID %in% rsq_filter$ID)
 
@@ -44,76 +43,59 @@ gxe <- gxe_all %>%
 # check <- inner_join(gxe, annotation_original, by = "SNP")
 # check <- anti_join(annotation_original, gxe, by = "SNP")
 
-#-------------------------------------#
-# convenience (labels, titles etc)
-# VERY IMPORTANT TO DEFINE THESE !!!
-# (CLEAN ENVIRONMENT BEFORE RUNNING!)
-#-------------------------------------#
-global_N <- unique(gxe$Subjects)
-global_covs <- c("age_ref_imp", "sex", "study_gxe", "PC1-3")
-global_E <- "asp_ref"
-source("~/Dropbox/FIGI/Code/Functions/GxEScan_PostHoc_Analyses.R")
+
+
+# output chiSqGxE results for LD clumping
+# gxe <- gxe %>% 
+#   dplyr::mutate(P = pchisq(chiSqGxE, df = 1, lower.tail = F))
+# 
+# for(chr in 1:22) {
+#   out <- gxe %>% 
+#     filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
+#     dplyr::select(SNP, P)
+#   write.table(out, file = paste0("/media/work/tmp/LDclump_chiSqGxE_asp_ref_age_ref_imp_sex_study_gxe_PC1-3_N_72820_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
+# }
+
 
 #-----------------------------------------------------------------------------#
+# QQ and Manhattan Plots ----
+#-----------------------------------------------------------------------------#
+plot_exposure <- "asp_ref"
+plot_covariates <- c("age_ref_imp", "sex", "study_gxe", "PC1", "PC2", "PC3")
+
 # Marginal G Results ----
-#-----------------------------------------------------------------------------#
-# QQ Plot
-create_qqplot(gxe, 'chiSqG', df = 1)
-# Manhattan Plot
-create_manhattanplot(gxe, 'chiSqG', df = 1)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqG', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqG', df = 1)
 
-#-----------------------------------------------------------------------------#
 # GxE results ----
-#-----------------------------------------------------------------------------#
-# QQ Plot
-create_qqplot(gxe, 'chiSqGxE', df = 1)
-# Manhattan Plot
-create_manhattanplot(gxe, 'chiSqGxE', df = 1)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqGxE', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqGxE', df = 1)
 
-#-----------------------------------------------------------------------------#
 # 2DF results ----
-#-----------------------------------------------------------------------------#
-# QQ Plot
-create_qqplot(gxe, 'chiSq2df', df = 2)
-# Manhattan Plot
-create_manhattanplot(gxe, 'chiSq2df', df = 2)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSq2df', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSq2df', df = 1)
 
-#-----------------------------------------------------------------------------#
 # 3DF results ----
-#-----------------------------------------------------------------------------#
-# QQ Plot
-create_qqplot(gxe, 'chiSq3df', df = 3)
-# Manhattan Plot
-create_manhattanplot(gxe, 'chiSq3df', df = 3)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSq3df', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSq3df', df = 1)
 
-#-----------------------------------------------------------------------------#
 # GE, Case, Control ----
-#-----------------------------------------------------------------------------#
-# GE QQ Plot
-create_qqplot(gxe, 'chiSqGE', df = 1)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqGE', df = 1)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqControl', df = 1)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqCase', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqCase', df = 1)
 
-# Control-Only
-create_qqplot(gxe, 'chiSqControl', df = 1)
 
-# Case-Only QQ + manhattan
-create_qqplot(gxe, 'chiSqCase', df = 1)
-create_manhattanplot(gxe, 'chiSqCase', df = 1)
 
-#-----------------------------------------------------------------------------#
 # D|G 2-step Kooperberg ----
-#-----------------------------------------------------------------------------#
 gxe_twostep <- format_2step_data(data = gxe, 'chiSqG', 5, 0.05)
 create_2step_weighted_plot(gxe_twostep, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqG')
 
-#-----------------------------------------------------------------------------#
 # G|E 2-step Murcray ----
-#-----------------------------------------------------------------------------#
 gxe_twostep <- format_2step_data(data = gxe, 'chiSqGE', 5, 0.05)
 create_2step_weighted_plot(gxe_twostep, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqGE')
 
-#-----------------------------------------------------------------------------#
 # EDGE 2-step Gauderman ----
-#-----------------------------------------------------------------------------#
 gxe_twostep <- format_2step_data(data = gxe, 'chiSqEDGE', 5, 0.05)
 create_2step_weighted_plot(gxe_twostep, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqEDGE')
 
