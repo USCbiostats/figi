@@ -2,12 +2,14 @@
 title: "FIGI Analysis - aspirin"
 bibliography: /home/rak/Dropbox/library.bib
 output: 
+  word_document:
+   reference_docx: /home/rak/Dropbox/FIGI/Code/Functions/word_styles.docx
   #pdf_document:
-  html_document:
-    toc: true
-    toc_float: true
-    toc_depth: 2
-    theme: "united"
+  #html_document:
+  #  toc: true
+  #  toc_float: true
+  #  toc_depth: 2
+  #  theme: "united"
 ---
 
 ```{r setup, include=FALSE}
@@ -60,6 +62,11 @@ dat <- figi %>%
 
 ```
 
+# NSAID **aspirin** Mapping
+
+![](figures/NSAID_Variable_list.png)
+
+(Investigators have mapping documents available, more information in this report not needed?)
 
 # Postharmonization
 
