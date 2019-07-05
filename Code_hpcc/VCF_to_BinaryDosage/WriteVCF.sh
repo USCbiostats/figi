@@ -1,26 +1,20 @@
 #!/bin/bash
-#SBATCH --time=300:00:00
+#SBATCH --time=100:00:00
 #SBATCH --ntasks=1
-#SBATCH --mem-per-cpu=8000
+#SBATCH --mem=8GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=16-22
-#SBATCH --output=./logs/vcftools_ukbiobank_chr%a.log
+#SBATCH --array=1-2
 
-REF=/auto/pmd-02/figi/HRC_VCF_SampleRename
-OUT=/staging/dvc/andreeki/bdose
-OUTF=/auto/pmd-02/figi/HRC_BDose
-
+#-----------------------------------------------------------------------------#
+# extract gzipped vcf file to vcf file for BinaryDosage package
+#-----------------------------------------------------------------------------#
+REF=/auto/pmd-02/figi/HRC_extract/ukbiobank
+OUT=/staging/dvc/andreeki/BD
 cd ${OUT}
 
 # subset and write VCF file
-vcftools --gzvcf ${REF}/ukbiobank_chr${SLURM_ARRAY_TASK_ID}.vcf.gz --snps ./ukbiobank/ukbiobank_subset_chr${SLURM_ARRAY_TASK_ID}.txt --recode --out ${OUT}/ukbiobank_chr${SLURM_ARRAY_TASK_ID}
+vcftools --gzvcf ${REF}/chr${SLURM_ARRAY_TASK_ID}.vcf.gz --recode --out ${OUT}/ukbiobank_chr${SLURM_ARRAY_TASK_ID}
 mv ukbiobank_chr${SLURM_ARRAY_TASK_ID}.recode.vcf ukbiobank_chr${SLURM_ARRAY_TASK_ID}.vcf
 
 
-#Rscript -e 'library(BinaryDosage); args <- commandArgs(trailingOnly=T); VCFtoBD(paste0(args[1], "'".vcf"'"), paste0(args[1], "'"_newest.bdose"'"))' ukbiobank_chr5
-
-#Rscript -e 'library(BinaryDosage); args <- commandArgs(trailingOnly=T); VCFtoBD(paste0(args[1], "'".vcf"'"), paste0(args[1], "'".bdose"'"))' $1_chr$2
-
-#rm ${OUT}/$1_chr$2.vcf
-#mv ${OUT}/$1_chr$2.bdose ${OUTF}

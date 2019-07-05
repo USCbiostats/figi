@@ -4,8 +4,9 @@
 #SBATCH --mem=8GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=10,14
-#SBATCH --output=MergeBDose_FIGI_chr%a.log
+#SBATCH --array=1-2
+#SBATCH --output=./logs/MergeBDose_FIGI_chr%a.log
 
 cd $SLURM_SUBMIT_DIR
 Rscript MergeBDose.R ${SLURM_ARRAY_TASK_ID}
+
