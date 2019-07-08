@@ -4,17 +4,18 @@
 #SBATCH --mem=8GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=1-2
+#SBATCH --array=10-22
+#SBATCH --output=./logs/WriteVCF_ukb1_chr%a.log
 
 #-----------------------------------------------------------------------------#
 # extract gzipped vcf file to vcf file for BinaryDosage package
 #-----------------------------------------------------------------------------#
-REF=/auto/pmd-02/figi/HRC_extract/ukbiobank
+REF=/auto/pmd-02/figi/HRC_extract/ukbiobank/UKB1/vcf
 OUT=/staging/dvc/andreeki/BD
 cd ${OUT}
 
 # subset and write VCF file
-vcftools --gzvcf ${REF}/chr${SLURM_ARRAY_TASK_ID}.vcf.gz --recode --out ${OUT}/ukbiobank_chr${SLURM_ARRAY_TASK_ID}
-mv ukbiobank_chr${SLURM_ARRAY_TASK_ID}.recode.vcf ukbiobank_chr${SLURM_ARRAY_TASK_ID}.vcf
+vcftools --gzvcf ${REF}/chr${SLURM_ARRAY_TASK_ID}.dose.vcf.gz --recode --out ${OUT}/ukb1_chr${SLURM_ARRAY_TASK_ID}
+mv ukb1_chr${SLURM_ARRAY_TASK_ID}.recode.vcf ukb1_chr${SLURM_ARRAY_TASK_ID}.vcf
 
 
