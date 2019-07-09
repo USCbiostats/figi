@@ -4,7 +4,7 @@
 #SBATCH --mem=8GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=10-22
+#SBATCH --array=1-9
 #SBATCH --output=./logs/WriteVCF_ukb1_chr%a.log
 
 #-----------------------------------------------------------------------------#

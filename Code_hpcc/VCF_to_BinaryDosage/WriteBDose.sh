@@ -4,7 +4,7 @@
 #SBATCH --mem-per-cpu=8000
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=10-21
+#SBATCH --array=1-13
 #SBATCH --output=/auto/rcf-40/andreeki/FIGI_code/Code_hpcc/VCF_to_BinaryDosage/logs/WriteBD_ukb1_chr%a.log
 
 cd /staging/dvc/andreeki/BD
