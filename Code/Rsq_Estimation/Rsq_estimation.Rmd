@@ -1,0 +1,93 @@
+---
+title: "Rsq Estimation using variance ratios"
+bibliography: /home/rak/Dropbox/library.bib
+output: 
+  #word_document:
+   #reference_docx: /home/rak/Dropbox/FIGI/Code/Functions/word_styles.docx
+  #pdf_document:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: "united"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<!-- <style type="text/css"> -->
+<!-- .main-container { -->
+<!--   max-width: 1800px !important; -->
+<!--   margin-left: auto; -->
+<!--   margin-right: auto; -->
+<!-- } -->
+<!-- </style> -->
+
+```{r package_setup, include = F}
+library(tidyverse)
+library(data.table)
+```
+
+
+Need to estimate Rsq for imputation quality filter. Cannot use Rsq values provided by Michigan Imputation Server since we are pooling imputed data across many batches.  
+
+Investigate different methods, using mecc (N = 750) chromosome 22 as an example.  
+
+# Method 1: Ratio of observed / expected variances (under HWE)
+
+(Medland)
+![](figures/Picture1.png)
+
+
+
+
+
+## Results common markers (MAF > 5%)
+
+![](mecc_chr22_Rsq_comparison_medland_common.png)
+
+## Results rare markers (MAF < 0.1%)
+
+![](mecc_chr22_Rsq_comparison_medland_rare.png)
+
+
+# Method 2: Variance of alt allele probability / expected variance
+
+![](figures/Picture2.png)
+
+
+
+## Algebra (John)
+
+Consider imputation is performed by haplotype in each phased chromosome  
+
+Start with alternate allele probabilities $q_1$ and $q_2$ (one for each chromosome):   
+
+$P(g=1) = q_1(1-q_2) + q_2(1-q_1)$  
+
+$P(g=2) = q_1q_2$
+
+$P_1 = \frac{P_2}{q_2} (1-q_2) + q_2(1 - \frac{P_2}{q_2})$
+
+Algebraically re-arranging terms you get:  
+
+$$q_2^2 - (P_1+2P_2)q_2 + P_2 = 0$$
+
+We can solve for $q_1$ and $q_2$ using quadratic formula in the format:  
+
+$$q_{1|2} = \frac{D \pm \sqrt{D^2 - 4P_2}}{2}$$
+
+The term $P_1+2P_2$ is the allelic dosage, while $P_2$ is the probability of the homozygote alternate allele genotype. Both values are readibly available from HRC output. From the minimac formula for Rsq, we can re-arrange terms to obtain:  
+
+$$ \frac{\frac{1}{2N} \sum_{i=1}^{2N}(D_i^2) - p^2}{p(1-p)} $$
+
+where $D_i$ is the squared sums of estimated $q$'s from the quadratic formula, while $p$ is the allele frequency
+
+## Results common markers
+
+![](mecc_chr22_Rsq_comparison_minimac_common.png)
+
+## Results rare markers
+
+![](mecc_chr22_Rsq_comparison_minimac_rare.png)

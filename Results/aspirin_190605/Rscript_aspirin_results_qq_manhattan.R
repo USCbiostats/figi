@@ -309,6 +309,10 @@ covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_se
 dosages <- data.frame(readRDS("files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>% 
   rownames_to_column(var = 'vcfid')
 
+dosages <- data.frame(readRDS("/home/rak/Dropbox/FIGI/Results/aspirin_190605/files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>% 
+  rownames_to_column(var = 'vcfid')
+
+
 # need to merge in dosage info to the EpiData
 posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid')
 
