@@ -4,7 +4,7 @@
 #SBATCH --mem=16GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=18-22
+#SBATCH --array=22
 #SBATCH --output=./logs/MergeBDose_FIGI_CORECT_chr%a.log
 
 cd $SLURM_SUBMIT_DIR
