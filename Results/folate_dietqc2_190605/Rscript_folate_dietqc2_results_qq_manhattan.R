@@ -9,53 +9,114 @@ library(tidyverse)
 library(data.table)
 library(qqman)
 library(EasyStrata)
+library(figifs)
 rm(list = ls())
 
 # annotations
 fh_annotations <- fread("~/data/Annotations/crc_gwas_125k_indep_signals_95_EasyStrata_LDBased.tsv") %>% 
   mutate(SNP = paste(Chr, Pos, sep = ":"))
 
-# Rsq Filter (vector of IDs to keep) --- will need to recreate this at some point
-rsq_filter <- readRDS("~/data/HRC_InfoFile_Merged/HRC_WtAvgRsq_HRCRefPanelMAFs.rds") %>% 
-  filter(Rsq_avg > 0.8)
+# Rsq Filter - re-estimate using alt allele probability (see BinaryDosage forked package)
+rsq_filter <- readRDS("/media/work/data/Rsq_Estimates_AA/rsq_aa_genomewide_filter_pt8.rds")
 
-# read in results
+# Rsq Filter - weighted average (by imputation batch sample size)
+# rsq_filter <- readRDS("~/data/HRC_InfoFile_Merged/HRC_WtAvgRsq_HRCRefPanelMAFs.rds") %>% 
+#   filter(Rsq_avg > 0.8)
+
+# Read in results
 # calculate chiSqEDGE and chiSq3df statistics
-gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/folate/folate_dietqc2/", full.names = T, pattern = "results_GxE_folate_dietqc2_sex_age_pc3_energytot_studygxe_52447_binCovF_chr"), fread, stringsAsFactors = F)) %>% 
+gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/folate_dietqc2/", full.names = T, pattern = "results_GxE_folate_dietqc2_sex_age_pc3_energytot_studygxe_52447_binCovF_chr"), fread, stringsAsFactors = F)) %>% 
   mutate(ID = paste(SNP, Reference, Alternate, sep = ":"),
          chiSqEDGE = chiSqG + chiSqGE,
          chiSq3df = chiSqG + chiSqGxE + chiSqGE) %>% 
   filter(!duplicated(ID)) # small issue with gxescan package
 
 gxe <- gxe_all %>% 
-  filter(ID %in% rsq_filter$ID)
+  dplyr::filter(ID %in% rsq_filter$SNP)
 
 # output results for LD clumping
+# this need to be done after filtering for Rsq values
 # calculate_pval <- function(data, statistic, df) {
 #   data$P <- pchisq(data[,statistic], df = df, lower.tail = F)
 #   data
 # }
-# 
 # for(chr in 1:22) {
-#   out <- calculate_pval(gxe, 'chiSqGxE', df = 1) %>% 
-#     filter(Chromosome == chr) %>% mutate(SNP = ID) %>% 
+#   out <- calculate_pval(gxe, 'chiSqGxE', df = 1) %>%
+#     filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
 #     dplyr::select(SNP, P)
-#   write.table(out, file = paste0("/media/work/tmp/Plink_clump_chiSqGxE_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
-#   
+#   write.table(out, file = paste0("/media/work/data/tmp_files/Plink_clump_chiSqGxE_folate_dietqc2_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
 # }
 
 
 # LD Clump Results
-plink_ld <- do.call(rbind, lapply(list.files("~/data/Results/folate/folate_dietqc2/folate_dietqc2_chiSqGxE_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
+gxe_chiSqGxE_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/folate_dietqc2/folate_dietqc2_chiSqGxE_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
 
-gxe_ld <- gxe %>% 
-  filter(ID %in% plink_ld$SNP)
+gxe_chiSqGxE_ld <- gxe %>% 
+  filter(ID %in% gxe_chiSqGxE_ldclumped$SNP)
+rm(gxe_chiSqGxE_ldclumped)
 
-# convenience global variables (plot labels, titles, filenames, etc)
-global_N <- unique(gxe$Subjects)
-global_covs <- c("age_ref_imp", "sex", "study_gxe", "PC1-3", "energytot")
-global_E <- "folate_dietqc2"
-source("~/Dropbox/FIGI/Code/Functions/GxEScan_PostHoc_Analyses.R")
+
+
+
+#-----------------------------------------------------------------------------#
+# QQ and Manhattan Plots ----
+#-----------------------------------------------------------------------------#
+plot_exposure <- "folate_dietqc2"
+plot_covariates <- c("age_ref_imp", "sex", "study_gxe", "PC1", "PC2", "PC3", "energytot")
+
+# Marginal G Results ----
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqG', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqG', df = 1)
+
+# GxE results ----
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqGxE', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqGxE', df = 1)
+
+# 2DF results ----
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSq2df', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSq2df', df = 1)
+
+# 3DF results ----
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSq3df', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSq3df', df = 1)
+
+# GE, Case, Control ----
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqGE', df = 1)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqControl', df = 1)
+create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqCase', df = 1)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqCase', df = 1)
+
+
+# D|G 2-step Kooperberg ----
+gxe_twostep <- format_data_twostep_data(data = gxe, 'chiSqG', 5, 0.05)
+create_2step_weighted_plot(gxe_twostep, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqG')
+
+# G|E 2-step Murcray ----
+gxe_twostep <- format_2step_data(data = gxe, 'chiSqGE', 5, 0.05)
+create_2step_weighted_plot(gxe_twostep, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqGE')
+
+# EDGE 2-step Gauderman ----
+gxe_twostep <- format_2step_data(data = gxe, 'chiSqEDGE', 5, 0.05)
+create_2step_weighted_plot(gxe_twostep, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqEDGE')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
