@@ -49,7 +49,7 @@ gxe <- gxe_all %>%
 
 
 # LD Clump Results
-gxe_chiSqGxE_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/folate_dietqc2/folate_dietqc2_chiSqGxE_ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
+gxe_chiSqGxE_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/folate_dietqc2/ld_clump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
 
 gxe_chiSqGxE_ld <- gxe %>% 
   filter(ID %in% gxe_chiSqGxE_ldclumped$SNP)
