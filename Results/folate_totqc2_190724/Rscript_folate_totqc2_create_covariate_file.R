@@ -26,40 +26,39 @@
 library(tidyverse)
 library(data.table)
 rm(list = ls())
+
 pca <- "/home/rak/data/PCA/190506/FIGI_GxESet_KGP_pc20_190430.eigenvec"
+# filename <- "/home/rak/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_folate_dietqc2_sex_age_pc3_studygxe_"
 load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData")
 
-table(figi$folate_totqc2)
-
 #-----------------------------------------------------------------------------#
-# GxE Set ------
+# GxE Set - folate_dietqc2
 #-----------------------------------------------------------------------------#
-
 pc30k <- fread(pca, skip = 1, 
                col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20))))
 
 cov <- figi %>%
-  filter(drop == 0 & gxe == 1) %>% 
-  inner_join(pc30k, by = c('vcfid' = 'IID')) %>% 
-  mutate(outcome = ifelse(outc == "Case", 1, 0),
+  dplyr::filter(drop == 0 & gxe == 1) %>% 
+  dplyr::inner_join(pc30k, by = c('vcfid' = 'IID')) %>% 
+  dplyr::mutate(outcome = ifelse(outc == "Case", 1, 0),
          age_ref_imp = as.numeric(age_ref_imp),
          sex = ifelse(sex == "Female", 0, 1),
          study_gxe = ifelse(study_gxe == "Colo2&3", "Colo23", study_gxe),
-         energytot = as.numeric(energytot),
-         folate_totqc2 = recode(folate_totqc2, `1`=1, `2`=2, `3`=3, `4`=4)) %>% 
-  dplyr::select(vcfid, outcome, age_ref_imp, sex, study_gxe, paste0(rep("PC", 3), seq(1,3)), energytot, folate_totqc2) %>% 
-  filter(complete.cases(.))
+         energytot = as.numeric(energytot), 
+         folate_dietqc2 = dplyr::recode(folate_dietqc2, `1`=1, `2`=2, `3`=3, `4`=4)) %>% 
+  dplyr::select(vcfid, outcome, age_ref_imp, sex, study_gxe, paste0(rep("PC", 3), seq(1,3)), energytot, folate_dietqc2) %>% 
+  dplyr::filter(complete.cases(.))
 
+# ------ exclude studies (case only etc) ------ #
 table(cov$study_gxe, cov$outcome)
 sort(unique(cov$study_gxe))
 drops <- data.frame(table(cov$study_gxe, cov$outcome)) %>% 
   filter(Freq == 0)
 exclude_studies <- as.vector(unique(drops$Var1))
 
-
 cov <- filter(cov, !study_gxe %in% exclude_studies)
 
-# ----- save, no dummy var
+# ----- save, no dummy var ------
 # saveRDS(cov, file = "~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_asp_ref_sex_age_pc10_studygxe_72820_GLM.rds", version = 2)
 
 
@@ -75,16 +74,9 @@ check <- dplyr::select(cov, unique(cov$study_gxe)) %>%
 # final (make Kentucky the reference)
 cov <- cov %>% 
   dplyr::select(-Kentucky, -study_gxe,
-                -folate_totqc2, folate_totqc2)
+                -folate_dietqc2, folate_dietqc2)
 
-# ------ save, WITH dummy var
-saveRDS(cov, file = '~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_folate_totqc2_sex_age_pc3_energytot_studygxe_54084.rds', version = 2)
-
-
-
-
-#-----------------------------------------------------------------------------#
-# GxE Set - asp_ref (N = 102,792 --> 72,145) ------
-#-----------------------------------------------------------------------------#
+# ------ save, WITH dummy var ------
+saveRDS(cov, file = '~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_folate_dietqc2_sex_age_pc3_energytot_studygxe_52447.rds', version = 2)
 
 
