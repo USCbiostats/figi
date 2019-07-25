@@ -98,7 +98,10 @@ get_estimates_e_by_group <- function(df, outcome, exposure, group, ...) {
   covariates <- enquos(...)
 
   # calling the function with group name = study_gxe
+  # complete case analysis
   df <- format_data_meta_analysis(df, !! outcome, !! exposure, !! group) %>%
+    dplyr::select(!! outcome, !! exposure, !! group, !!! covariates) %>%
+    dplyr::filter(complete.cases(.)) %>%
     dplyr::group_by(!! group)
 
   # as.vector(unlist(lapply(covariates, quo_name)))
@@ -161,5 +164,7 @@ get_estimates_gxe_by_group <- function(df, outcome, exposure, group, dosage, ...
   return(results)
 
 }
+
+
 
 

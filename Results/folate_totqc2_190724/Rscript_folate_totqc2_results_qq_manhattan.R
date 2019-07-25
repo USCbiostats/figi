@@ -25,7 +25,7 @@ rsq_filter <- readRDS("/media/work/data/Rsq_Estimates_AA/rsq_aa_genomewide_filte
 
 # Read in results
 # calculate chiSqEDGE and chiSq3df statistics
-gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/folate_dietqc2/", full.names = T, pattern = "results_GxE_folate_dietqc2_sex_age_pc3_energytot_studygxe_52447_binCovF_chr"), fread, stringsAsFactors = F)) %>% 
+gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/folate_totqc2/", full.names = T, pattern = "results_GxE_folate_totqc2_sex_age_pc3_energytot_studygxe_54084_binCovF_chr"), fread, stringsAsFactors = F)) %>% 
   mutate(ID = paste(SNP, Reference, Alternate, sep = ":"),
          chiSqEDGE = chiSqG + chiSqGE,
          chiSq3df = chiSqG + chiSqGxE + chiSqGE) %>% 
@@ -36,20 +36,20 @@ gxe <- gxe_all %>%
 
 # output results for LD clumping
 # this need to be done after filtering for Rsq values
-# calculate_pval <- function(data, statistic, df) {
-#   data$P <- pchisq(data[,statistic], df = df, lower.tail = F)
-#   data
-# }
-# for(chr in 1:22) {
-#   out <- calculate_pval(gxe, 'chiSqGxE', df = 1) %>%
-#     filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
-#     dplyr::select(SNP, P)
-#   write.table(out, file = paste0("/media/work/data/tmp_files/Plink_clump_chiSqGxE_folate_dietqc2_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
-# }
+calculate_pval <- function(data, statistic, df) {
+  data$P <- pchisq(data[,statistic], df = df, lower.tail = F)
+  data
+}
+for(chr in 1:22) {
+  out <- calculate_pval(gxe, 'chiSqGxE', df = 1) %>%
+    filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
+    dplyr::select(SNP, P)
+  write.table(out, file = paste0("/media/work/data/tmp_files/Plink_ldclump_chiSqGxE_folate_totqc2_sex_age_pc3_energytot_studygxe_54084_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
+}
 
 
 # LD Clump Results
-gxe_chiSqGxE_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/folate_dietqc2/ld_clump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
+gxe_chiSqGxE_ldclumped <- do.call(rbind, lapply(list.files("~/data/Results/folate_totqc2/ldclump/", full.names = T, pattern = "*.clumped"), fread, stringsAsFactors = F))
 
 gxe_chiSqGxE_ld <- gxe %>% 
   filter(ID %in% gxe_chiSqGxE_ldclumped$SNP)
@@ -60,7 +60,7 @@ rm(gxe_chiSqGxE_ldclumped)
 #-----------------------------------------------------------------------------#
 # QQ and Manhattan Plots ----
 #-----------------------------------------------------------------------------#
-plot_exposure <- "folate_dietqc2"
+plot_exposure <- "folate_totqc2"
 plot_covariates <- c("age_ref_imp", "sex", "study_gxe", "PC1", "PC2", "PC3", "energytot")
 
 # Marginal G Results ----

@@ -35,7 +35,9 @@ x <- batch_rsq[snp_sample_index, ] %>%
   inner_join(rsq_filter_chr22[, c("ID", "Rsq_avg")], by = "ID")
 
 # Rsq estimate from alt allele probability variance
-z <- readRDS("~/data/HRC_InfoFile_Merged/Rsq_Estimate_AltAlleleProbVar/FIGI_RsqEstimate_chr22.rds")[snp_sample_index]
+# z <- readRDS("~/data/HRC_InfoFile_Merged/Rsq_Estimate_AltAlleleProbVar/FIGI_RsqEstimate_chr22.rds")[snp_sample_index]
+z <- readRDS("~/data/Rsq_Estimate/FIGI_RsqEstimate_chr22.rds")[snp_sample_index]
+
 x$Rsq_summary <- z
 
 

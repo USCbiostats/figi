@@ -208,14 +208,22 @@ create_manhattanplot <- function(dat, exposure, covars, stat, df, filename_suffi
 #'
 #' @return A DATA.TABLE (!) - mainly because the code I copied pasted used a dt. Contains bin number, bin logp threshold, normalized X axis information for plotting.
 #' @export
+#' @import data.table
 #'
 #' @examples format_data_twostep_data(gxe, 'chiSqG', 5, 0.05)
+
+
+# dat <- gxe
+# stats_step1 <- 'chiSqG'
+# sizeBin0 = 5
+# alpha = 0.05
+
+
 format_twostep_data <- function(dat, stats_step1, sizeBin0, alpha) {
 
   # quick function to calculate p values from chisq stats depending on method
-  create_pval_info <- function(dat, statistic, df=1) {
-    data.table(dat)[
-      , step1p := pchisq(dat[,statistic], df = df, lower.tail = F)
+  create_pval_info <- function(dat, stats_step1, df=1) {
+    data.table(dat)[, step1p := pchisq(dat[, eval(quote(stats_step1))], df = df, lower.tail = F)
       ][
       , step2p := pchisq(dat[,'chiSqGxE'],  df = 1, lower.tail = F)
       ][
@@ -272,6 +280,17 @@ format_twostep_data <- function(dat, stats_step1, sizeBin0, alpha) {
 #'
 #' @examples create_twostep_weighted_plot(gxe_twostep, exposure = plot_exposure, covars = plot_covariates, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqG')
 
+
+# dat = gxe_twostep
+# exposure = plot_exposure
+# covars = plot_covariates
+# sizeBin0 = 5
+# alpha = 0.05
+# binsToPlot = 10
+# statistic = 'chiSqG'
+# filename_suffix = ""
+
+
 create_twostep_weighted_plot <- function(dat, exposure, covars, sizeBin0, alpha, binsToPlot, statistic, filename_suffix = "") {
 
   cases <- unique(data.frame(dat[, 'Cases']))
@@ -316,7 +335,7 @@ create_twostep_weighted_plot <- function(dat, exposure, covars, sizeBin0, alpha,
   # CREATE PLOT
   head(glist[[1]]) # for reference
 
-  png(paste0("figures/TwoStep_WeightedHypothesis_", exposure, "_", statistic, "_", paste0(covars, collapse = "_"), "_N_", total, filename_suffix, ".png"), height = 720, width = 1280)
+  png(paste0("figures/TwoStep_WeightedHypothesis_", deparse(substitute(dat)), "_", exposure, "_", statistic, "_", paste0(covars, collapse = "_"), "_N_", total, filename_suffix, ".png"), height = 720, width = 1280)
   # png(write_weighted_plot_filename(deparse(substitute(dat)), statistic), width = 1280, height = 720)
   color <- rep(c("blue","olivedrab4"),100)
   plot(glist[[1]][,x], glist[[1]][,y],
