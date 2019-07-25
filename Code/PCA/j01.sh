@@ -4,19 +4,21 @@
 #SBATCH --mem=8GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=1-22
+#SBATCH --constraint=IB
+#SBATCH --array=22
 
 # Extract snp backbone (random sample) from VCFs (all batches + chromosomes)
 # ${batch} should be imputation batch name, export during sbatch command
 # also export log file (slurm doesn't support exported variables from being used in #SBATCH lines..)
 
 REF=/auto/pmd-02/figi/HRC_VCF_SampleRename
-OUT=/staging/dvc/andreeki/pca_ibd
+#OUT=/staging/dvc/andreeki/pca_ibd
+OUT=/auto/pmd-02/figi/PCA
 cd ${OUT}
 
-vcftools --gzvcf ${REF}/${batch}_chr${SLURM_ARRAY_TASK_ID}.vcf.gz --positions ${OUT}/FIGI_PC_Backbone_Sample_30K.txt --recode --out ${OUT}/tmp/${batch}_backbone_chr${SLURM_ARRAY_TASK_ID}
+vcftools --gzvcf ${REF}/${batch}_chr${SLURM_ARRAY_TASK_ID}.vcf.gz --positions ${OUT}/FIGI_PC_Backbone_Sample_30K.txt --recode --out ${OUT}/files/${batch}_backbone_chr${SLURM_ARRAY_TASK_ID}
 
-plink --vcf ${OUT}/tmp/${batch}_backbone_chr${SLURM_ARRAY_TASK_ID}.recode.vcf --double-id --snps-only --biallelic-only --keep-allele-order --make-bed --out ${OUT}/tmp/${batch}_backbone_chr${SLURM_ARRAY_TASK_ID}
+plink --vcf ${OUT}/files/${batch}_backbone_chr${SLURM_ARRAY_TASK_ID}.recode.vcf --double-id --snps-only --biallelic-only --keep-allele-order --memory 8000 --make-bed --out ${OUT}/files/${batch}_backbone_chr${SLURM_ARRAY_TASK_ID}
 
 
 # example submission

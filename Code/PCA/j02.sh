@@ -4,20 +4,21 @@
 #SBATCH --mem=8GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
+#SBATCH --constraint=IB
 
 # Merge chromosome plink files from j01.sh (by imputation batch)
 
-OUT=/staging/dvc/andreeki/pca_ibd
-cd ${OUT}
+#OUT=/staging/dvc/andreeki/pca_ibd
+OUT=/auto/pmd-02/figi/PCA
 
 # write out a list of files to merge to use with plink
 for chr in {1..22}
 do 
-    echo ${OUT}/tmp/${batch}_backbone_chr${chr}
-done > ${OUT}/tmp/mergelist_${batch}.txt
+    echo ${OUT}/files/${batch}_backbone_chr${chr}
+done > ${OUT}/files/mergelist_${batch}.txt
 
 # call plink
-plink --merge-list ${OUT}/tmp/mergelist_${batch}.txt --make-bed --out ${OUT}/${batch}_backbone
+plink --merge-list ${OUT}/files/mergelist_${batch}.txt --memory 8000 --make-bed --out ${OUT}/files/${batch}_backbone
 
 #--------------------
 # example submission

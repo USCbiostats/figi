@@ -8,6 +8,9 @@
 
 wdir="/auto/pmd-02/figi/HRC_BDose"
 
-cp /staging/dvc/andreeki/BD/ukb2_chr7.bdose ${wdir}
-cp /staging/dvc/andreeki/BD/ukb2_chr8.bdose ${wdir}
-
+cp /staging/dvc/andreeki/BD/ukb2_chr1.bdose ${wdir}
+cp /staging/dvc/andreeki/BD/ukb2_chr2.bdose ${wdir}
+cp /staging/dvc/andreeki/BD/ukb2_chr3.bdose ${wdir}
+cp /staging/dvc/andreeki/BD/ukb2_chr4.bdose ${wdir}
+cp /staging/dvc/andreeki/BD/ukb2_chr5.bdose ${wdir}
+cp /staging/dvc/andreeki/BD/ukb2_chr6.bdose ${wdir}
