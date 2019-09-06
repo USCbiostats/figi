@@ -1,6 +1,7 @@
 #=======================================================
 # EPI DATA V2.2
 # 03/13/2019
+# 07/29/2019
 # 
 # Incorporate E variables
 # Process duplicates, problem samples
@@ -11,7 +12,7 @@ library(tidyverse)
 rm(list = ls())
 
 # start with samplefile, filter by drops/gxe
-load("~/data/FIGI_EpiData_rdata/FIGI_SampleFile_Summary_190424.RData")
+load("~/data/FIGI_EpiData_rdata/FIGI_SampleFile_Summary_190729.RData")
 
 df <- figi_samplefile %>% 
   filter(drop == 0)
@@ -40,5 +41,5 @@ any(duplicated(figi$vcfid))
 any(duplicated(figi$pooledcompassid))
 
 rm(list=setdiff(ls(), c("figi_samplefile", "figi")))
-save.image("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData")
+save.image("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190729.RData")
 

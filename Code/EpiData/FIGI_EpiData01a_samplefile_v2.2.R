@@ -2,6 +2,7 @@
 # FIGI Analysis 11/20/2018 Update v2.0
 # FIGI Analysis 03/13/2019 Update v2.1
 # FIGI Analysis 04/24/2019 Update v2.2
+# FIGI Analysis 07/29/2019 Update v2.2 (small fix, accidentally excluded a few samples)
 #
 # Please refer to documentation Yi created
 # this newest sample file cleans up some sample issues we identified previously, don't get confused
@@ -19,7 +20,7 @@
 library("tidyverse")
 library("data.table")
 rm(list = ls())
-setwd('~/data/FIGI_samplefile_epi-190424/')
+setwd('~/data/FIGI_samplefile_epi-190729/')
 
 #-----------------------------------------------------------------------------#
 # DATA MATCHING ----
@@ -52,7 +53,7 @@ table(samplefile$study_gxe)
 # (to avoid issues with GxEScanR)
 # (reassembled vcf samples to be 100% sure, from HRC_VCF_SampleRename folder)
 wrapp <- function(x) {
-  fread(x, stringsAsFactors = F, sep = "\t", col.names = "vcfid") %>% 
+  fread(x, stringsAsFactors = F, sep = "\t", col.names = "vcfid", header = F) %>% 
     mutate(filename = x)
 }
 
@@ -72,13 +73,9 @@ figi_samplefile <- full_join(samplefile, vcf_samplenames, by = "vcfid") %>%
 
 rm(vcf_samplenames, check, samplefile, wrapp)
 
-table(figi_samplefile$filename)
+table(figi_samplefile$filename, useNA = 'ifany')
 
-save.image("~/data/FIGI_EpiData_rdata/FIGI_SampleFile_Summary_190424.RData")
-
-
-
-
+save.image("~/data/FIGI_EpiData_rdata/FIGI_SampleFile_Summary_190729.RData")
 
 
 

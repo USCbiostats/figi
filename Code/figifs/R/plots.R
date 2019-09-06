@@ -84,6 +84,8 @@ create_qqplot <- function(dat, exposure, covars, stat, df, filename_suffix = "")
             cex.axis = 1.3,
             cex.lab = 1.3,
             cex.sub = 1.3,
+            cex = 1.4,
+            pch = 1,
             col = 'blue4')
   par(adj = 1)
   title(sub = bquote(lambda ~ '=' ~ .(signif(lambda, 4)) ~~ lambda[1000] ~ '=' ~.(signif(lambda1000, 4))), cex.sub = 1.3) # FYI ~~ adds spaces when using signif
@@ -172,16 +174,17 @@ create_manhattanplot <- function(dat, exposure, covars, stat, df, filename_suffi
       --anumAddPvalLineLty 6
       --astrAddPvalLineCol coral3
       # Other Graphical Params
+      --anumParMar 7;4;7;4
       --numDefaultSymbol 20
-      --numDefaultCex 0.1
-      --numCexAxis 1.5
-      --numCexLab 2
+      --numDefaultCex 0.6
+      --numCexAxis 1.2
+      --numCexLab 1.2
       --arcdSymbolCrit P<5e-8
       --anumSymbol 17
       --arcdColourCrit P<5e-8
       --astrColour gray30
       --arcdCexCrit P<5e-8
-      --anumCex 0.6
+      --anumCex 1.2
 
       STOP EASYX"), file = ecf_file_name, append = F)
 
@@ -339,12 +342,17 @@ create_twostep_weighted_plot <- function(dat, exposure, covars, sizeBin0, alpha,
   # png(write_weighted_plot_filename(deparse(substitute(dat)), statistic), width = 1280, height = 720)
   color <- rep(c("blue","olivedrab4"),100)
   plot(glist[[1]][,x], glist[[1]][,y],
-       col = "blue",
-       xlab="Bin # for step1 p-values",
-       ylab="-log10(step2 p-values)",
+       col = "blue1",
+       xlab="Bin number for step1 p value",
+       ylab="-log10(step2 chiSqGxE p value)",
        xlim=c(0,binsToPlot),
        ylim=c(0,min.p),
-       axes=F, pch=19, cex=0.5)
+       axes=F, pch=19,
+       cex.main = 1.6,
+       cex.axis = 1.3,
+       cex.lab = 1.3,
+       cex.sub = 1.3,
+       cex = 1)
   lines(glist[[1]][,x], glist[[1]][,ref],
         col = "black",lwd=2)
 
@@ -352,7 +360,12 @@ create_twostep_weighted_plot <- function(dat, exposure, covars, sizeBin0, alpha,
   # (adding to current plot..)
   for(i in 2:binsToPlot){
     points(glist[[i]][,x], glist[[i]][,y],
-           col = color[i], pch = 19, cex = 0.5)
+           col = color[i], pch = 19,
+           cex.main = 1.6,
+           cex.axis = 1.3,
+           cex.lab = 1.3,
+           cex.sub = 1.3,
+           cex = 1)
     lines(glist[[i]][,x], glist[[i]][,ref],
           col = "black",lwd = 2)
   }
@@ -364,9 +377,9 @@ create_twostep_weighted_plot <- function(dat, exposure, covars, sizeBin0, alpha,
   #        col= color[num], pch = 19, cex = 0.5)
   # lines(glist[[num]][,x], rep(last.sig, nrow(glist[[num]])) ,col="black",lwd=2) # need to fix to create last horizontal line
 
-  axis(1, at = c(-1.5, seq(0.5, binsToPlot-0.5, 1)), label = c(0, seq(1, binsToPlot, 1)), cex.axis = 0.8)
-  axis(2, at = c(0:floor(min.p)), label = c(0:min.p), cex.axis=0.8)
-  title(main = write_twostep_weightedHT_plot_title(statistic, exposure, covars, total), sub = "iBin Size = 5, alpha = 0.05", cex.main = 1.5, cex.sub = 1.2)
+  axis(1, at = c(-1.5, seq(0.5, binsToPlot-0.5, 1)), label = c(0, seq(1, binsToPlot, 1)), cex.axis = 1)
+  axis(2, at = c(0:floor(min.p)), label = c(0:min.p), cex.axis=1)
+  title(main = write_twostep_weightedHT_plot_title(statistic, exposure, covars, total), sub = "iBin Size = 5, alpha = 0.05", cex.main = 1.6, cex.sub = 1.3)
 
   dev.off()
 

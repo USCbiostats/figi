@@ -1,10 +1,11 @@
 ---
 title: "FIGI GxE Principal Component Analysis"
 bibliography: /home/rak/Dropbox/library.bib
+date: '`r paste("Updated ", Sys.Date())`'
 output: 
-  #html_document
-  word_document:
-   reference_docx: word_styles.docx
+  html_document
+  #word_document:
+   #reference_docx: word_styles.docx
 ---
 
 
@@ -34,7 +35,7 @@ output:
 
 # Goals
 * Principal Component Analysis of FIGI data. Two data subsets:
-    + GWAS Set N = 138,572
+    + GWAS Set N = 138,572 ()
     + GxE Set N = 102,792
     + (Include 1000 Genomes samples for plotting super-population clusters)
 * Estimate kinship coefficients, identify duplicate samples / crytic relatedness
@@ -106,14 +107,14 @@ library(broom)
 ```{r data, cache = T}
 # Load data (created in another script)
 rm(list = ls())
-load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData")
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190729.RData")
 
 # GxE set
 gxe_set <- figi %>%
   filter(drop == 0 & gxe == 1)
 
 # PCA Results
-pc30k <- fread("~/data/PCA/190506/FIGI_GxESet_KGP_pc20_190430.eigenvec", skip = 1,
+pc30k <- fread("~/data/PCA/190729/FIGI_GxESet_KGP_190729.eigenvec", skip = 1,
                col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20)))) %>% 
   mutate(vcfid = IID)
 
@@ -132,7 +133,7 @@ df <- full_join(df_tmp, kgp_samples, by = "vcfid") %>%
 ```
 
 
-## Pairwise Plots (PC1-5)
+## Pairwise Plots (PC1-4)
 
 ```{r pairwise_setup, message=F, echo=F, warning=F, cache=T}
 plot_pc_pairs <- function(pc, npc) {
@@ -185,12 +186,13 @@ ggdraw() + draw_image("figures/tmp_pca_pc1_p3_country.png")
 ggdraw() + draw_image("figures/tmp_pca_pc1_p4_country.png")
 ```
 
+
 ## PC Adjustment Selection
 
 ### Scree Plot
 ```{r scree_plot, echo=F, warning=F, message=F, cache=T}
 
-eigenval <- fread("~/data/PCA/190506/FIGI_GxESet_pc20_190430.eigenval")
+eigenval <- fread("~/data/PCA/190729/FIGI_GxESet_190729.eigenval")
 eigenval$PC <- seq(1,20)
 eigenvalTotal <- sum(eigenval$V1)
 pct <- round((eigenval$V1 / eigenvalTotal) * 100, 1)
@@ -259,11 +261,11 @@ ggplot(df3, aes(PC, PC_pct) ) +
 ```
 
 
-<!-- ## Regression Comparison -->
-<!-- ```{r regression_comparison, message=F, echo=F, warning=F, cache=T} -->
-<!-- # I think a better idea is to get some markers with maf < 0.001, < 0.01, < 0.1, common markers, run some GLM.  -->
-<!-- # in addition to some of the GWAS top hits -->
-<!-- ``` -->
+## Regression Comparison
+```{r regression_comparison, message=F, echo=F, warning=F, cache=T}
+# I think a better idea is to get some markers with maf < 0.001, < 0.01, < 0.1, common markers, run some GLM.
+# in addition to some of the GWAS top hits
+```
 
 ------
 
@@ -272,25 +274,26 @@ ggplot(df3, aes(PC, PC_pct) ) +
 ## 30,000 PCA SNPs - Rsq/MAF values by Imputation Batch {.tabset}
 ```{r maf_rsq_setup, message=F, echo=F, warning=F, cache=T}
 # rsq_wrapper <- function(batch) {
-#   
+#
 #   # 30K random markers selected for PCA calculation. Addded ref/alt info to reduce headache with reach + ukbiobank
 #   sample30k_edit <- fread("~/data/PCA/FIGI_PC_Backbone_Sample_30K_edit.txt", header = F, col.names = "id")
-#   
+#
 #   # read files, filter the 30K markers
 #   fread_wrapper <- function(x) fread(x) %>%  mutate(id = paste(SNP, `REF(0)`, `ALT(1)`, sep = ":")) %>% filter(id %in% sample30k_edit$id)
 #   sample30_info <- lapply(list.files(paste0("/home/rak/data/HRC_InfoFile/", batch), full.names = T, pattern = "chr"), fread_wrapper)
-#   
+#
 #   # rbind, convert vars to numeric
-#   sample30_info_df <- do.call(rbind, sample30_info) %>% 
-#     dplyr::mutate(x = seq(1, 30000), 
-#                   Rsq = as.numeric(Rsq), 
+#   sample30_info_df <- do.call(rbind, sample30_info) %>%
+#     dplyr::mutate(x = seq(1, 30000),
+#                   Rsq = as.numeric(Rsq),
 #                   MAF = as.numeric(MAF))
-# 
+#
 #   # saveRDS
 #   saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", batch, ".rds"))
 #   }
 
-## use wrapper to create RDS objects of the 30K markers for each imputation batch (only run once, documenting here)
+## use wrapper to create RDS objects of the 30K markers for each imputation batch 
+## (only run once, documenting here)
 ## plot Rsq + MAF
 # rsq_wrapper("axiom_acs_aus_nf")
 # rsq_wrapper("axiom_mecc_cfr_ky")
@@ -306,69 +309,35 @@ ggplot(df3, aes(PC, PC_pct) ) +
 # rsq_wrapper("omniexpress_exomechip")
 # rsq_wrapper("oncoarray_to_usc")
 # rsq_wrapper("plco_3")
-
-# handle these slightly different because the 'snp' variable already contains REF/ALT info, no need to paste like I did for the other batches. 
-# (it's a simple fix for ukbiobank)
-# (reach has all sorts of issues that I believe I handled before...specifically it has headers placed randomly throughout the info files)
-
-## UKBIOBANK
-  # fread_wrapper <- function(x) fread(x)  %>% filter(SNP %in% sample30k_edit$id)
-  # sample30_info <- lapply(list.files(paste0("/home/rak/data/HRC_InfoFile/", "ukbiobank"), full.names = T, pattern = "chr"), fread_wrapper)
-  # 
-  # # rbind, convert vars to numeric
-  # sample30_info_df <- do.call(rbind, sample30_info) %>%
-  #   dplyr::mutate(x = seq(1, 30000),
-  #                 Rsq = as.numeric(Rsq),
-  #                 MAF = as.numeric(MAF))
-  # 
-  # # saveRDS
-  # saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", "ukbiobank", ".rds"))
-
-## REACH (using an 'info' file derived direction from the VCF file i.e. wrayner vcfparse.pl script))
-  # fread_wrapper <- function(x) fread(x) %>%
-  #   filter(ID %in% sample30k_edit$id) %>% 
-  #   separate(INFO, sep = ";", into = c('AF', 'MAF', 'Rsq', 'EmpRsq')) %>% 
-  #   dplyr::select(-EmpRsq) %>% 
-  #   mutate(AF = str_remove(AF, "AF="),
-  #          MAF = str_remove(MAF, "MAF="),
-  #          Rsq = str_remove(Rsq, "R2="))
-  # 
-  # sample30_info <- lapply(list.files(paste0("/media/work/FIGI/IC/reach"), full.names = T, pattern = "chr"), fread_wrapper)
-  # 
-  # sample30_info_df <- do.call(rbind, sample30_info) %>%
-  #   dplyr::mutate(x = seq(1, 30000),
-  #                 Rsq = as.numeric(Rsq),
-  #                 MAF = as.numeric(MAF))
-  #saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", "reach", ".rds"))
-
-
-
+# rsq_wrapper("reach")
+# rsq_wrapper("ukb1")
+# rsq_wrapper("ukb2")
 
 # plotting wrapper
 rsq_plot <- function(df) {
-  
+
   ggplot(data = df, aes(x, Rsq)) +
     geom_point() +
     theme_bw() +
     #scale_y_continuous(breaks=seq(0,1,0.1)) +
     ylim(0,1) + ggtitle("Imputation Rsq values")
-} 
+}
 
 maf_plot <- function(df) {
-  
+
   Nsnps = length(df[which(df$MAF < 0.05), "MAF"])
-  
+
   ggplot(data = df, aes(x, MAF)) +
     geom_point() +
     theme_bw() +
     #scale_y_continuous(breaks=seq(0,1,0.1)) +
-    ylim(0,0.1) + 
+    ylim(0,0.1) +
     ggtitle(paste0("MAF 0-10% (", Nsnps, " out of 30K SNPs < 5%)"))
 }
 
 maf_count <- function(df) {
   tmp <- filter(df, MAF < 0.05)
-  
+
 }
 
 ```
@@ -478,12 +447,18 @@ rsq_plot(df)
 maf_plot(df)
 ```
 
-### ukbiobank
+### ukbiobank (part 1)
 ```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
-df <- readRDS("working/maf_rsq_setup_ukbiobank.rds")
+df <- readRDS("working/maf_rsq_setup_ukb1.rds")
 rsq_plot(df)
 maf_plot(df)
 ```
 
+### ukbiobank (part 2)
+```{r, message=F, echo=F, warning=F, cache=T, dependson='maf_rsq_setup'}
+df <- readRDS("working/maf_rsq_setup_ukb2.rds")
+rsq_plot(df)
+maf_plot(df)
+```
 
 <!-- ## Stephanie - plotting manhattan of each PC vs SNP (get a bird’s eye view of association between each SNP and PCs to gauge contribution from loci to a particular PC) -->
