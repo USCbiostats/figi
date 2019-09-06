@@ -6,7 +6,7 @@
 #SBATCH --partition=conti
 #SBATCH --output=./logs/j04.log
 
-OUT=/staging/dvc/andreeki/pca_ibd
+OUT=/auto/pmd-02/figi/PCA
 cd ${OUT}
 
 # create 2 sets:
@@ -14,7 +14,7 @@ cd ${OUT}
     # gxe + KGP
 
 # gwas set + kgp
-plink --bfile FIGI_GwasSet --memory 16000 --bmerge kgp_backbone --make-bed --out FIGI_GwasSet_KGP
+plink --bfile FIGI_GwasSet_190729 --memory 16000 --bmerge ${OUT}/files/kgp_backbone --make-bed --out FIGI_GwasSet_KGP_190729
 # gxe set + kgp
-plink --bfile FIGI_GxESet --memory 16000 --bmerge kgp_backbone --make-bed --out FIGI_GxESet_KGP
+plink --bfile FIGI_GxESet_190729 --memory 16000 --bmerge ${OUT}/files/kgp_backbone --make-bed --out FIGI_GxESet_KGP_190729
 

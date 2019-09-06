@@ -4,7 +4,7 @@
 #SBATCH --mem=8GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=1-2
+#SBATCH --array=1-3
 #SBATCH --output=./logs/GetBDoseInfo_FIGI_chr%a.log
 
 #cd $SLURM_SUBMIT_DIR

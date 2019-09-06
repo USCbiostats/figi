@@ -6,18 +6,18 @@
 #SBATCH --partition=conti
 #SBATCH --constraint=IB
 #SBATCH --array=1-22
-#SBATCH --output=../logs/Plink_folate_totqc2_ldclump_chiSqGxE_chr%a.log
+#SBATCH --output=../logs/Plink_folate_dietqc2_colon_ldclump_chiSqG_chr%a.log
 
 INN=/auto/pmd-01/andreeki/clump
 INN=/staging/dvc/andreeki/clump
-OUT=/staging/dvc/andreeki/clump_results/folate_totqc2
+OUT=/staging/dvc/andreeki/clump_results/folate_dietqc2_colon
 
 plink \
     --bed ${INN}/corect_oncoarray_chr${SLURM_ARRAY_TASK_ID}.bed \
     --bim ${INN}/corect_oncoarray_chr${SLURM_ARRAY_TASK_ID}_fix.bim \
     --fam ${INN}/corect_oncoarray_chr${SLURM_ARRAY_TASK_ID}.fam \
     --memory 8000 \
-    --clump ${OUT}/Plink_folate_totqc2_ldclump_chiSqGxE_chr${SLURM_ARRAY_TASK_ID}.txt \
+    --clump ${OUT}/Plink_folate_dietqc2_colon_ldclump_chiSqG_chr${SLURM_ARRAY_TASK_ID}.txt \
     --clump-p1 1 --clump-p2 1 \
-    --out   ${OUT}/Plink_folate_totqc2_ldclump_chiSqGxE_chr${SLURM_ARRAY_TASK_ID}
+    --out   ${OUT}/Plink_folate_dietqc2_colon_ldclump_chiSqG_chr${SLURM_ARRAY_TASK_ID}
 

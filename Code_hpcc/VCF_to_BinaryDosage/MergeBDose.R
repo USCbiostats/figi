@@ -7,8 +7,10 @@ library(BinaryDosage)
 args <- commandArgs(trailingOnly=T)
 chr <- args[1]
 
-etal <- c(paste0("/auto/pmd-02/figi/HRC_BDose/FIGI_noUKB_chr", chr, ".bdose"),
-          paste0("/staging/dvc/andreeki/BD/ukbiobank_chr", chr, ".bdose"))
+etal <- c(paste0("/auto/pmd-02/figi/HRC_BDose/FIGI_CORECT_chr", chr, ".bdose"),
+          paste0("/auto/pmd-02/figi/HRC_BDose/FIGI_GECCO_chr", chr, ".bdose"),
+          paste0("/auto/pmd-02/figi/HRC_BDose/UKB1_chr", chr, ".bdose"), 
+          paste0("/auto/pmd-02/figi/HRC_BDose/UKB2_chr", chr, ".bdose"))
 
 mergedFile <- paste0("/auto/pmd-02/figi/HRC_BDose/FIGI_chr", chr, ".bdose")
 

@@ -4,7 +4,7 @@
 #SBATCH --mem=4GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=18,20,21
-#SBATCH --output=/auto/rcf-40/andreeki/FIGI_code/Code_hpcc/Get_Rsq_Estimate/logs/GetRsqEstimateMinimac_chr%a.log
+#SBATCH --array=1-22
+#SBATCH --output=./logs/GxEScanR_folate_dietqc2_sex_age_pc3_energytot_studygxe_52447_binCovF_chr%a.log
 
 Rscript job01.R ${SLURM_ARRAY_TASK_ID}

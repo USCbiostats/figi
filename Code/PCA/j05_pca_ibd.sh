@@ -6,10 +6,12 @@
 #SBATCH --partition=conti
 #SBATCH --output=./logs/j05_PCA_IBD.log
 
-plink2 --bfile FIGI_GwasSet     --pca 20 approx --out FIGI_GwasSet
-plink2 --bfile FIGI_GwasSet_KGP --pca 20 approx --out FIGI_GwasSet_KGP
-plink2 --bfile FIGI_GxESet      --pca 20 approx --out FIGI_GxESet
-plink2 --bfile FIGI_GxESet_KGP  --pca 20 approx --out FIGI_GxESet_KGP
+OUT=/auto/pmd-02/figi/PCA
 
-king -b FIGI_GwasSet.bed --cpus 8 --related --degree 2 --prefix FIGI_GwasSet
-king -b FIGI_GxESet.bed --cpus 8 --related --degree 2 --prefix FIGI_GxESet
+plink2 --bfile ${OUT}/FIGI_GwasSet_190729     --pca 20 approx --out ${OUT}/FIGI_GwasSet_190729
+plink2 --bfile ${OUT}/FIGI_GwasSet_KGP_190729 --pca 20 approx --out ${OUT}/FIGI_GwasSet_KGP_190729
+plink2 --bfile ${OUT}/FIGI_GxESet_190729      --pca 20 approx --out ${OUT}/FIGI_GxESet_190729
+plink2 --bfile ${OUT}/FIGI_GxESet_KGP_190729  --pca 20 approx --out ${OUT}/FIGI_GxESet_KGP_190729
+
+king -b ${OUT}/FIGI_GwasSet_190729.bed --cpus 8 --related --degree 2 --prefix ${OUT}/FIGI_GwasSet_190729
+king -b ${OUT}/FIGI_GxESet_190729.bed --cpus 8 --related --degree 2 --prefix ${OUT}/FIGI_GxESet_190729

@@ -5,7 +5,7 @@
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
 #SBATCH --constraint=IB
-#SBATCH --array=6-10
+#SBATCH --array=1-5
 #SBATCH --output=./logs/MergeBDose_CORECT_chr%a.log
 
 cd $SLURM_SUBMIT_DIR

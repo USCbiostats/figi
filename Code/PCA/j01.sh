@@ -5,7 +5,7 @@
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
 #SBATCH --constraint=IB
-#SBATCH --array=22
+#SBATCH --array=1-22
 
 # Extract snp backbone (random sample) from VCFs (all batches + chromosomes)
 # ${batch} should be imputation batch name, export during sbatch command

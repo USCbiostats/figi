@@ -11,10 +11,16 @@ args <- commandArgs(trailingOnly=T)
 chr <- args[1]
 
 # vcfid vector (GWAS or GxE sets)
-samples <- readRDS("/staging/dvc/andreeki/Rsq/FIGI_GWASSet_vcfid_N_138015.rds")
+samples <- readRDS("/staging/dvc/andreeki/Rsq/FIGI_GWASSet_vcfid_N_131679.rds")
 
 # binarydosage info file (indexed)
 figiGene <- readRDS(paste0("FIGI_chr", chr, ".rds"))
 
-out <- GetRsqEstimateMinimac(figiGene, 1L:nrow(figiGene[[11]]), samples)
+rsq <- GetRsqEstimateMinimac(figiGene, 1L:nrow(figiGene[[11]]), samples)
+aaf <- GetAlternateAlleleFrequencies(figiGene, 1L:nrow(figiGene[[11]]), samples)
+id <- paste(figiGene[[11]]$SNPID, figiGene[[11]]$Reference, figiGene[[11]]$Alternate, sep = ":")
+
+out <- data.frame(id, aaf, rsq)
+
+
 saveRDS(out, file = paste0("/staging/dvc/andreeki/Rsq/FIGI_RsqEstimate_chr", chr, ".rds"))

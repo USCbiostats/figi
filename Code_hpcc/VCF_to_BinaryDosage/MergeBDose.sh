@@ -4,7 +4,9 @@
 #SBATCH --mem=8GB
 #SBATCH --account=lc_dvc
 #SBATCH --partition=conti
-#SBATCH --array=1-2
+#SBATCH --mail-user=andreeki@usc.edu
+#SBATCH --mail-type=END
+#SBATCH --array=4-5
 #SBATCH --output=./logs/MergeBDose_FIGI_chr%a.log
 
 cd $SLURM_SUBMIT_DIR
