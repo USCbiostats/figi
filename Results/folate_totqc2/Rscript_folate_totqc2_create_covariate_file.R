@@ -26,10 +26,8 @@
 library(tidyverse)
 library(data.table)
 rm(list = ls())
-
-pca <- "/home/rak/data/PCA/190506/FIGI_GxESet_KGP_pc20_190430.eigenvec"
-# filename <- "/home/rak/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_folate_dietqc2_sex_age_pc3_studygxe_"
-load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData")
+pca <- "/home/rak/data/PCA/190729/FIGI_GxESet_190729.eigenvec"
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190729.RData")
 
 #-----------------------------------------------------------------------------#
 # GxE Set - folate_dietqc2
@@ -45,9 +43,11 @@ cov <- figi %>%
          sex = ifelse(sex == "Female", 0, 1),
          study_gxe = ifelse(study_gxe == "Colo2&3", "Colo23", study_gxe),
          energytot = as.numeric(energytot), 
-         folate_dietqc2 = dplyr::recode(folate_dietqc2, `1`=1, `2`=2, `3`=3, `4`=4)) %>% 
-  dplyr::select(vcfid, outcome, age_ref_imp, sex, study_gxe, paste0(rep("PC", 3), seq(1,3)), energytot, folate_dietqc2) %>% 
+         folate_totqc2 = dplyr::recode(folate_dietqc2, `1`=1, `2`=2, `3`=3, `4`=4)) %>% 
+  dplyr::select(vcfid, outcome, age_ref_imp, sex, study_gxe, paste0(rep("PC", 3), seq(1,3)), energytot, folate_totqc2) %>%
   dplyr::filter(complete.cases(.))
+
+table(cov$study_gxe, cov$folate_totqc2, useNA = 'ifany')
 
 # ------ exclude studies (case only etc) ------ #
 table(cov$study_gxe, cov$outcome)

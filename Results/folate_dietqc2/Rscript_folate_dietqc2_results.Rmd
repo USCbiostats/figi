@@ -1,15 +1,16 @@
 ---
-title: "FIGI Analysis - folate_totqc2"
+title: "FIGI Analysis - folate_dietqc2"
 bibliography: /home/rak/Dropbox/library.bib
+date: '`r paste("Updated ", Sys.Date())`'
 output: 
-  #word_document:
-   #reference_docx: /home/rak/Dropbox/FIGI/Code/Functions/word_styles.docx
+  word_document:
+    reference_docx: /home/rak/Dropbox/FIGI/Code/Functions/word_styles.docx
   #pdf_document:
-  html_document:
-    toc: true
-    toc_float: true
-    toc_depth: 2
-    theme: "united"
+  # html_document:
+  #   toc: true
+  #   toc_float: true
+  #   toc_depth: 2
+  #   theme: "united"
 ---
 
 ```{r setup, include=FALSE}
@@ -27,6 +28,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r package_setup, include = F}
 library(tidyverse)
 library(data.table)
+library(forcats)
 library(ggplot2)
 library(qqman)
 library(table1)
@@ -40,7 +42,7 @@ library(figifs)
 # Define Exposure Variable HERE
 # manually edit meta-analysis covariates (fix soon)
 #-----------------------------------------------------#
-results_exposure <- "folate_totqc2"
+results_exposure <- "folate_dietqc2"
 ```
 
 
@@ -65,10 +67,10 @@ dat <- figi %>%
          sex = ifelse(sex == "Female", 0, 1),
          study_gxe = ifelse(study_gxe == "Colo2&3", "Colo23", study_gxe),
          energytot = as.numeric(energytot),
-         folate_totqc2 = recode(folate_totqc2, `1`=1, `2`=2, `3`=3, `4`=4))
+         folate_dietqc2 = recode(folate_dietqc2, `1`=1, `2`=2, `3`=3, `4`=4))
 ```
 
-<!-- # NSAID **folate_totqc2** Mapping -->
+<!-- # NSAID **folate_dietqc2** Mapping -->
 <!-- ![](figures/NSAID_Variable_list.png) -->
 
 (Investigators have mapping documents available, more information in this report not needed?)
@@ -78,7 +80,7 @@ dat <- figi %>%
 ## BoxPlots {.tabset}
 ```{r, echo = F, message = F, cache = T, fig.height=18, fig.width=13}
 pdat <- dat %>%
-  dplyr::mutate(!!results_exposure := factor(!! sym(results_exposure), exclude = NULL, levels = c(1,2,3,4)))
+  dplyr::mutate(!!results_exposure := fct_rev(factor(!! sym(results_exposure), exclude = NULL, levels = c(1,2,3,4,NA))))
 
 ggplot(data=pdat, aes(x=outcome)) +
     geom_bar(aes(fill = !! sym(results_exposure)), position = 'fill') +
@@ -121,14 +123,11 @@ create_descriptive_table(dat %>% dplyr::filter(cancer_site_sum1 == "rectal" | ou
 ## Meta Analyses {.tabset}
 
 ```{r, echo = F, message = F, cache = F}
-#
-# Important to edit this accordingly 
-# 
 meta_function_wrap <- function(dat) {
   study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
   gxe_counts <- get_counts_outcome_by_group(dat, outcome, !! sym(results_exposure), study_gxe)
-  gxe_glm <- get_estimates_e_by_group(dat, outcome = outcome, exposure = !! sym(results_exposure), group = study_gxe, age_ref_imp, sex, energytot)
-  gxe_meta <- dplyr::inner_join(gxe_counts, gxe_glm, 'study_gxe') %>%
+  gxe_glm <- get_estimates_e_by_group(dat, outcome, !! sym(results_exposure), group=study_gxe, age_ref_imp, sex, energytot)
+  gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
     inner_join(., study_info, by = "study_gxe")
 }
 ```
@@ -312,75 +311,75 @@ funnel(results_meta, sm="OR", studlab = T)
 
 ### chiSqG
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_folate_totqc2_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
-knitr::include_graphics("figures/EasyStrata_folate_totqc2_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_folate_dietqc2_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
+knitr::include_graphics("figures/EasyStrata_folate_dietqc2_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### chiSqGxE
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_folate_totqc2_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
-knitr::include_graphics("figures/EasyStrata_folate_totqc2_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_folate_dietqc2_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
+knitr::include_graphics("figures/EasyStrata_folate_dietqc2_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### 2DF
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_folate_totqc2_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
-knitr::include_graphics("figures/EasyStrata_folate_totqc2_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_folate_dietqc2_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
+knitr::include_graphics("figures/EasyStrata_folate_dietqc2_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### 3DF
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_folate_totqc2_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
-knitr::include_graphics("figures/EasyStrata_folate_totqc2_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_folate_dietqc2_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
+knitr::include_graphics("figures/EasyStrata_folate_dietqc2_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### chiSqGE (QQ)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_folate_totqc2_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
+knitr::include_graphics("figures/QQ_Plot_folate_dietqc2_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
 
 ### chiSqControl (QQ)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_folate_totqc2_chiSqControl_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
+knitr::include_graphics("figures/QQ_Plot_folate_dietqc2_chiSqControl_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
 
 ### chiSqCase
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_folate_totqc2_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
-knitr::include_graphics("figures/EasyStrata_folate_totqc2_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_folate_dietqc2_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
+knitr::include_graphics("figures/EasyStrata_folate_dietqc2_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### 2-Step (chiSqG)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_folate_totqc2_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_folate_dietqc2_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
 
 ### 2-Step (chiSqGE)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_folate_totqc2_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_folate_dietqc2_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
 
 ### 2-Step (chiSqEDGE)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_folate_totqc2_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_folate_dietqc2_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
@@ -397,21 +396,21 @@ knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_folate_t
 
 ### chiSqGxE 2-step (chiSqG)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_folate_totqc2_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_folate_dietqc2_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
 ```
 <br><br><br>
 ---------------
 
 ### chiSqGxE 2-step (chiSqGE)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_folate_totqc2_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_folate_dietqc2_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
 ```
 <br><br><br>
 ---------------
 
 ### chiSqGxE 2-step (chiSqEDGE)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_folate_totqc2_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_54084.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_ld_folate_dietqc2_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_energytot_N_52447.png")
 ```
 <br><br><br>
 ---------------

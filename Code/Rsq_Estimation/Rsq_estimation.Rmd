@@ -91,3 +91,17 @@ where $D_i$ is the squared sums of estimated $q$'s from the quadratic formula, w
 ## Results rare markers
 
 ![](mecc_chr22_Rsq_comparison_minimac_rare.png)
+
+
+# Estimating Rsq for FIGI GWAS Set
+
+### Calculate Rsq estimates for use in filtering steps for all GxEScanR analysis results:   
+
+1. calculate Rsq using alt allele probabilities (see BinaryDosage fork on KimAE github account) **using the GWAS subset of individuals, N = 138,015**  
+2. create chromosome specific files containing GWAS set MAF and Rsq estimates  
+3. create concatenated files, all SNPs with MAF > 0.001 and Rsq Estimate > 0.8   
+  - "FIGI_RsqEsimate_chrALL.rds"  
+
+
+
+

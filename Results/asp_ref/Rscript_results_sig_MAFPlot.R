@@ -14,7 +14,8 @@ library(lmtest)
 rm(list = ls())
 
 # annotations
-fh_annotations <- fread("~/data/Annotations/crc_gwas_125k_indep_signals_95_EasyStrata_LDBased.tsv") %>% 
+fh_annotations <- fread("~/data/Annotations/crc_gwas_125k_indep_sig
+                        nals_95_EasyStrata_LDBased.tsv") %>% 
   mutate(SNP = paste(Chr, Pos, sep = ":"))
 
 # results

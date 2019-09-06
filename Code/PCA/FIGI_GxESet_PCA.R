@@ -1,70 +1,53 @@
-#=============================================
-# Create PC plots
-#=============================================
+#=============================================================================#
+# Create additional PC plots and other objects for rmarkdown report
+#=============================================================================#
 library(dplyr)
 library(data.table)
 library(ggplot2)
+rm(list = ls())
 
 # eigenvalues
-eigenvals <- fread("~/Dropbox/code/FIGI_EpiData/FIGI_GxESet_KGP.eigenval") %>% 
+eigenvals <- fread("~/data/PCA/190729/FIGI_GxESet_KGP_190729.eigenval") %>% 
   mutate(tot = sum(V1),
          pct = round(100*(V1/tot), 2),
          csum = cumsum(pct))
 
-summarise (n = n()) %>%
-  mutate(freq = n / sum(n))
-
 # eigenvectors
 rm(list = ls())
-load("~/git/DATA/FIGI_EpiData_rdata/FIGI_Genotype_Epi_181120.RData")
-Epi <- Epi %>% 
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190729.RData")
+
+# GxE set
+gxe_set <- figi %>%
   filter(drop == 0 & gxe == 1)
 
-pc30k <- fread("~/Dropbox/code/FIGI_EpiData/FIGI_GxESet_KGP.eigenvec", skip = 1, 
-               col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20))))
-kgp_samples <- fread("~/Dropbox/code/FIGI_EpiData/integrated_call_samples_v3.20130502.ALL.panel.fix", stringsAsFactors = F) %>% 
-  dplyr::rename(IID = sample)
+# PCA Results
+pc30k <- fread("~/data/PCA/190729/FIGI_GxESet_KGP_190729.eigenvec", skip = 1,
+               col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20)))) %>% 
+  mutate(vcfid = IID)
 
-pool <- seq(0,1,by = 0.001) # for random sampling
+df_tmp <- full_join(gxe_set, pc30k, by="vcfid") %>% 
+  dplyr::select(vcfid, outc, race_self, study_gxe, study_site, study, platform, paste0(rep("PC", 20), seq(1,20)))
 
-set.seed(2018)
-df <- full_join(pc30k, kgp_samples, by = 'IID')
-df <- full_join(df, Epi[,c("vcfid", "race_self", "studyname", "study_site", "study")], by = c("IID"="vcfid")) %>% 
+# add 1000G sample info for plotting
+kgp_samples <- fread("~/data/PCA/integrated_call_samples_v3.20130502.ALL.panel.fix", stringsAsFactors = F) %>%
+  dplyr::rename(vcfid = sample)
+
+# final data.frame
+df <- full_join(df_tmp, kgp_samples, by = "vcfid") %>% 
   mutate(race_self = factor(race_self, labels = c("Unknown", "AI_AN", "Asian", "Black", "NH_PI", "Other", "White")),
-         Group = factor(replace(super_pop,is.na(super_pop), 'FIGI'),
-                                levels=c("FIGI","AFR", "AMR", "EAS", "EUR", "SAS")),
-         test = sample(pool, nrow(.), replace = T),
-         Country = factor(ifelse(study_site %in% c('Alabama', 'Kentucky', 'Los Angeles', 'Seattle', 'Hawaii', 'Mayo Foundation', 'Midwest', 'South', 'West', 'Northeast'), 'USA', 
-                          ifelse(study_site %in% c('Barcelona', 'Leon', 'Santiago', 'Asturias'), 'Spain', 
-                          ifelse(study_site %in% c('MECC'), 'Israel', 
-                          ifelse(study_site %in% c('Melbourne', 'Australia'), 'Australia', 
-                          ifelse(study_site %in% c('Heidelberg'), 'Germany',
-                          ifelse(study_site %in% c('888'), 'Italy', 
-                          ifelse(study_site %in% c('Central Sweden'), 'Sweden', 
-                          ifelse(study_site %in% c('Ontario', 'Newfoundland'), 'Canada',
-                          ifelse(study == 'ATBC', 'Finland',
-                          ifelse(study == 'CzechCCS', 'Czech Republic', 
-                          ifelse(study == 'EPICOLON', 'Spain', 
-                          ifelse(study %in% c('ASTERISK'), 'France', 
-                          ifelse(study %in% c('FIRE3', 'DACHS', 'ESTHER_VERDI', 'NGCCS'), 'Germany', 
-                          ifelse(study %in% c('SEARCH', 'UKB', 'LCCS'), 'UK',
-                          ifelse(study %in% c('DALS', 'EDRN', 'MOFFITT', 'VITAL', 'CLUEII', 'Colo23', 'NCCCSI', 'NCCCSII', 'PLCO', 'PPS3', 'PPS4', 'SELECT', 'NHS', 'PHS', 'REACH', 'USC_HRT_CRC', 'HawaiiCCS', 'HPFS', 'SMS'), 'USA', 
-                          ifelse(study == 'CORSA', 'Austria', NA)))))))))))))))))) %>% 
-  arrange(Group)
+         group = factor(replace(super_pop, is.na(super_pop), 'FIGI'),
+                        levels=c("FIGI","AFR", "AMR", "EAS", "EUR", "SAS")))
 
 
 
-
-
-
-
-
-df <- full_join(pc30k, kgp_samples, by = 'IID')
-df <- full_join(df, Epi[,c("vcfid", "race_self", "studyname", "study_site", "study")], by = c("IID"="vcfid")) %>% 
+#-----------------------------------------------------------------------------#
+# plot by country
+# (to show uninformative nature of PC4 in terms of study country)
+#-----------------------------------------------------------------------------#
+df_country_noUSA <- full_join(df_tmp, kgp_samples, by = "vcfid") %>% 
   mutate(race_self = factor(race_self, labels = c("Unknown", "AI_AN", "Asian", "Black", "NH_PI", "Other", "White")),
-         Group = factor(replace(super_pop,is.na(super_pop), 'FIGI'),
+         group = factor(replace(super_pop, is.na(super_pop), 'FIGI'),
                         levels=c("FIGI","AFR", "AMR", "EAS", "EUR", "SAS")),
-         test = sample(pool, nrow(.), replace = T),
          Country = factor(ifelse(study_site %in% c('Alabama', 'Boca Rat', 'CA', 'CO', 'CCF', 'Colorado', 'Detriot', 'DHMC', 'GA', 'Georgetown', 'Greensvi', 'H', 'Hartford', 'Hawaii', 'HAWAII', 'Henry Ford Health System', 'IA', 'Iowa', 'JHU CLUE,WASHCO MD USA', 'Kaiser', 'Kentucky', 'Los Angeles', 'Marshfield', 'Martin M', 'Mayo Foundation', 'Midwest', 'Minn', 'Minnesota', 'MN', 'Moffitt', 'Morton P', 'NC', 'NH', 'Northeast', 'Northwest region', 'OH', 'Pittsburgh', 'PR', 'Sarasota', 'SC', 'Seattle', 'South', 'St. Jose', 'St. Vinc', 'Tallahas', 'TX', 'UCO', 'UMN', 'UNC', 'UTR', 'USA, Midwest', 'USA, Northeast', 'USA, Southeast', 'USA, Southwest', 'USA, West', 'USC/KP', 'Utah', 'Washington', 'Watson C', 'West'), 'USA',
                           ifelse(study_site %in% c('Asturias', 'Barcelona', 'CRCBarcelona', 'Granada', 'Leon', 'Murcia', 'Navarra', 'Santiago', 'San Sebastian'), 'Spain', 
                           ifelse(study_site %in% c('Barts', 'Birmingham', 'Bristol', 'Bury', 'Cardiff', 'Cambridge', 'Croydon', 'Edinburgh', 'Glasgow', 'Hounslow', 'Leeds', 'Liverpool', 'Manchester', 'Middlesborough', 'Newcastle', 'Nottingham', 'Oxford', 'Reading', 'Sheffield', 'Stockport (pilot)', 'Stoke', 'Swansea', 'Wrexham', 'UK General Population', 'UK Health Conscious'), 'UK', 
@@ -83,24 +66,158 @@ df <- full_join(df, Epi[,c("vcfid", "race_self", "studyname", "study_site", "stu
                           ifelse(study %in% c('SEARCH'), 'UK', 
                           ifelse(study %in% c('CORSA'), 'Austria', 
                           ifelse(study %in% c('DACHS', 'NGCCS'), 'Germany', NA)))))))))))))))))))) %>% 
-  arrange(Group)
+  filter(!(is.na(Country)),
+         Country != "USA")
+
+ggplot(data = df_country_noUSA, aes(PC1, PC2, color = Country)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "PC1",
+       y = "PC2",
+       title = "PC1 vs PC2") + 
+  theme_classic() +
+  theme(legend.key.size = unit(0.15, 'inches')) + scale_x_reverse()
+ggsave("figures/tmp_pca_pc1_p2_country.png", width = 6, height = 4)
 
 
-x <- filter(df, !is.na(Country))
+ggplot(data = df_country_noUSA, aes(PC1, PC3, color = Country)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "PC1",
+       y = "PC3",
+       title = "PC1 vs PC3") + 
+  theme_classic() +
+  theme(legend.key.size = unit(0.15, 'inches')) + scale_x_reverse()
+ggsave("figures/tmp_pca_pc1_p3_country.png", width = 6, height = 4)
 
-y <- data.frame(table(df$Country, df$study)) %>% filter(Freq !=0)
-table(df$study, df$Country)
+
+ggplot(data = df_country_noUSA, aes(PC1, PC4, color = Country)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "PC1",
+       y = "PC4",
+       title = "PC1 vs PC4") + 
+  theme_classic() +
+  theme(legend.key.size = unit(0.15, 'inches')) + scale_x_reverse()
+ggsave("figures/tmp_pca_pc1_p4_country.png", width = 6, height = 4)
 
 
-x <- filter(df, study == "MECC")
-y <- data.frame(table(x$study_site, x$study)) %>% filter(Freq !=0)
-table(df$study, df$Country)
 
-x <- filter(df, Country == "Europe")
+#-----------------------------------------------------------------------------#
+# MAF and Rsq by imputation batch
+# to gauge quality of the 30,000 markers randomly sampled for PC calculation
+#
+# output rds file (info file + id etc)
+#-----------------------------------------------------------------------------#
 
-table(x$study)
-y= data.frame(table(x$study_site, x$study)) %>% 
-  filter(Freq != 0)
+rsq_wrapper <- function(batch) {
+
+  # 30K random markers selected for PCA calculation. Addded ref/alt info to reduce headache with reach + ukbiobank
+  sample30k_edit <- fread("~/data/PCA/FIGI_PC_Backbone_Sample_30K_edit.txt", header = F, col.names = "id")
+
+  # read files, filter the 30K markers
+  fread_wrapper <- function(x) fread(x) %>%  mutate(id = paste(SNP, `REF(0)`, `ALT(1)`, sep = ":")) %>% filter(id %in% sample30k_edit$id)
+  sample30_info <- lapply(list.files(paste0("/home/rak/data/HRC_InfoFile/", batch), full.names = T, pattern = "chr"), fread_wrapper)
+
+  # rbind, convert vars to numeric
+  sample30_info_df <- do.call(rbind, sample30_info) %>%
+    dplyr::mutate(x = seq(1, 30000),
+                  Rsq = as.numeric(Rsq),
+                  MAF = as.numeric(MAF))
+
+  # saveRDS
+  saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", batch, ".rds"))
+  }
+
+# use wrapper to create RDS objects of the 30K markers for each imputation batch (only run once, documenting here)
+# plot Rsq + MAF
+rsq_wrapper("axiom_acs_aus_nf")
+rsq_wrapper("axiom_mecc_cfr_ky")
+rsq_wrapper("ccfr_1m_1mduo_reimpute")
+rsq_wrapper("ccfr_omni")
+rsq_wrapper("corect_oncoarray")
+rsq_wrapper("corsa_axiom")
+rsq_wrapper("cytosnp_comb")
+rsq_wrapper("initial_comb_datasets")
+rsq_wrapper("mecc")
+rsq_wrapper("newfoundland_omniquad")
+rsq_wrapper("omni_comb")
+rsq_wrapper("omniexpress_exomechip")
+rsq_wrapper("oncoarray_to_usc")
+rsq_wrapper("plco_3")
+rsq_wrapper("reach")
+rsq_wrapper("ukb1")
+rsq_wrapper("ukb2")
+
+
+# --- No applicable since UKB and reach were reimputed --- #
+# handle these slightly different because the 'snp' variable already contains REF/ALT info, no need to paste like I did for the other batches.
+# (it's a simple fix for ukbiobank)
+# (reach has all sorts of issues that I believe I handled before...specifically it has headers placed randomly throughout the info files)
+# # UKBIOBANK
+# fread_wrapper <- function(x) fread(x)  %>% filter(SNP %in% sample30k_edit$id)
+# sample30_info <- lapply(list.files(paste0("/home/rak/data/HRC_InfoFile/", "ukbiobank"), full.names = T, pattern = "chr"), fread_wrapper)
+# 
+# # rbind, convert vars to numeric
+# sample30_info_df <- do.call(rbind, sample30_info) %>%
+#   dplyr::mutate(x = seq(1, 30000),
+#                 Rsq = as.numeric(Rsq),
+#                 MAF = as.numeric(MAF))
+# 
+# # saveRDS
+# saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", "ukbiobank", ".rds"))
+# 
+# # REACH (using an 'info' file derived direction from the VCF file i.e. wrayner vcfparse.pl script))
+# fread_wrapper <- function(x) fread(x) %>%
+#   filter(ID %in% sample30k_edit$id) %>%
+#   separate(INFO, sep = ";", into = c('AF', 'MAF', 'Rsq', 'EmpRsq')) %>%
+#   dplyr::select(-EmpRsq) %>%
+#   mutate(AF = str_remove(AF, "AF="),
+#          MAF = str_remove(MAF, "MAF="),
+#          Rsq = str_remove(Rsq, "R2="))
+# 
+# sample30_info <- lapply(list.files(paste0("/media/work/FIGI/IC/reach"), full.names = T, pattern = "chr"), fread_wrapper)
+# 
+# sample30_info_df <- do.call(rbind, sample30_info) %>%
+#   dplyr::mutate(x = seq(1, 30000),
+#                 Rsq = as.numeric(Rsq),
+#                 MAF = as.numeric(MAF))
+# saveRDS(sample30_info_df, file = paste0("working/maf_rsq_setup_", "reach", ".rds"))
+
+
+
+
+# plotting wrapper
+rsq_plot <- function(df) {
+  
+  ggplot(data = df, aes(x, Rsq)) +
+    geom_point() +
+    theme_bw() +
+    #scale_y_continuous(breaks=seq(0,1,0.1)) +
+    ylim(0,1) + ggtitle("Imputation Rsq values")
+}
+
+maf_plot <- function(df) {
+  
+  Nsnps = length(df[which(df$MAF < 0.05), "MAF"])
+  
+  ggplot(data = df, aes(x, MAF)) +
+    geom_point() +
+    theme_bw() +
+    #scale_y_continuous(breaks=seq(0,1,0.1)) +
+    ylim(0,0.1) +
+    ggtitle(paste0("MAF 0-10% (", Nsnps, " out of 30K SNPs < 5%)"))
+}
+
+maf_count <- function(df) {
+  tmp <- filter(df, MAF < 0.05)
+  
+}
+
+
+
+
+
+#-----------------------------------------------------------------------------#
+# Older but still useful stuff
+#-----------------------------------------------------------------------------#
 
 
 # first, generate pairwise plots 
@@ -152,19 +269,19 @@ for(pc in 1:19) {
 
 # PC VS NOISE (to visualize single PC)
 for(pc in 1:20) {
-    xpc <- paste0('PC', pc)
-    filename = paste0("~/Dropbox/code/FIGI_PCA/working/", xpc, "_test", ".png")
-    
-    p <- ggplot(data = df, aes(eval(parse(text=xpc)), test, color = Group)) + 
-      geom_point(alpha = 0.5) + 
-      labs(x = xpc,
-           y = 'Jitter',
-           title = paste0("Jitter", " vs. ", xpc)) + 
-      scale_colour_manual(values=c("gold", "red", "black", "purple", "green", "royalblue")) +
-      theme_classic() +
-      theme(legend.key.size = unit(0.15, 'inches'))
-    
-    ggsave(p, filename = filename)
+  xpc <- paste0('PC', pc)
+  filename = paste0("~/Dropbox/code/FIGI_PCA/working/", xpc, "_test", ".png")
+  
+  p <- ggplot(data = df, aes(eval(parse(text=xpc)), test, color = Group)) + 
+    geom_point(alpha = 0.5) + 
+    labs(x = xpc,
+         y = 'Jitter',
+         title = paste0("Jitter", " vs. ", xpc)) + 
+    scale_colour_manual(values=c("gold", "red", "black", "purple", "green", "royalblue")) +
+    theme_classic() +
+    theme(legend.key.size = unit(0.15, 'inches'))
+  
+  ggsave(p, filename = filename)
 }
 
 
@@ -404,7 +521,7 @@ p
 # who are these non-whites
 nonwhite <- filter(df, race_self != "White")
 table(nonwhite$studyname)
-  
+
 
 
 
@@ -441,10 +558,7 @@ p
 
 
 
-#------------------------------------------------
-# Graphs by subsets
-# To be Continued... 
-#------------------------------------------------
+# graphs by subsets
 kgp <- fread("~/work/FIGI_TestRun_85k/integrated_call_samples_v3.20130502.ALL.panel.fix", stringsAsFactors = F) %>%
   rename(IID = sample)
 pca <- fread("~/work/FIGI_TestRun_85k/ALL_Merged_20KSNPS_KGP.eigenvec", stringsAsFactors = F, col.names = c("FID", "IID", paste0(rep("PC", 10), seq(1,10))))
@@ -537,10 +651,7 @@ plotpc.race('PC2', 'PC3', group = "White")
 
 
 
-#===============================================
-# PCA Plots
-# pairwise comparisons
-#===============================================
+# pairwise plots
 
 ## PCA Plots
 library(dplyr)

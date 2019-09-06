@@ -2,37 +2,39 @@
 # FIGI Analysis 02/26/2019
 # FIGI Analysis 03/13/2019
 # FIGI Analysis 05/16/2019
+# FIGI Analysis 08/08/2019 - reimputed UKB + reach
 #
-# Creates the following:
-# - Covariate table for GxEScanR (flat text table)
-# - Covariate data.frame (same as above, but study_gxe as factor)
-# - Covariate data.frame with more covariates (for post-harmonization, post-hoc analyses)
+# Create covariate tables for GxEScanR
 #
+# COVARIATE DATA.FRAME
+# 
 # Notes:
 # use gxe set as determined in `gxe` variable (in addition to drop == 0)
-# 	- gxe == 1 removes nonEUR studies --- c("HispanicCCS", "Taiwan", "SMHS", "SWHS", "HCES-CRC", "PURIFICAR")
+# 	- gxe == 1 removes nonEUR studies
+#		- c("HispanicCCS", "Taiwan", "SMHS", "SWHS", "HCES-CRC", "PURIFICAR")
 # 	- gxe == 1 removes outc == "other"!
-#   - study_gxe = adj. for study + platform. Remove case-only studies when running GxEScanR (causes crash)
-# principal components
-#   - 2 sets available: GWAS and GxE
-#   - see documentation for details
 #
-# maybe generalize this step as a function but for now edit manually
-# also need to create datasets by tumor site
+# studyname = adj. for study + platform
+# remove case-only studies (causes crash)
+# add principal components
+# 	- remember these were calculated on whole set N = 141,362
+#   - updated PCs, 2 sets available: GWAS and GxE
+#
+# Combine NFCCR_1 NFCCR_2 (double check this with Yi)
+#		- NFCCR_1 only has cases, NFCCR_2 has cases/controls 
+#   - actually, DON'T DO THIS!!!!
 #=============================================================================#
 library(tidyverse)
 library(data.table)
 rm(list = ls())
-pca <- "/home/rak/data/PCA/190506/FIGI_GxESet_KGP_pc20_190430.eigenvec"
-filename <- "/home/rak/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485"
-load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190424.RData")
+pca <- "/home/rak/data/PCA/190729/FIGI_GxESet_190729.eigenvec"
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190729.RData")
 
 
 #-----------------------------------------------------------------------------#
 # GxE Set aspirin
 #-----------------------------------------------------------------------------#
-pc30k <- fread(pca, skip = 1, 
-               col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20))))
+pc30k <- fread(pca, skip = 1, col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20))))
 
 cov <- figi %>%
   filter(drop == 0 & gxe == 1) %>% 
@@ -49,33 +51,23 @@ table(cov$study_gxe, cov$outcome)
 sort(unique(cov$study_gxe))
 drops <- data.frame(table(cov$study_gxe, cov$outcome)) %>% 
   filter(Freq == 0)
-exclude_studies <- as.vector(unique(drops$Var1))
 
-cov <- filter(cov, !study_gxe %in% exclude_studies)
+cov <- filter(cov, !study_gxe %in% unique(drops$Var1))
 
-
-# ------ covar data.frame (minimal)  ------
-# no study_gxe indicator variables (as factors)
-saveRDS(cov, file = paste0(filename, "_GLM.rds"), version = 2)
-
-
-# ------ GxEScan covariate table ------
-out <- cov
-
-for(t in unique(out$study_gxe)) {
-  out[paste0(t)] <- ifelse(out$study_gxe==t,1,0)
+# create indicator variables for GxEScanR
+cov_gxescan <- cov
+for(t in unique(cov_gxescan$study_gxe)) {
+  cov_gxescan[paste0(t)] <- ifelse(cov_gxescan$study_gxe==t,1,0)
 }
 
-# Checks (what studies are included and how many)
-check <- dplyr::select(out, unique(out$study_gxe)) %>% 
+# checks (what studies are included and how many)
+check <- dplyr::select(cov_gxescan, unique(cov_gxescan$study_gxe)) %>% 
   summarise_all(sum) %>% t() %>%  as.data.frame(.) %>% 
   rownames_to_column()
 
-# final (making Kentucky the reference)
-out <- out %>% 
-  dplyr::select(-Kentucky, -study_gxe,
-                -aspirin, aspirin)
+# clean up , make Kentucky reference study_gxe (arbitrary)
+cov_gxescan <- dplyr::select(cov_gxescan, -Kentucky, -study_gxe, -aspirin, aspirin)
 
-saveRDS(out, file = paste0(filename, '.rds'), version = 2)
-
-
+# save files
+saveRDS(cov,         file = '~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds', version = 2)
+saveRDS(cov_gxescan, file = "~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485.rds",     version = 2)
