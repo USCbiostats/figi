@@ -1,0 +1,105 @@
+---
+title: "FIGI GxE Principal Component Analysis"
+bibliography: /home/rak/Dropbox/library.bib
+date: '`r paste("Updated ", Sys.Date())`'
+output: 
+  html_document
+  #word_document:
+   #reference_docx: word_styles.docx
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+```{r libraries, include=F}
+library(data.table)
+library(tidyverse)
+library(kableExtra)
+library(plotly)
+library(qqman)
+library(gridExtra)
+library(cowplot)
+library(broom)
+```
+
+# FIGI GWAS
+
+How many PCs to include in main effects analysis
+
+## Scree Plot
+```{r scree_plot, echo=F, warning=F, message=F, cache=T}
+
+eigenval <- fread("~/data/PCA/190729/FIGI_GwasSet_190729.eigenval")
+eigenval$PC <- seq(1,20)
+eigenvalTotal <- sum(eigenval$V1)
+pct <- round((eigenval$V1 / eigenvalTotal) * 100, 1)
+cumpct <- round(cumsum(pct), 1)
+eigenval$PC_pct <- pct
+eigenval$PC_pct_cumsum <- cumpct
+
+# plot PC vs Eigenvalue
+ggplot(eigenval, aes(PC, V1)) +
+  geom_point() + geom_line() + theme_bw() +
+  ggtitle("PC vs Eigenvalue") +
+  labs(x = "Principal Component", y = "Eigenvalue")
+
+# plot PC vs Eigenvalue Percentage
+# Including average Eigenvalue Percentage across all PCs
+avg_eigenvalPct <- mean(eigenval$PC_pct)
+
+ggplot(eigenval, aes(PC, PC_pct)) +
+  geom_point() + geom_line() + theme_bw() +
+  ggtitle("PC vs Eigenvalue Pct") +
+  labs(x = "Principal Component", y = "Eigenvalue Pct") +
+  geom_hline(yintercept = avg_eigenvalPct, color = 'red')
+```
+
+## Cumulative Pct
+```{r cumulative_pct, message=F, echo=F, warning=F, cache=T}
+df <- eigenval %>%
+  rename(EigenvalPct = PC_pct,
+         EigenvalPctCum = PC_pct_cumsum) %>%
+  dplyr::select(-V1) %>%
+  gather(key = group, value, -PC)
+
+ggplot(df, aes(PC, value) ) +
+  geom_point() +
+  geom_line(aes(linetype = group)) +
+  theme_bw() +
+  theme(legend.position = 'bottom', legend.text=element_text(size=14)) +
+  labs(x = "Principal Component", y = "Eigenval Proportion") +
+  scale_linetype_discrete(name = "", labels = c("EigenvalPct", "Cumulative EigenvalPct")) +
+  geom_text(aes(label=ifelse(value > 40, as.character(value), ''), vjust = -3))
+```
+
+## Broken Stick
+```{r broken_stick, message=F, echo=F, warning=F, cache=T}
+p = 20
+z <- rep(1, p) / seq(1, p)
+g <- cumsum(rev(z)) / p
+
+df1 <- eigenval %>%
+  mutate(group = "EigenvalPct") %>%
+  dplyr::select(group, PC, PC_pct)
+
+df2 <- data.frame(group = "BrokenStick Rule",
+                  PC = seq(1,20),
+                  PC_pct = rev(100*g))
+
+df3 <- rbind(df1, df2)
+
+
+ggplot(df3, aes(PC, PC_pct) ) +
+  geom_point() +
+  geom_line(aes(linetype = group)) +
+  theme_bw() +
+  labs(x = "Principal Component", y = "Eigenvalue Percentage") +
+  theme(legend.position = 'bottom', legend.text=element_text(size=14))
+```
+
+

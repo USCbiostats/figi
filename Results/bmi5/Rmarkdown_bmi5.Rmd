@@ -1,0 +1,395 @@
+---
+title: "FIGI Analysis - bmi5"
+bibliography: /home/rak/Dropbox/library.bib
+output: 
+  #word_document:
+   #reference_docx: /home/rak/Dropbox/FIGI/Code/Functions/word_styles.docx
+  #pdf_document:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: "united"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+
+```{r package_setup, include = F}
+library(tidyverse)
+library(data.table)
+library(ggplot2)
+library(ggpubr)
+library(qqman)
+library(table1)
+library(meta)
+library(rlang)
+library(broom)
+library(effects)
+library(kableExtra)
+library(figifs)
+library(DT)
+```
+
+
+```{r data_setup, include = F}
+pca <- "/home/rak/data/PCA/190729/FIGI_GxESet_190729.eigenvec"
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190729.RData")
+
+# - filter drop/gxe
+# - only fix outcome, E, and 'colo2&3' study_gxe name
+# leave everything else to functions below
+pc <- fread(pca, skip = 1, 
+               col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20))))
+dat <- figi %>%
+  filter(drop == 0 & gxe == 1) %>% 
+  inner_join(pc, by = c('vcfid' = 'IID')) %>% 
+  mutate(outcome = ifelse(outc == "Case", 1, 0),
+         age_ref_imp = as.numeric(age_ref_imp),
+         sex = ifelse(sex == "Female", 0, 1),
+         study_gxe = ifelse(study_gxe == "Colo2&3", "Colo23", study_gxe),
+         bmi5 = as.numeric(bmi5))
+```
+
+# BMI Variable List - using **bmi5**
+![](figures/variable_list_bmi.png)
+
+# Postharmonization
+
+## BoxPlots - All Studies {.tabset}
+```{r, echo = F, message = F, cache = T, warning = F, fig.height=18, fig.width=13}
+ggplot(data=dat, aes(x = outc, y = bmi5, color = outc)) +
+    geom_boxplot() +
+    theme_bw() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()) +
+    facet_wrap(vars(study_gxe), ncol = 5)
+
+```
+
+## BoxPlots {.tabset}
+### Removed case-only studies. Omitted bmi5 outliers (included in quantile calculation however), and plotted smaller range of values for visibility.
+```{r, echo = F, message = F, cache = T, warning = F, fig.height=18, fig.width=13}
+
+# remove case-only studies, remove missing bmi5
+pdat <- filter(dat, !is.na(bmi5))
+drops <- data.frame(table(pdat$study_gxe, 
+                          pdat$outcome)) %>% 
+  filter(Freq == 0)
+pdat <- filter(pdat, !study_gxe %in% unique(drops$Var1))
+
+#compare_means(bmi5 ~ outc, data = pdat, method = 't.test', group.by = 'study_gxe')
+
+ggplot(data=pdat, aes(x = outc, y = bmi5, color = outc)) +
+    geom_boxplot(outlier.shape = NA) +
+    theme_bw() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()) +
+    facet_wrap(vars(study_gxe), ncol = 5) +
+      stat_compare_means(method = 't.test', label.y = 6.5) + 
+  coord_cartesian(ylim=c(3, 7))
+
+```
+
+
+<br><br><br>
+
+------
+
+## Tables {.tabset}
+
+### Overall
+```{r, echo = F, message = F, cache = F}
+varlist <- c("age_ref_imp", "sex", "education", "smoke", "alcohol", "bmi5", "famhx1", "asp_ref", "calcium_tot", "fruit", "vegetable", "redmeat", "procmeat")
+varlistCat <- c("sex", "education", "smoke", "famhx1", "asp_ref")
+
+tdat <- dat %>% 
+  dplyr::select(outcome, bmi5, cancer_site_sum1, varlist, varlistCat) %>% 
+  mutate(sex = factor(sex, labels = c("Female", "Male")),
+         alcohol = as.numeric(alcohol)) %>% 
+  mutate_at(vars(varlistCat), function(x) na_if(x, ""))
+
+label(tdat$age_ref_imp) <- "Imputed age"
+label(tdat$sex) <- "Sex"
+label(tdat$smoke) <- "Smoking status"
+label(tdat$alcohol) <- "Alcohol use"
+units(tdat$alcohol) <- "g/day"
+label(tdat$bmi5) <- "BMI/5, BMI < 18.5 as NA, continuous"
+label(tdat$famhx1) <- "Family history of CRC"
+label(tdat$asp_ref) <- "Aspirin/NSAID intake"
+label(tdat$calcium_tot) <- "Total calcium intake"
+units(tdat$calcium_tot) <- "mg/day"
+
+label(tdat$fruit) <- "Fruit intake"
+units(tdat$fruit) <- "servings/day"
+label(tdat$vegetable) <- "Vegetable intake"
+units(tdat$vegetable) <- "servings/day"
+label(tdat$redmeat) <- "Red meat intake"
+units(tdat$redmeat) <- "servings/day"
+label(tdat$procmeat) <- "Processed meat intake"
+units(tdat$procmeat) <- "servings/day"
+
+create_descriptive_table(tdat, outcome, bmi5, varlist, varlistCat)
+```
+<br><br><br>
+
+### cancer_site_sum1 = 'colon'
+```{r, echo = F, message = F, cache = F}
+create_descriptive_table(tdat %>% dplyr::filter(cancer_site_sum1 == "colon" | outcome == 0), outcome, bmi5, varlist, varlistCat)
+```
+<br><br><br>
+
+### cancer_site_sum1 = 'rectal'
+```{r, echo = F, message = F, cache = F}
+create_descriptive_table(tdat %>% dplyr::filter(cancer_site_sum1 == "rectal" | outcome == 0), outcome, bmi5, varlist, varlistCat)
+```
+<br><br><br>
+
+------
+
+
+## Meta Analyses {.tabset}
+
+### CRC
+```{r, echo = F, message = F, warning = F, cache = T, fig.height=15, fig.width=13}
+study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
+gxe_counts <- get_counts_outcome_by_group(dat, outcome, bmi5, study_gxe)
+gxe_glm <- get_estimates_e_by_group(dat, outcome, bmi5, group=study_gxe, age_ref_imp, sex)
+gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
+  inner_join(., study_info, by = "study_gxe")
+
+results_meta <- meta::metagen(estimate,
+                std.error,
+                data=gxe_meta,
+                studlab=paste(study_gxe),
+                comb.fixed = FALSE,
+                comb.random = TRUE,
+                method.tau = "SJ",
+                hakn = TRUE,
+                prediction=TRUE,
+                sm="OR",
+                byvar = study_design)
+
+forest(results_meta,
+       layout = "JAMA",
+       text.predict = "95% CI",
+       col.predict = "black",
+       leftcols = c("studlab", "Control", "Case", "N", "effect", "ci", "w.random"), 
+       digits.addcols=0,
+       study.results=T,
+       prediction = F)
+
+funnel(results_meta, sm="OR", studlab = T)
+
+```
+<br><br><br>
+
+
+
+### Colon Cancer
+```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13}
+tmp <- dat %>% dplyr::filter(cancer_site_sum1 == "colon" | outcome == 0)
+
+study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
+gxe_counts <- get_counts_outcome_by_group(tmp, outcome, bmi5, study_gxe)
+gxe_glm <- get_estimates_e_by_group(tmp, outcome, bmi5, group=study_gxe, age_ref_imp, sex)
+gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
+  inner_join(., study_info, by = "study_gxe")
+
+results_meta <- meta::metagen(estimate,
+                std.error,
+                data=gxe_meta,
+                studlab=paste(study_gxe),
+                comb.fixed = FALSE,
+                comb.random = TRUE,
+                method.tau = "SJ",
+                hakn = TRUE,
+                prediction=TRUE,
+                sm="OR",
+                byvar = study_design)
+
+forest(results_meta,
+       layout = "JAMA",
+       text.predict = "95% CI",
+       col.predict = "black",
+       leftcols = c("studlab", "Control", "Case", "N", "effect", "ci", "w.random"), 
+       digits.addcols=0,
+       study.results=T,
+       prediction = F)
+
+meta::funnel(results_meta, sm="OR", studlab = T)
+```
+<br><br><br>
+
+
+
+
+### Rectal Cancer
+```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13}
+tmp <- dat %>% dplyr::filter(cancer_site_sum1 == "rectal" | outcome == 0)
+
+study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
+gxe_counts <- get_counts_outcome_by_group(tmp, outcome, bmi5, study_gxe)
+gxe_glm <- get_estimates_e_by_group(tmp, outcome, bmi5, group=study_gxe, age_ref_imp, sex)
+gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
+  inner_join(., study_info, by = "study_gxe")
+
+results_meta <- meta::metagen(estimate,
+                std.error,
+                data=gxe_meta,
+                studlab=paste(study_gxe),
+                comb.fixed = FALSE,
+                comb.random = TRUE,
+                method.tau = "SJ",
+                hakn = TRUE,
+                prediction=TRUE,
+                sm="OR",
+                byvar = study_design)
+
+forest(results_meta,
+       layout = "JAMA",
+       text.predict = "95% CI",
+       col.predict = "black",
+       leftcols = c("studlab", "Control", "Case", "N", "effect", "ci", "w.random"), 
+       digits.addcols=0,
+       study.results=T,
+       prediction = F)
+
+funnel(results_meta, sm="OR", studlab = T)
+```
+<br><br><br>
+
+
+# Results
+
+## Main Results (WtAvg Rsq > 0.8) {.tabset}
+
+### G Main Effects (chiSqG)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics("figures/QQ_Plot_bmi5_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.png")
+knitr::include_graphics("figures/EasyStrata_bmi5_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.txt.mh.png")
+```
+<br><br><br>
+---------------------------------------------------------
+
+### GxE (chiSqGxE)
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/QQ_Plot_bmi5_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.png")
+knitr::include_graphics("figures/EasyStrata_bmi5_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.txt.mh.png")
+```
+<br><br><br>
+---------------------------------------------------------
+
+### 2DF
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/QQ_Plot_bmi5_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.png")
+knitr::include_graphics("figures/EasyStrata_bmi5_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.txt.mh.png")
+```
+<br><br><br>
+---------------------------------------------------------
+
+### 3DF
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/QQ_Plot_bmi5_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.png")
+knitr::include_graphics("figures/EasyStrata_bmi5_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.txt.mh.png")
+```
+<br><br><br>
+---------------------------------------------------------
+
+### G|E Association (ChiSqGE)
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/QQ_Plot_bmi5_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.png")
+knitr::include_graphics("figures/EasyStrata_bmi5_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.txt.mh.png")
+```
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+---------------------------------------------------------
+
+### G|E Association - Controls (chiSqControl)
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/QQ_Plot_bmi5_chiSqControl_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_50617.png")
+knitr::include_graphics("figures/EasyStrata_bmi5_chiSqControl_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.txt.mh.png")
+```
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+---------------------------------------------------------
+
+### G|E Association - Cases (chiSqCase)
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/QQ_Plot_bmi5_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_37707.png")
+knitr::include_graphics("figures/EasyStrata_bmi5_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.txt.mh.png")
+```
+<br><br><br>
+---------------------------------------------------------
+
+### 2-Step Method (chiSqG Step1)
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_bmi5_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.png")
+```
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+---------------------------------------------------------
+
+### 2-Step Method (chiSqGE Step1)
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_bmi5_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.png")
+```
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+---------------------------------------------------------
+
+### 2-Step Method (chiSqEDGE Step1)
+```{r , echo=FALSE,  out.width = '100%'}
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_bmi5_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324.png")
+```
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+---------------------------------------------------------
+
+
+
+## Main Results (WtAvg Rsq > 0.8 + LD CLUMPING) {.tabset}
+
+### chiSqGxE 2-step (chiSqG)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_bmi5_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324_clump_chiSqGxE.png")
+```
+<br><br><br>
+---------------
+
+### chiSqGxE 2-step (chiSqGE)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_bmi5_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324_clump_chiSqGxE.png")
+```
+<br><br><br>
+---------------
+
+### chiSqGxE 2-step (chiSqEDGE)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_bmi5_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_PC4_PC5_PC6_PC7_PC8_PC9_PC10_N_88324_clump_chiSqGxE.png")
+```
+<br><br><br>
+---------------
+
+# Comments
+
+Several hits when fitting G|E among controls, cases, and all.  
+Among controls, these are the hits that meet statistical significance at p < 5e-8. The largest peak is within the FTO gene. 
+
+```{r, echo = F, message = F, warning = F, cache = T}
+ge_controls <- readRDS(file = "files/results_ge_controls_significant_pvalues.rds") %>% 
+  separate(ID, into = c("tmp", "BP", "Ref", "Alt")) %>% 
+  mutate(Chr = paste0("Chr", tmp), 
+         p = formatC(p_ge_controls, format = "e", digits = 2)) %>% 
+  dplyr::select(Chr, BP, Ref, Alt, betaControl, chiSqControl, p)
+
+datatable(ge_controls)
+```
