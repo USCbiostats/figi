@@ -4,7 +4,13 @@
 
 ### Inclusion/Exclusion of prevalent cases
 ```{r results='asis', cache = T}
-stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+
+if(params$energy_adj == TRUE) {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe + energytot_imp"))
+} else {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+}
+
 
 x1 <- glm(stratified_formula, data = gxe, family = 'binomial')
 
@@ -22,8 +28,18 @@ stargazer(x1, x2, title = "E main effects logistic regression with and without p
 
 ### Sex
 ```{r results='asis', cache = T}
-stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
-stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " * sex + age_ref_imp + study_gxe"))
+# stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+# stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " * sex + age_ref_imp + study_gxe"))
+
+if(params$energy_adj == TRUE) {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe + energytot_imp"))
+  stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " * sex + age_ref_imp + study_gxe + energytot_imp"))
+} else {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+  stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " * sex + age_ref_imp + study_gxe"))
+}
+
+
 
 tmp <- filter(gxe, sex == 0)
 x1 <- glm(stratified_formula, data = tmp, family = 'binomial')
@@ -44,8 +60,16 @@ stargazer(x1, x2, x3, title = "E main effects logistic regression stratified by 
 ### Tumor site
 ```{r results='asis', cache = T}
 
-multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", params$exposure, " + age_ref_imp + sex + study_gxe"))
+# multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", params$exposure, " + age_ref_imp + sex + study_gxe"))
 # multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", "asp_ref", " + age_ref_imp + sex + study_gxe"))
+
+if(params$energy_adj == TRUE) {
+  multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", params$exposure, " + age_ref_imp + sex + study_gxe + energytot_imp"))
+} else {
+  multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", params$exposure, " + age_ref_imp + sex + study_gxe"))
+}
+
+
 
 quiet <- function(x) { 
   sink(tempfile()) 
@@ -84,8 +108,18 @@ stargazer(multinom_out, type = 'html', title = "Tumor site (colon vs rectum) mul
 
 ### Study design
 ```{r results='asis', cache = T}
-stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
-stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " *study_design_ind + sex + age_ref_imp + study_gxe"))
+# stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+# stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " *study_design_ind + sex + age_ref_imp + study_gxe"))
+
+if(params$energy_adj == TRUE) {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe + energytot_imp"))
+  stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " *study_design_ind + sex + age_ref_imp + study_gxe + energytot_imp"))
+} else {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+  stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " *study_design_ind + sex + age_ref_imp + study_gxe + energytot_imp"))
+}
+
+
 
 # stratified_formula <- as.formula(paste0("outcome ~ ", "asp_ref", " + sex + age_ref_imp + study_gxe"))
 # stratified_formula_interaction <- as.formula(paste0("outcome ~ ", "asp_ref", " *study_design_ind + sex + age_ref_imp + study_gxe"))

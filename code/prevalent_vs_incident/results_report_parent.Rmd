@@ -168,9 +168,9 @@ gxe <- format_data_desc(figi_gwas, params$exposure, params$is_exposure_categoric
 ```{r child = 'results_report_child_meta_analysis.Rmd'}
 ```
 
-<!-- ## Heterogeneity in pooled analysis {.tabset} -->
-<!-- ```{r child = 'results_report_child_pooled_analysis.Rmd'} -->
-<!-- ``` -->
+## Heterogeneity in pooled analysis {.tabset}
+```{r child = 'results_report_child_pooled_analysis.Rmd'}
+```
 
 <!-- # QQ + Manhattan Plots {.tabset} -->
 <!-- ```{r child = 'results_report_child_qq_manhattan.Rmd' } -->
