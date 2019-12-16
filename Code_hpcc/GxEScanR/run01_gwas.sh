@@ -8,6 +8,6 @@
 #SBATCH --mail-user=andreeki@usc.edu
 #SBATCH --mail-type=END
 #SBATCH --array=1-22
-#SBATCH --output=/staging/dvc/andreeki/GxE/logs/GxEScanR_aspirin_sex_age_pc3_studygxe_72269_binCovF_chr%a.log
+#SBATCH --output=/staging/dvc/andreeki/GxE/logs/GxEScanR_sex_age_pc3_studygxe_124702_binCovF_chr%a.log
 
-Rscript job01.R ${SLURM_ARRAY_TASK_ID} /staging/dvc/andreeki/GxE/aspirin/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269
+Rscript job01.R ${SLURM_ARRAY_TASK_ID} /staging/dvc/andreeki/GxE/gwas/FIGI_GwasSet_sex_age_pc3_studygxe_124702
