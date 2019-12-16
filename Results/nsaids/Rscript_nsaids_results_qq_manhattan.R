@@ -34,7 +34,7 @@ rsq_filter <- readRDS("~/data/Rsq_Estimate/FIGI_RsqEstimate_chrALL.rds")
 
 
 # RESULTS
-gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/aspirin/", full.names = T, pattern = "FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_chr"), fread, stringsAsFactors = F)) %>% 
+gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/nsaids/", full.names = T, pattern = "FIGI_GxESet_nsaids_sex_age_pc3_studygxe_70335_chr"), fread, stringsAsFactors = F)) %>% 
   mutate(ID = paste(SNP, Reference, Alternate, sep = ":"),
          chiSqEDGE = chiSqG + chiSqGE,
          chiSq3df = chiSqG + chiSqGxE + chiSqGE) %>% 
@@ -43,47 +43,29 @@ gxe_all <- do.call(rbind, lapply(list.files(path = "~/data/Results/aspirin/", fu
 gxe <- gxe_all %>% 
   filter(ID %in% rsq_filter$id)
 
-# # --------------------------------------- #
-# # output chiSqGxE results for LD clumping
-# calculate_pval <- function(data, statistic, df) {
-#   data$P <- pchisq(data[,statistic], df = df, lower.tail = F)
-#   data
-# }
-# 
-# for(chr in 1:22) {
-#   out <- calculate_pval(gxe, 'chiSqGxE', df = 1) %>%
-#     filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
-#     dplyr::select(SNP, P)
-#   write.table(out, file = paste0("/media/work/tmp/Plink_ldclump_aspirin_age_sex_pc3_studygxe_72269_chiSqGxE_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
-# }
-# 
-# for(chr in 1:22) {
-#   out <- calculate_pval(gxe, 'chiSqG', df = 1) %>%
-#     filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
-#     dplyr::select(SNP, P)
-#   write.table(out, file = paste0("/media/work/tmp/Plink_aspirin_ldclump_chiSqG_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
-# }
-# # --------------------------------------- #
+# --------------------------------------- #
+# output chiSqGxE results for LD clumping
+calculate_pval <- function(data, statistic, df) {
+  data$P <- pchisq(data[,statistic], df = df, lower.tail = F)
+  data
+}
+
+for(chr in 1:22) {
+  out <- calculate_pval(gxe, 'chiSqGxE', df = 1) %>%
+    filter(Chromosome == chr) %>% mutate(SNP = ID) %>%
+    dplyr::select(SNP, P)
+  write.table(out, file = paste0("/media/work/tmp/Plink_ldclump_nsaid_age_sex_pc3_studygxe_70335_chiSqGxE_chr", chr, ".txt"), quote = F, row.names = F, sep = '\t')
+}
+
+# --------------------------------------- #
 
 
 
 # LD Clump Results
 
 ## chiSqGxE
-tmp <- do.call(rbind, lapply(list.files("~/data/Results/aspirin/clump/", full.names = T, pattern = "Plink_ldclump_aspirin_age_sex_pc3_studygxe_72269_chiSqGxE_chr"), fread, stringsAsFactors = F))
+tmp <- do.call(rbind, lapply(list.files("~/data/Results/nsaids/clump/", full.names = T, pattern = "Plink_ldclump_nsaid_age_sex_pc3_studygxe_70335_chiSqGxE_chr"), fread, stringsAsFactors = F))
 gxe_clump_chiSqGxE <- gxe %>% 
-  filter(ID %in% tmp$SNP)
-rm(tmp)
-
-## chiSqGxE - Controls only
-tmp <- do.call(rbind, lapply(list.files("~/data/Results/aspirin/clump_controls/", full.names = T, pattern = "Plink_aspirin_ldclump_chiSqGxE_controls"), fread, stringsAsFactors = F))
-gxe_clump_chiSqGxE <- gxe %>% 
-  filter(ID %in% tmp$SNP)
-rm(tmp)
-
-## chiSqG
-tmp <- do.call(rbind, lapply(list.files("~/data/Results/aspirin/clump", full.names = T, pattern = "Plink_aspirin_ldclump_chiSqG_"), fread, stringsAsFactors = F))
-gxe_clump_chiSqG <- gxe %>% 
   filter(ID %in% tmp$SNP)
 rm(tmp)
 
@@ -91,12 +73,12 @@ rm(tmp)
 #-----------------------------------------------------------------------------#
 # QQ and Manhattan Plots ----
 #-----------------------------------------------------------------------------#
-plot_exposure <- "aspirin"
+plot_exposure <- "nsaids"
 plot_covariates <- c("age_ref_imp", "sex", "study_gxe", "PC1", "PC2", "PC3")
 
 # Marginal G Results 
 create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqG', df = 1)
-create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqG', df = 1, filename_suffix = test)
+create_manhattanplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqG', df = 1)
 
 # GxE results
 create_qqplot(gxe, plot_exposure, plot_covariates, stat = 'chiSqGxE', df = 1)
@@ -132,7 +114,6 @@ create_twostep_weighted_plot(gxe_twostep, exposure = plot_exposure, covars = plo
 
 
 
-
 #-----------------------------------------------------------------------------#
 # Two-step method w/ LD clumping chiSqGxE statistic ----
 #-----------------------------------------------------------------------------#
@@ -147,6 +128,12 @@ create_twostep_weighted_plot(gxe_twostep, exposure = plot_exposure, covars = plo
 # EDGE 2-step Gauderman
 gxe_twostep <- format_twostep_data(dat = gxe_clump_chiSqGxE, 'chiSqEDGE', 5, 0.05)
 create_twostep_weighted_plot(gxe_twostep, exposure = plot_exposure, covars = plot_covariates, sizeBin0 = 5, alpha = 0.05, binsToPlot = 10, statistic = 'chiSqEDGE', filename_suffix = "_clump_chiSqGxE")
+
+
+
+
+
+
 
 
 #-----------------------------------------------------------------------------#
@@ -176,9 +163,7 @@ create_twostep_weighted_plot(gxe_twostep, exposure = plot_exposure, covars = plo
 gxe_top <- filter(gxe, ID %in% fh_annotations$SNP_B) %>% 
   mutate(pGxE = pchisq(chiSqGxE, df = 1, lower.tail = F))
 create_manhattanplot(gxe_top, plot_exposure, plot_covariates, stat = 'chiSqG', df = 1, filename_suffix = "_EXPECTATION_GWAShits_chiSqG")
-manhattan(gxe_top, chr = "Chromosome", bp = "Location", p = "pGxE", col = c("blue4", "orange3"), suggestiveline = F, genomewideline = -log10(0.05/140), main = "GWAS Hits GxE Significant at P = 0.05/140")
-
-gxe_top_filter <- filter(gxe_top, pGxE < (0.05/140))
+manhattan(gxe_top, chr = "Chromosome", bp = "Location", p = "pGxE", suggestiveline = F, genomewideline = -log10(0.05/140))
 
 
 # start with ordering by step1p_g (marginal)
@@ -313,42 +298,8 @@ saveRDS(vcfid, file = "files/GetSNPValues_aspirin_sex_age_pc3_studygxe_vcfid.rds
 
 
 
-#-----------------------------------------------------------------------------#
-# Extract SNP ranges for functional DB lookups ----
-#-----------------------------------------------------------------------------#
-
-# start with clumped findings (chr 5 40252294 +- 500kb)
-
-func <- gxe %>% 
-  filter(Chromosome == 5 & between(Location, 40252294-500000, 40252294+500000)) %>% 
-  mutate(p = pchisq(chiSqGxE, df = 1, lower.tail = F),
-         logp = -log10(p),
-         start = Location - 1)
-
-func_sig <- filter(func, logp > 4) %>% 
-  dplyr::select(Chromosome, start, Location)
 
 
-func_sig_annovar <- filter(func, logp > 4) %>% 
-  mutate(start = Location) %>% 
-  dplyr::select(Chromosome, start, Location, Location, Reference, Alternate)
-
-write.table(func_sig_annovar, file = "~/annovar/example/figi_aspirin_wthyp_clump_sig.txt", quote =  F, row.names = F, col.names = F, sep = '\t')
 
 
-# let's try a more targeted region (essentially all markers in betweeen the significant hits after filtering chiSqGxE -log10 p value > 4)
-# chr5:40234224-40286497
-
-func <- gxe %>% 
-  filter(Chromosome == 5 & between(Location, 40234224, 40286497)) %>% 
-  mutate(p = pchisq(chiSqGxE, df = 1, lower.tail = F),
-         logp = -log10(p),
-         start = Location - 1)
-
-func_sig_annovar <- func %>% 
-  mutate(start = Location) %>% 
-  dplyr::select(Chromosome, start, Location, Location, Reference, Alternate)
-
-
-write.table(func_sig_annovar, file = "~/annovar/example/figi_aspirin_wthyp_clump_sig.txt", quote =  F, row.names = F, col.names = F, sep = '\t')
 

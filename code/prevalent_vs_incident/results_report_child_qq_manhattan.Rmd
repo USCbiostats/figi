@@ -1,0 +1,45 @@
+
+
+## Genetic Main Effect
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqG_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSqG_", params$exposure, "_", params$covariates, ".mh.png"))
+```
+
+## GxE
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqGxE_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSqGxE_", params$exposure, "_", params$covariates, ".mh.png"))
+```
+
+## 2DF Test
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSq2df_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSq2df_", params$exposure, "_", params$covariates, ".mh.png"))
+```
+
+## 3DF Test
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSq3df_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSq3df_", params$exposure, "_", params$covariates, ".mh.png"))
+```
+
+## G|E Association (all)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqGE_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSqGE_", params$exposure, "_", params$covariates, ".mh.png"))
+```
+
+
+## G|E Association (controls)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqControl_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSqControl_", params$exposure, "_", params$covariates, ".mh.png"))
+```
+
+## G|E Association (case only)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqCase_",       params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0(params$exposure,"/figures/manhattan_chiSqCase_", params$exposure, "_", params$covariates, ".mh.png"))
+```
+

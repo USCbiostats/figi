@@ -1,0 +1,160 @@
+<!-- For meta analyses, use the glm version of the gxescanr datasets you generated. 
+These files don't have case-only studies, the exposure variables are filtered for missingness and are coded appropriately. 
+Save posthoc and variable adjustment to the mega analysis, where you can generate multiple models and present as a table -->
+
+```{r, include = F}
+study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
+```
+
+
+
+<!-- params <- list(exposure = 'asp_ref') -->
+
+### All
+```{r, include=F, cache = T}
+gxe_counts <- get_counts_outcome_by_group(gxe, 'outcome', 'study_gxe')
+if(params$energy_adj == TRUE) {
+  gxe_glm <- get_estimates_e_by_group(gxe, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'sex', 'energytot_imp')
+} else {
+  gxe_glm <- get_estimates_e_by_group(gxe, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'sex')
+}
+
+gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
+  inner_join(., study_info, by = "study_gxe")
+
+meta_analysis_wrapper(gxe_meta, forest_plot_title = "", filename_suffix = "age_ref_imp_sex_study_gxe", 13, 8.5, 8, 8.5)
+```
+
+```{r  out.width="80%", echo = F, message = F, warning = F, cache = F}
+knitr::include_graphics(paste0("/media/work/tmp_images/meta_analysis_", params$exposure, "_", "age_ref_imp_sex_study_gxe.png"))
+knitr::include_graphics(paste0("/media/work/tmp_images/funnel_plot_", params$exposure, "_", "age_ref_imp_sex_study_gxe.png"))
+```
+
+
+
+
+<!-- ### Prevalent cases -->
+<!-- ```{r, include=F, cache = T} -->
+<!-- ### Including prevalent cases (same as original) -->
+<!-- gxe_counts <- get_counts_outcome_by_group(gxe, 'outcome', 'study_gxe') -->
+<!-- gxe_glm <- get_estimates_e_by_group(gxe, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'sex') -->
+<!-- gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>% -->
+<!--   inner_join(., study_info, by = "study_gxe") -->
+
+<!-- meta_analysis_wrapper(gxe_meta, forest_plot_title = "Including prevalent cases", filename_suffix = "age_ref_imp_sex_study_gxe_prev_keep", 13.5, 8.5, 8, 8.5) -->
+
+
+<!-- #### Excluding prevalent cases -->
+<!-- tmp <- filter(gxe, is.na(prev)) %>% -->
+<!--   remove_low_count_cells(., params$exposure, params$is_exposure_categorical, min_cell_size = 10) -->
+
+<!-- gxe_counts <- get_counts_outcome_by_group(tmp, 'outcome', 'study_gxe') -->
+<!-- gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'sex') -->
+<!-- gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>% -->
+<!--   inner_join(., study_info, by = "study_gxe") -->
+
+<!-- meta_analysis_wrapper(gxe_meta, forest_plot_title = "Excluding prevalent cases", filename_suffix = "age_ref_imp_sex_study_gxe_prev_drop", 13.5, 8.5, 8, 8.5) -->
+<!-- ``` -->
+
+<!-- ```{r echo=F, out.width="49%"} -->
+<!-- knitr::include_graphics(c(paste0("/media/work/tmp_images/meta_analysis_", params$exposure, "_", "age_ref_imp_sex_study_gxe_prev_keep.png"), -->
+<!--                           paste0("/media/work/tmp_images/meta_analysis_", params$exposure, "_", "age_ref_imp_sex_study_gxe_prev_drop.png"))) -->
+<!-- knitr::include_graphics(c(paste0("/media/work/tmp_images/funnel_plot_", params$exposure, "_", "age_ref_imp_sex_study_gxe_prev_keep.png"), -->
+<!--                           paste0("/media/work/tmp_images/funnel_plot_", params$exposure, "_", "age_ref_imp_sex_study_gxe_prev_drop.png"))) -->
+<!-- ``` -->
+
+
+
+
+
+### Sex
+```{r, include=F, cache = T}
+#### Female
+tmp <- filter(gxe, sex == 0) %>%
+  remove_low_count_cells(., params$exposure, params$is_exposure_categorical, min_cell_size = 10)
+
+gxe_counts <- get_counts_outcome_by_group(tmp, 'outcome', 'study_gxe')
+if(params$energy_adj == TRUE) {
+  gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'energytot_imp')
+} else {
+  gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp')
+}
+gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
+  inner_join(., study_info, by = "study_gxe")
+
+meta_analysis_wrapper(gxe_meta, forest_plot_title = "Females", filename_suffix = "age_ref_imp_study_gxe_FEMALES", 13.5, 8.5, 8, 8.5)
+
+
+
+#### Female
+tmp <- filter(gxe, sex == 1) %>%
+  remove_low_count_cells(., params$exposure, params$is_exposure_categorical, min_cell_size = 10)
+
+gxe_counts <- get_counts_outcome_by_group(tmp, 'outcome', 'study_gxe')
+if(params$energy_adj == TRUE) {
+  gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'energytot_imp')
+} else {
+  gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp')
+}
+gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
+  inner_join(., study_info, by = "study_gxe")
+
+meta_analysis_wrapper(gxe_meta, forest_plot_title = "Males", filename_suffix = "age_ref_imp_study_gxe_MALES", 13.5, 8.5, 8, 8.5)
+```
+
+```{r echo=F, out.width="49%"}
+knitr::include_graphics(c(paste0("/media/work/tmp_images/meta_analysis_", params$exposure, "_", "age_ref_imp_study_gxe_FEMALES.png"),
+                          paste0("/media/work/tmp_images/meta_analysis_", params$exposure, "_", "age_ref_imp_study_gxe_MALES.png")))
+knitr::include_graphics(c(paste0("/media/work/tmp_images/funnel_plot_", params$exposure, "_", "age_ref_imp_study_gxe_FEMALES.png"),
+                          paste0("/media/work/tmp_images/funnel_plot_", params$exposure, "_", "age_ref_imp_study_gxe_MALES.png")))
+```
+
+
+
+
+
+### Tumor Site
+```{r, include=F, cache = T}
+
+#### Colon
+# be mindful of small cell sizes after subsetting
+tmp <- gxe %>% dplyr::filter(cancer_site_sum1 == "colon" | outcome == 0) %>%
+  remove_low_count_cells(., params$exposure, params$is_exposure_categorical, min_cell_size = 20)
+
+gxe_counts <- get_counts_outcome_by_group(tmp, 'outcome', 'study_gxe')
+if(params$energy_adj == TRUE) {
+  gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'sex', 'energytot_imp')
+} else {
+  gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'sex')
+}
+gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
+  inner_join(., study_info, by = "study_gxe")
+
+meta_analysis_wrapper(gxe_meta, forest_plot_title = "Colon", filename_suffix = "age_ref_imp_sex_study_gxe_colon", 13.5, 8.5, 8, 8.5)
+
+
+
+#### Rectum
+tmp <- gxe %>% dplyr::filter(cancer_site_sum1 == "rectal" | outcome == 0) %>%
+  remove_low_count_cells(., params$exposure, params$is_exposure_categorical, min_cell_size = 10)
+
+gxe_counts <- get_counts_outcome_by_group(tmp, 'outcome', 'study_gxe')
+if(params$energy_adj == TRUE) {
+  gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'sex', 'energytot_imp')
+} else {
+  gxe_glm <- get_estimates_e_by_group(tmp, 'outcome', params$exposure, 'study_gxe', 'age_ref_imp', 'sex')
+}
+gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
+  inner_join(., study_info, by = "study_gxe")
+
+meta_analysis_wrapper(gxe_meta, forest_plot_title = "Rectum", filename_suffix = "age_ref_imp_sex_study_gxe_rectum", 13.5, 8.5, 8, 8.5)
+```
+
+```{r echo=F, out.width="49%"}
+knitr::include_graphics(c(paste0("/media/work/tmp_images/meta_analysis_", params$exposure, "_", "age_ref_imp_sex_study_gxe_colon.png"),
+                          paste0("/media/work/tmp_images/meta_analysis_", params$exposure, "_", "age_ref_imp_sex_study_gxe_rectum.png")))
+knitr::include_graphics(c(paste0("/media/work/tmp_images/funnel_plot_", params$exposure, "_", "age_ref_imp_sex_study_gxe_colon.png"),
+                          paste0("/media/work/tmp_images/funnel_plot_", params$exposure, "_", "age_ref_imp_sex_study_gxe_rectum.png")))
+```
+
+

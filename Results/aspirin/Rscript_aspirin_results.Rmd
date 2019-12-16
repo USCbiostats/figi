@@ -58,8 +58,7 @@ dat <- figi %>%
          age_ref_imp = as.numeric(age_ref_imp),
          sex = ifelse(sex == "Female", 0, 1),
          study_gxe = ifelse(study_gxe == "Colo2&3", "Colo23", study_gxe),
-         aspirin = ifelse(aspirin == "Yes", 1, ifelse(asp_ref == "No", 0, NA)))
-
+         aspirin = ifelse(aspirin == "Yes", 1, ifelse(aspirin == "No", 0, NA)))
 ```
 
 # NSAID **aspirin** Mapping
@@ -321,75 +320,77 @@ funnel(results_meta, sm="OR", studlab = T)
 
 ### chiSqG
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
-knitr::include_graphics("figures/EasyStrata_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.png")
+knitr::include_graphics("figures/EasyStrata_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### chiSqGxE
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
-knitr::include_graphics("figures/EasyStrata_aspirin_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.png")
+knitr::include_graphics("figures/EasyStrata_aspirin_chiSqGxE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### 2DF
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_aspirin_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
-knitr::include_graphics("figures/EasyStrata_aspirin_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_aspirin_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.png")
+knitr::include_graphics("figures/EasyStrata_aspirin_chiSq2df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### 3DF
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_aspirin_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
-knitr::include_graphics("figures/EasyStrata_aspirin_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_aspirin_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.png")
+knitr::include_graphics("figures/EasyStrata_aspirin_chiSq3df_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### chiSqGE (QQ)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
+knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.png")
+knitr::include_graphics("figures/EasyStrata_aspirin_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.txt.mh.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
 
 ### chiSqControl (QQ)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqControl_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
+knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqControl_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_41948.png")
+knitr::include_graphics("figures/EasyStrata_aspirin_chiSqControl_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.txt.mh.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
 
 ### chiSqCase
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
-knitr::include_graphics("figures/EasyStrata_aspirin_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.txt.mh.png")
+knitr::include_graphics("figures/QQ_Plot_aspirin_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_30321.png")
+knitr::include_graphics("figures/EasyStrata_aspirin_chiSqCase_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.txt.mh.png")
 ```
 <br><br><br>
 ---------------------------------------------------------
 
 ### 2-Step (chiSqG)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
 
 ### 2-Step (chiSqGE)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
 
 ### 2-Step (chiSqEDGE)
 ```{r , echo=FALSE,  out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269.png")
 ```
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 ---------------------------------------------------------
@@ -406,21 +407,21 @@ knitr::include_graphics("figures/EasyStrata_chiSqG_vs_chiSqG_ld_clumped.gif")
 
 ### chiSqGxE 2-step (chiSqG)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485_LDclump.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269_clump_chiSqGxE.png")
 ```
 <br><br><br>
 ---------------
 
 ### chiSqGxE 2-step (chiSqGE)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485_LDclump.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269_clump_chiSqGxE.png")
 ```
 <br><br><br>
 ---------------
 
 ### chiSqGxE 2-step (chiSqEDGE)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_66485_LDclump.png")
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqEDGE_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269_clump_chiSqGxE.png")
 ```
 <br><br><br>
 ---------------
@@ -430,8 +431,7 @@ knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_
 ```{r , echo=FALSE, out.width = '100%'}
 knitr::include_graphics("figures/chr5_1.png")
 knitr::include_graphics("figures/chr5_2.png")
-knitr::include_graphics("figures/chr6_1.png")
-
+# knitr::include_graphics("figures/chr6_1.png")
 ```
 <br><br><br>
 
@@ -443,33 +443,57 @@ knitr::include_graphics("figures/chr6_1.png")
 #   rownames_to_column(var = 'vcfid')
 # posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid')
 
-posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)) %>% rownames_to_column("vcfid"))) %>% 
-  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds"))
-
+posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>% 
+  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds"))
 
 posthoc_df_maf <- posthoc_df %>%
   group_by(study_gxe) %>%
-  summarise_at(vars(X5.40252294, X5.40268376, X6.12577203), function(x) 0.5 - abs( (sum(x) / (2*length(x))) - 0.5))
+  summarise_at(vars(X5.40252294, X5.40262347), function(x) 0.5 - abs( (sum(x) / (2*length(x))) - 0.5))
 
 ggplot(posthoc_df_maf) +
   geom_point(aes(y = study_gxe, x = X5.40252294)) +
   theme_bw() +
   xlim(0,0.5)
 
-
 ggplot(posthoc_df_maf) +
-  geom_point(aes(y = study_gxe, x = X5.40268376)) +
+  geom_point(aes(y = study_gxe, x = X5.40262347)) +
   theme_bw() +
   xlim(0,0.5)
-
-ggplot(posthoc_df_maf) +
-  geom_point(aes(y = study_gxe, x = X6.12577203)) +
-  theme_bw() +
-  xlim(0,0.5)
-
 
 ```
 <br><br><br>
+
+<!-- ```{r, echo = F, out.width = '49%'} -->
+<!-- # covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds") -->
+<!-- # dosages <- data.frame(readRDS("files/GetSNPValues_aspirin_age_ref_imp_sex_study_gxe_PC1-3_N_66485_chr5_out.rds")) %>% -->
+<!-- #   rownames_to_column(var = 'vcfid') -->
+<!-- # posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') -->
+
+<!-- posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>%  -->
+<!--   merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds")) -->
+
+
+<!-- posthoc_df_maf <- posthoc_df %>% -->
+<!--   group_by(study_gxe) %>% -->
+<!--   summarise_at(vars(X5.40252294, X5.40268376, X6.12577203), function(x) 0.5 - abs( (sum(x) / (2*length(x))) - 0.5)) -->
+
+<!-- ggplot(posthoc_df_maf) + -->
+<!--   geom_point(aes(y = study_gxe, x = X5.40252294)) + -->
+<!--   theme_bw() + -->
+<!--   xlim(0,0.5) -->
+
+<!-- ggplot(posthoc_df_maf) + -->
+<!--   geom_point(aes(y = study_gxe, x = X5.40268376)) + -->
+<!--   theme_bw() + -->
+<!--   xlim(0,0.5) -->
+
+<!-- ggplot(posthoc_df_maf) + -->
+<!--   geom_point(aes(y = study_gxe, x = X6.12577203)) + -->
+<!--   theme_bw() + -->
+<!--   xlim(0,0.5) -->
+
+<!-- ``` -->
+<!-- <br><br><br> -->
 
 
 
@@ -477,8 +501,8 @@ ggplot(posthoc_df_maf) +
 
 ### Chr5:40252294
 ```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13}
-posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)) %>% rownames_to_column("vcfid"))) %>% 
-  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds"))
+posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>% 
+  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds"))
 
 study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
 gxe_counts <- get_counts_outcome_by_group(posthoc_df, outcome, X5.40252294, study_gxe)
@@ -511,14 +535,15 @@ meta::funnel(results_meta, sm="OR", studlab = T)
 ```
 <br><br><br>
 
-### Chr5:40268376
+
+### Chr5:40262347
 ```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13}
-posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)) %>% rownames_to_column("vcfid"))) %>% 
-  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds"))
+posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>% 
+  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds"))
 
 study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
-gxe_counts <- get_counts_outcome_by_group(posthoc_df, outcome, X5.40268376, study_gxe)
-gxe_glm <- get_estimates_gxe_by_group(posthoc_df, outcome, aspirin, study_gxe, X5.40268376, age_ref_imp, sex)
+gxe_counts <- get_counts_outcome_by_group(posthoc_df, outcome, X5.40262347, study_gxe)
+gxe_glm <- get_estimates_gxe_by_group(posthoc_df, outcome, aspirin, study_gxe, X5.40262347, age_ref_imp, sex)
 gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
   inner_join(., study_info, by = "study_gxe")
 
@@ -543,139 +568,259 @@ meta::forest(results_meta,
 
 meta::funnel(results_meta, sm="OR", studlab = T)
 
-```
-<br><br><br>
-
-### Chr6:12577203
-```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13}
-posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)) %>% rownames_to_column("vcfid"))) %>%
-  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")) 
-
-study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
-gxe_counts <- get_counts_outcome_by_group(posthoc_df, outcome, X6.12577203, study_gxe)
-gxe_glm <- get_estimates_gxe_by_group(posthoc_df, outcome, aspirin, study_gxe, X6.12577203, age_ref_imp, sex)
-gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
-  inner_join(., study_info, by = "study_gxe")
-
-results_meta <- meta::metagen(estimate,
-                std.error,
-                data=gxe_meta,
-                studlab=paste(study_gxe),
-                comb.fixed = FALSE,
-                comb.random = TRUE,
-                method.tau = "SJ",
-                hakn = TRUE,
-                prediction=TRUE,
-                sm="OR",
-                byvar = study_design)
-
-meta::forest(results_meta,
-       layout = "JAMA",
-       text.predict = "95% CI",
-       col.predict = "black",
-       leftcols = c("studlab", "Control", "Case", "N", "effect", "ci", "w.random"),
-       digits.addcols=0)
-
-# meta::funnel(results_meta, sm="OR", studlab = T, xlim = c(0,5))
 
 ```
 <br><br><br>
 
+<!-- ### Chr5:40268376 -->
+<!-- ```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13} -->
+<!-- posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>%  -->
+<!--   merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds")) -->
 
 
-### Chr6:12577203
-```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13}
-posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)) %>% rownames_to_column("vcfid"))) %>%
-  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")) %>% 
-  filter(study_gxe != "ATBC")
+<!-- study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds") -->
+<!-- gxe_counts <- get_counts_outcome_by_group(posthoc_df, outcome, X5.40268376, study_gxe) -->
+<!-- gxe_glm <- get_estimates_gxe_by_group(posthoc_df, outcome, aspirin, study_gxe, X5.40268376, age_ref_imp, sex) -->
+<!-- gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>% -->
+<!--   inner_join(., study_info, by = "study_gxe") -->
 
-study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds")
-gxe_counts <- get_counts_outcome_by_group(posthoc_df, outcome, X6.12577203, study_gxe)
-gxe_glm <- get_estimates_gxe_by_group(posthoc_df, outcome, aspirin, study_gxe, X6.12577203, age_ref_imp, sex)
-gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>%
-  inner_join(., study_info, by = "study_gxe")
+<!-- results_meta <- meta::metagen(estimate, -->
+<!--                 std.error, -->
+<!--                 data=gxe_meta, -->
+<!--                 studlab=paste(study_gxe), -->
+<!--                 comb.fixed = FALSE, -->
+<!--                 comb.random = TRUE, -->
+<!--                 method.tau = "SJ", -->
+<!--                 hakn = TRUE, -->
+<!--                 prediction=TRUE, -->
+<!--                 sm="OR", -->
+<!--                 byvar = study_design) -->
 
-results_meta <- meta::metagen(estimate,
-                std.error,
-                data=gxe_meta,
-                studlab=paste(study_gxe),
-                comb.fixed = FALSE,
-                comb.random = TRUE,
-                method.tau = "SJ",
-                hakn = TRUE,
-                prediction=TRUE,
-                sm="OR",
-                byvar = study_design)
+<!-- meta::forest(results_meta, -->
+<!--        layout = "JAMA", -->
+<!--        text.predict = "95% CI", -->
+<!--        col.predict = "black", -->
+<!--        leftcols = c("studlab", "Control", "Case", "N", "effect", "ci", "w.random"), -->
+<!--        digits.addcols=0) -->
 
-meta::forest(results_meta,
-       layout = "JAMA",
-       text.predict = "95% CI",
-       col.predict = "black",
-       leftcols = c("studlab", "Control", "Case", "N", "effect", "ci", "w.random"),
-       digits.addcols=0)
+<!-- meta::funnel(results_meta, sm="OR", studlab = T) -->
 
-# meta::funnel(results_meta, sm="OR", studlab = T, xlim = c(0,5))
+<!-- ``` -->
+<!-- <br><br><br> -->
 
-```
+
+<!-- ### Chr6:12577203 -->
+<!-- ```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13} -->
+<!-- posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>%  -->
+<!--   merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds")) -->
+
+
+<!-- study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds") -->
+<!-- gxe_counts <- get_counts_outcome_by_group(posthoc_df, outcome, X6.12577203, study_gxe) -->
+<!-- gxe_glm <- get_estimates_gxe_by_group(posthoc_df, outcome, aspirin, study_gxe, X6.12577203, age_ref_imp, sex) -->
+<!-- gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>% -->
+<!--   inner_join(., study_info, by = "study_gxe") -->
+
+<!-- results_meta <- meta::metagen(estimate, -->
+<!--                 std.error, -->
+<!--                 data=gxe_meta, -->
+<!--                 studlab=paste(study_gxe), -->
+<!--                 comb.fixed = FALSE, -->
+<!--                 comb.random = TRUE, -->
+<!--                 method.tau = "SJ", -->
+<!--                 hakn = TRUE, -->
+<!--                 prediction=TRUE, -->
+<!--                 sm="OR", -->
+<!--                 byvar = study_design) -->
+
+<!-- meta::forest(results_meta, -->
+<!--        layout = "JAMA", -->
+<!--        text.predict = "95% CI", -->
+<!--        col.predict = "black", -->
+<!--        leftcols = c("studlab", "Control", "Case", "N", "effect", "ci", "w.random"), -->
+<!--        digits.addcols=0) -->
+
+<!-- # meta::funnel(results_meta, sm="OR", studlab = T, xlim = c(0,5)) -->
+
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+
+<!-- ### Chr6:12577203 -->
+<!-- ```{r, echo = F, message = F, warning = F, cache = T, fig.height=13, fig.width=13} -->
+<!-- posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>%  -->
+<!--   merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds")) %>%  -->
+<!--   filter(study_gxe != "ATBC") -->
+
+<!-- study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds") -->
+<!-- gxe_counts <- get_counts_outcome_by_group(posthoc_df, outcome, X6.12577203, study_gxe) -->
+<!-- gxe_glm <- get_estimates_gxe_by_group(posthoc_df, outcome, aspirin, study_gxe, X6.12577203, age_ref_imp, sex) -->
+<!-- gxe_meta <- dplyr::bind_cols(gxe_counts, gxe_glm) %>% -->
+<!--   inner_join(., study_info, by = "study_gxe") -->
+
+<!-- results_meta <- meta::metagen(estimate, -->
+<!--                 std.error, -->
+<!--                 data=gxe_meta, -->
+<!--                 studlab=paste(study_gxe), -->
+<!--                 comb.fixed = FALSE, -->
+<!--                 comb.random = TRUE, -->
+<!--                 method.tau = "SJ", -->
+<!--                 hakn = TRUE, -->
+<!--                 prediction=TRUE, -->
+<!--                 sm="OR", -->
+<!--                 byvar = study_design) -->
+
+<!-- meta::forest(results_meta, -->
+<!--        layout = "JAMA", -->
+<!--        text.predict = "95% CI", -->
+<!--        col.predict = "black", -->
+<!--        leftcols = c("studlab", "Control", "Case", "N", "effect", "ci", "w.random"), -->
+<!--        digits.addcols=0) -->
+
+<!-- # meta::funnel(results_meta, sm="OR", studlab = T, xlim = c(0,5)) -->
+
+<!-- ``` -->
 <br><br><br>
 
 
 
 ## Stratified analyses {.tabset}
-
 ### X5.40252294
 ```{r echo = F, message = F, warning = F, cache = T}
-covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")
-dosages <- data.frame(readRDS("~/data/Results/aspirin/dosage/GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr5_out.rds")) %>%
-  rownames_to_column(var = 'vcfid')
-
-# need to merge in dosage info to the EpiData
-posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') %>% 
-  mutate(sex = factor(sex, levels = c(0,1), labels = c("Female", "Male")),
+posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>%
+  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds")) %>%
+    mutate(sex = factor(sex, levels = c(0,1), labels = c("Female", "Male")),
          aspirin = factor(aspirin, levels = c(0,1), labels = c("No", "Yes")),
          study_gxe = as.factor(study_gxe))
 
 model1 <- glm(outcome ~ X5.40252294*aspirin + sex + age_ref_imp + study_gxe + PC1+PC2+PC3, data = posthoc_df, family = 'binomial')
-create_glm_stratified_plot(model1, "X5.40252294", "aspirin", gxe = T)
 
+model_eff <- effect("X5.40252294*aspirin",
+                    model1,
+                    #xlevels=xlevel_list, # might have to add more here, depending on coding of E
+                    se=TRUE,
+                    confidence.level=.95,
+                    typical=mean)
+
+plot(model_eff)
+plot(predictorEffect("aspirin", model1, xlevels = list(X5.40252294 = c(0,1,2))), lines = list(multilines = TRUE))
 ```
-<br><br><br>
 
-### X5.40268376
+
+### X5.40262347
 ```{r echo = F, message = F, warning = F, cache = T}
-covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")
-dosages <- data.frame(readRDS("~/data/Results/aspirin/dosage/GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr5_out.rds")) %>%
-  rownames_to_column(var = 'vcfid')
-
-# need to merge in dosage info to the EpiData
-posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') %>% 
+posthoc_df <- do.call(inner_join, lapply(list.files("~/data/Results/aspirin/dosage/", pattern = "GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr", full.names = T), function(x) data.frame(readRDS(x)))) %>%
+  merge(readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_72269_GLM.rds")) %>%
     mutate(sex = factor(sex, levels = c(0,1), labels = c("Female", "Male")),
          aspirin = factor(aspirin, levels = c(0,1), labels = c("No", "Yes")),
          study_gxe = as.factor(study_gxe))
 
-model1 <- glm(outcome ~ X5.40268376*aspirin + sex + age_ref_imp + study_gxe + PC1+PC2+PC3, data = posthoc_df, family = 'binomial')
-create_glm_stratified_plot(model1, "X5.40268376", "aspirin", gxe = T)
+model1 <- glm(outcome ~ X5.40262347*aspirin + sex + age_ref_imp + study_gxe + PC1+PC2+PC3, data = posthoc_df, family = 'binomial')
+
+model_eff <- effect("X5.40262347*aspirin",
+                    model1,
+                    #xlevels=xlevel_list, # might have to add more here, depending on coding of E
+                    se=TRUE,
+                    confidence.level=.95,
+                    typical=mean)
+
+plot(model_eff)
+plot(predictorEffect("aspirin", model1, xlevels = list(X5.40262347 = c(0,1,2))), lines = list(multilines = TRUE))
+```
+
+
+# Additional Results
+
+## GWAS Top Hits GxE, adjusted at P = 0.05/140
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics("figures/gwas_hits_GxE_140.png")
+knitr::include_graphics("figures/gwas_hits_gxe_140_chr1.png")
+knitr::include_graphics("figures/gwas_hits_gxe_140_chr5.png")
+knitr::include_graphics("figures/gwas_hits_gxe_140_chr6.png")
 
 ```
-<br><br><br>
 
 
+## Expectation based two-step procedure, excluding GWAS peaks
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics("figures/TwoStep_WeightedHypothesis_gxe_twostep_aspirin_chiSqG_age_ref_imp_sex_study_gxe_PC1_PC2_PC3_N_72269_EXPECTATION_chiSqGxE.png")
 
-### X6.12577203
-```{r echo = F, message = F, warning = F, cache = T}
-covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds")
-dosages <- data.frame(readRDS("~/data/Results/aspirin/dosage/GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr6_out.rds")) %>%
-  rownames_to_column(var = 'vcfid')
-
-# need to merge in dosage info to the EpiData
-posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') %>% 
-    mutate(sex = factor(sex, levels = c(0,1), labels = c("Female", "Male")),
-         aspirin = factor(aspirin, levels = c(0,1), labels = c("No", "Yes")),
-         study_gxe = as.factor(study_gxe))
-
-model1 <- glm(outcome ~ X6.12577203*aspirin + sex + age_ref_imp + study_gxe + PC1+PC2+PC3, data = posthoc_df, family = 'binomial')
-create_glm_stratified_plot(model1, "X6.12577203", "aspirin", gxe = T)
-
+knitr::include_graphics("figures/Expectation_chr15.png")
 ```
-<br><br><br>
+
+
+## Suggestive findings
+```{r , echo=FALSE, out.width = '100%'}
+
+knitr::include_graphics("figures/suggestive_chr1a.png")
+knitr::include_graphics("figures/suggestive_chr1b.png")
+knitr::include_graphics("figures/suggestive_chr1c.png")
+knitr::include_graphics("figures/suggestive_chr6.png")
+knitr::include_graphics("figures/suggestive_chr9.png")
+```
+
+
+
+
+<!-- # Jeroen -->
+<!-- ```{r , echo=FALSE,  out.width = '100%'} -->
+<!-- knitr::include_graphics("figures/Jeroen.png") -->
+<!-- ``` -->
+
+
+<!-- ### X5.40252294 -->
+<!-- ```{r echo = F, message = F, warning = F, cache = T} -->
+<!-- covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds") -->
+<!-- dosages <- data.frame(readRDS("~/data/Results/aspirin/dosage/GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr5_out.rds")) %>% -->
+<!--   rownames_to_column(var = 'vcfid') -->
+
+<!-- # need to merge in dosage info to the EpiData -->
+<!-- posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') %>%  -->
+<!--   mutate(sex = factor(sex, levels = c(0,1), labels = c("Female", "Male")), -->
+<!--          aspirin = factor(aspirin, levels = c(0,1), labels = c("No", "Yes")), -->
+<!--          study_gxe = as.factor(study_gxe)) -->
+
+<!-- model1 <- glm(outcome ~ X5.40252294*aspirin + sex + age_ref_imp + study_gxe + PC1+PC2+PC3, data = posthoc_df, family = 'binomial') -->
+<!-- create_glm_stratified_plot(model1, "X5.40252294", "aspirin", gxe = T) -->
+
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+<!-- ### X5.40268376 -->
+<!-- ```{r echo = F, message = F, warning = F, cache = T} -->
+<!-- covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds") -->
+<!-- dosages <- data.frame(readRDS("~/data/Results/aspirin/dosage/GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr5_out.rds")) %>% -->
+<!--   rownames_to_column(var = 'vcfid') -->
+
+<!-- # need to merge in dosage info to the EpiData -->
+<!-- posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') %>%  -->
+<!--     mutate(sex = factor(sex, levels = c(0,1), labels = c("Female", "Male")), -->
+<!--          aspirin = factor(aspirin, levels = c(0,1), labels = c("No", "Yes")), -->
+<!--          study_gxe = as.factor(study_gxe)) -->
+
+<!-- model1 <- glm(outcome ~ X5.40268376*aspirin + sex + age_ref_imp + study_gxe + PC1+PC2+PC3, data = posthoc_df, family = 'binomial') -->
+<!-- create_glm_stratified_plot(model1, "X5.40268376", "aspirin", gxe = T) -->
+
+<!-- ``` -->
+<!-- <br><br><br> -->
+
+
+
+<!-- ### X6.12577203 -->
+<!-- ```{r echo = F, message = F, warning = F, cache = T} -->
+<!-- covariate_file <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_GxESet_aspirin_sex_age_pc3_studygxe_66485_GLM.rds") -->
+<!-- dosages <- data.frame(readRDS("~/data/Results/aspirin/dosage/GetSNPValues_aspirin_sex_age_pc3_studygxe_index_positions_chr6_out.rds")) %>% -->
+<!--   rownames_to_column(var = 'vcfid') -->
+
+<!-- # need to merge in dosage info to the EpiData -->
+<!-- posthoc_df <- inner_join(covariate_file, dosages, by = 'vcfid') %>%  -->
+<!--     mutate(sex = factor(sex, levels = c(0,1), labels = c("Female", "Male")), -->
+<!--          aspirin = factor(aspirin, levels = c(0,1), labels = c("No", "Yes")), -->
+<!--          study_gxe = as.factor(study_gxe)) -->
+
+<!-- model1 <- glm(outcome ~ X6.12577203*aspirin + sex + age_ref_imp + study_gxe + PC1+PC2+PC3, data = posthoc_df, family = 'binomial') -->
+<!-- create_glm_stratified_plot(model1, "X6.12577203", "aspirin", gxe = T) -->
+
+<!-- ``` -->
+<!-- <br><br><br> -->
 

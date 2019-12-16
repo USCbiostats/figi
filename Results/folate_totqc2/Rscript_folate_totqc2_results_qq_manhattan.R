@@ -14,8 +14,7 @@ library(figifs)
 rm(list = ls())
 
 # annotations
-fh_annotations <- fread("~/data/Annotations/crc_gwas_125k_indep_signals_95_EasyStrata_LDBased.tsv") %>% 
-  mutate(SNP = paste(Chr, Pos, sep = ":"))
+fh_annotations <- fread("~/data/Annotations/crc_gwas_indep_signals_140_EasyStrata_LDBased.tsv")
 
 # Rsq Filter - maf > 0.001, Rsq >= 0.8
 rsq_filter <- readRDS("~/data/Rsq_Estimate/FIGI_RsqEstimate_chrALL.rds")
