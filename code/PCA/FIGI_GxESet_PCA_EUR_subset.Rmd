@@ -1,0 +1,170 @@
+---
+title: "FIGI GxE Principal Component Analysis"
+bibliography: /home/rak/Dropbox/library.bib
+date: '`r paste("Updated ", Sys.Date())`'
+output: 
+  html_document
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+# Goals
+* Principal Component Analysis of FIGI data. Two data subsets:
+    + GWAS Set N = 138,572 ()
+    + GxE Set N = 102,792
+    + (Include 1000 Genomes samples for plotting super-population clusters)
+* Estimate kinship coefficients, identify duplicate samples / crytic relatedness
+
+# Steps
+
+## Obtain random sample of SNPs for PCA
+1. Subset SNPs from *corect_oncoarray* imputation batch (N = 36,621) based on the following criteria:
+    + Rsq > 0.99
+    + MAF > 0.05
+    + (Exclude multi-allelic markers for simplicity)
+2. from step 1, ensure SNPs overlap with 1000 Genomes reference panel markers. See *HRC.r1-1.GRCh37.wgs.mac5.sites.tab* for matching rsIDs
+3. from step 2, randomly sample 30K SNPs -- R set.seed(2018)
+
+## Extract markers from HRC/1000G files
+
+Perform this for each imputation batch / chromosome file:  
+
+```{bash, eval=F}
+# HRC Imputed VCF files
+vcftools --gzvcf batch1_chr1.vcf.gz --positions snplist.txt --recode --out output.vcf
+
+# 1000G Plink files
+plink --vcf output.vcf --double-id --snps-only --biallelic-only --keep-allele-order --make-bed --out output.bed/bim/fam
+```
+
+## Merge chromosome files
+```{bash, eval=F}
+
+# merge chromosomes
+plink --merge-list list_of_chromosome_bed_files.txt --make-bed --out imputation_batch.bed/bim/fam
+
+# merge all imputation batches
+plink --merge-list list_of_imputationbatch_bed_files.txt --make-bed --out final.bed/bim/fam
+
+# create GWAS/GxE subsets, with/without 1000G samples (N = 2,504)
+plink --bfile final --keep FIGI_GwasSet --make-bed --out FIGI_GwasSet.bed/bim/fam
+plink --bfile final --keep FIGI_GxESet --make-bed --out FIGI_GxESet.bed/bim/fam
+plink --bfile FIGI_GwasSet.bed/bim/fam --bmerge KGP --make-bed --out FIGI_GwasSet_KGP.bed/bim/fam
+plink --bfile FIGI_GxESet.bed/bim/fam --bmerge KGP --make-bed --out FIGI_GxESet_KGP.bed/bim/fam
+
+# PCA with plink2 (https://www.cog-genomics.org/plink/2.0/)
+plink2 --bfile FIGI_GwasSet     --pca 20 approx --out FIGI_GwasSet
+plink2 --bfile FIGI_GwasSet_KGP --pca 20 approx --out FIGI_GwasSet_KGP
+plink2 --bfile FIGI_GxESet      --pca 20 approx --out FIGI_GxESet
+plink2 --bfile FIGI_GxESet_KGP  --pca 20 approx --out FIGI_GxESet_KGP
+
+# IBD with king (http://people.virginia.edu/~wc9c/KING/manual.html)
+king -b FIGI_GwasSet.bed --cpus 8 --related --degree 2 --prefix FIGI_GwasSet
+king -b FIGI_GxESet.bed --cpus 8 --related --degree 2 --prefix FIGI_GxESet
+```
+
+
+------
+
+# Results
+
+```{r libraries, include=F}
+library(data.table)
+library(tidyverse)
+library(kableExtra)
+library(plotly)
+library(qqman)
+library(gridExtra)
+library(cowplot)
+library(broom)
+```
+
+```{r data, cache = T}
+# Load data (created in another script)
+rm(list = ls())
+load("~/data/FIGI_EpiData_rdata/FIGI_Genotype_Epi_190729.RData")
+
+# GxE set
+gxe_set <- figi %>%
+  filter(drop == 0 & gxe == 1)
+
+# PCA Results
+pc30k <- fread("~/data/PCA/190729/FIGI_GxESet_KGP_190729.eigenvec", skip = 1,
+               col.names = c("FID", "IID", paste0(rep("PC", 20), seq(1,20)))) %>% 
+  mutate(vcfid = IID)
+
+df_tmp <- full_join(gxe_set, pc30k, by="vcfid") %>% 
+  dplyr::select(vcfid, outc, race_self, study_gxe, study_site, study, platform, paste0(rep("PC", 20), seq(1,20)))
+
+# add 1000G sample info for plotting
+kgp_samples <- fread("integrated_call_samples_v3.20130502.ALL.panel.fix", stringsAsFactors = F) %>%
+  dplyr::rename(vcfid = sample)
+
+# final data.frame
+df <- full_join(df_tmp, kgp_samples, by = "vcfid") %>% 
+  mutate(race_self = factor(race_self, labels = c("Unknown", "AI_AN", "Asian", "Black", "NH_PI", "Other", "White")),
+         group = factor(replace(super_pop, is.na(super_pop), 'FIGI'),
+                        levels=c("FIGI","AFR", "AMR", "EAS", "EUR", "SAS")))
+```
+
+
+## Pairwise Plots (PC1-4)
+
+```{r pairwise_setup, message=F, echo=F, warning=F, cache=T}
+plot_pc_pairs <- function(pc, npc) {
+  xpc <- paste0("PC", pc)
+  ypc <- paste0("PC", npc)
+
+  ggplot(data = df, aes(eval(parse(text = xpc)), eval(parse(text = ypc)), color = group)) +
+    geom_point(alpha = 0.5) +
+    labs(x = xpc,
+         y = ypc,
+         title = paste0(xpc, " vs. ", ypc)) +
+    scale_colour_manual(values=c("gold", "red", "black", "purple", "green", "royalblue")) +
+    theme_classic() +
+    theme(legend.key.size = unit(0.15, 'inches'))
+}
+```
+
+### PC1
+```{r pairwise_plots_pc1, message=F, echo=F, warning=F, tidy=T, fig.width=7.5, fig.height = 6, cache=T, dependson="pairwise_setup"}
+pc_list <- as.list(2:5)
+x <- lapply(pc_list, plot_pc_pairs, pc=1)
+plot_grid(x[[1]], x[[2]], x[[3]], x[[4]], cols = 2)
+```
+
+### PC2
+```{r pairwise_plots_pc2, message=F, echo=F, warning=F, tidy=T, fig.width=7.5, fig.height = 6, cache=T, dependson="pairwise_setup"}
+pc_list <- as.list(3:5)
+x <- lapply(pc_list, plot_pc_pairs, pc=2)
+plot_grid(x[[1]], x[[2]], x[[3]], cols = 2)
+```
+
+### PC3
+```{r pairwise_plots_pc3, message=F, echo=F, warning=F, tidy=T, fig.width=7.5, fig.height = 3, cache=T, dependson="pairwise_setup"}
+pc_list <- as.list(4:5)
+x <- lapply(pc_list, plot_pc_pairs, pc=3)
+plot_grid(x[[1]], x[[2]], cols = 2)
+```
+
+### PC4
+```{r pairwise_plots_pc4, message=F, echo=F, warning=F, tidy=T, fig.width=7.5, fig.height = 3, cache=T, dependson="pairwise_setup"}
+pc_list <- as.list(5)
+x <- lapply(pc_list, plot_pc_pairs, pc=4)
+plot_grid(x[[1]], cols = 2)
+```
+
+### PC4 by Country (excluding USA)
+```{r, echo = F, fig.show='hold', out.width = "50%", fig.align = "default"}
+ggdraw() + draw_image("figures/tmp_pca_pc1_p2_country.png")
+ggdraw() + draw_image("figures/tmp_pca_pc1_p3_country.png")
+ggdraw() + draw_image("figures/tmp_pca_pc1_p4_country.png")
+```
+
+

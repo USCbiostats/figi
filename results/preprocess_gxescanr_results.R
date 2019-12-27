@@ -29,7 +29,7 @@ filename <- args[2] # ex: FIGI_GxESet_asp_ref_age_sex_pc3_studygxe_72820
 rsq_filter <- readRDS("~/data/Rsq_Estimate/FIGI_RsqEstimate_chrALL.rds")
 
 # Results
-gxe_all <- do.call(rbind, lapply(list.files(path = paste0("~/data/Results/", exposure), full.names = T, pattern = filename), fread, stringsAsFactors = F)) %>% 
+gxe_all <- do.call(rbind, lapply(list.files(path = paste0("~/data/results/", exposure), full.names = T, pattern = filename), fread, stringsAsFactors = F)) %>% 
   mutate(ID = paste(SNP, Reference, Alternate, sep = ":"),
          chiSqEDGE = chiSqG + chiSqGE,
          chiSq3df = chiSqG + chiSqGxE + chiSqGE) %>% 
@@ -38,7 +38,7 @@ gxe_all <- do.call(rbind, lapply(list.files(path = paste0("~/data/Results/", exp
 gxe <- gxe_all %>% 
   filter(ID %in% rsq_filter$id)
 
-saveRDS(gxe, file = paste0("~/data/Results/", exposure, "/processed/", filename, "_results.rds"), version = 2)
+saveRDS(gxe, file = paste0("~/data/results/", exposure, "/processed/", filename, "_results.rds"), version = 2)
 
 #-----------------------------------------------------------------------------#
 # Output chiSqG and chiSqGxE for LD Clumping

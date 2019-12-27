@@ -1,0 +1,146 @@
+<!-- Interaction tests of main effects using pooled dataset (not meta-analyses) -->
+
+
+
+## Inclusion/Exclusion of prevalent cases
+```{r results='asis', cache = T}
+
+if(params$energy_adj == TRUE) {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe + energytot_imp"))
+} else {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+}
+
+
+x1 <- glm(stratified_formula, data = gxe, family = 'binomial')
+
+tmp <- filter(gxe, is.na(prev))
+x2 <- glm(stratified_formula, data = tmp, family = 'binomial')
+
+coefs <- list(exp(coef(x1)),
+              exp(coef(x2)))
+
+stargazer(x1, x2, title = "E main effects logistic regression with and without prevalent cases (N ~ 4915)", align = T, type = 'html', ci=TRUE, ci.level=0.95, omit = "study_gxe", keep.stat = "n", column.labels=c("Including prevalent cases","Excluding prevalent cases"), star.cutoffs = c(0.05, 0.01, 0.001), column.sep.width = '10pt', coef=coefs, p.auto = F)
+```
+
+
+
+
+<!-- ## Sex -->
+<!-- ```{r results='asis', cache = T} -->
+<!-- # stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe")) -->
+<!-- # stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " * sex + age_ref_imp + study_gxe")) -->
+
+<!-- if(params$energy_adj == TRUE) { -->
+<!--   stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe + energytot_imp")) -->
+<!--   stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " * sex + age_ref_imp + study_gxe + energytot_imp")) -->
+<!-- } else { -->
+<!--   stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe")) -->
+<!--   stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " * sex + age_ref_imp + study_gxe")) -->
+<!-- } -->
+
+
+
+<!-- tmp <- filter(gxe, sex == 0) -->
+<!-- x1 <- glm(stratified_formula, data = tmp, family = 'binomial') -->
+
+<!-- tmp <- filter(gxe, sex == 1) -->
+<!-- x2 <- glm(stratified_formula, data = tmp, family = 'binomial') -->
+
+<!-- x3 <- glm(stratified_formula_interaction, data = gxe, family = 'binomial') -->
+
+<!-- coefs <- list(exp(coef(x1)), -->
+<!--               exp(coef(x2)), -->
+<!--               exp(coef(x3))) -->
+
+<!-- stargazer(x1, x2, x3, title = "E main effects logistic regression stratified by sex", align = T, type = 'html', ci=TRUE, ci.level=0.95, omit = "study_gxe", keep.stat = "n", column.labels=c("Females","Males","Interaction (glm)"), star.cutoffs = c(0.05, 0.01, 0.001), column.sep.width = '10pt', coef=coefs, p.auto = F) -->
+<!-- ``` -->
+
+
+## Tumor site
+```{r results='asis', cache = T}
+
+# multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", params$exposure, " + age_ref_imp + sex + study_gxe"))
+# multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", "asp_ref", " + age_ref_imp + sex + study_gxe"))
+
+if(params$energy_adj == TRUE) {
+  multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", params$exposure, " + age_ref_imp + sex + study_gxe + energytot_imp"))
+} else {
+  multinom_formula <- as.formula(paste0("outcome_multinomial2 ~ ", params$exposure, " + age_ref_imp + sex + study_gxe"))
+}
+
+
+# function to run multinom function without any messages
+quiet <- function(x) { 
+  sink(tempfile()) 
+  on.exit(sink()) 
+  invisible(force(x)) 
+} 
+
+tmp <- gxe %>%
+  mutate(outcome_multinomial = as.factor(ifelse(outcome == 0 & is.na(cancer_site_sum1), "control",
+                                ifelse(cancer_site_sum1 == "colon", "colon",
+                                ifelse(cancer_site_sum1 == "rectal", "rectal", NA)))))
+
+# multinom
+tmp$outcome_multinomial2 <- relevel(tmp$outcome_multinomial, ref = "control")
+quiet(multinom_out <- multinom(multinom_formula, data = tmp))
+
+# colon vs rectum p value 
+var_covar_matrix <- vcov(multinom_out)
+var_covar_df <- data.frame(var_covar_matrix)
+
+coefficients <- coef(multinom_out)
+dif <- coefficients[1,params$exposure] - coefficients[2,params$exposure]
+# dif <- coefficients[1,'asp_ref'] - coefficients[2,'asp_ref']
+
+se <- sqrt( var_covar_df[paste0('colon:', params$exposure), paste0('colon.', params$exposure)] + var_covar_df[paste0('rectal:', params$exposure), paste0('rectal.', params$exposure)] - 2*var_covar_df[paste0('colon:', params$exposure), paste0('rectal.', params$exposure)])
+
+z <- dif/se
+
+pval <- 2*(1 - pnorm(abs(z)))
+
+stargazer(multinom_out, type = 'html', title = "Tumor site (colon vs rectum) multinomial logistic regression", omit = 'study_gxe', ci=TRUE, ci.level=0.95, keep.stat = "n", column.labels=c("vs. controls", "vs. controls"), star.cutoffs = c(0.05, 0.01, 0.001), column.sep.width = '10pt', coef=list(exp(coefficients)), p.auto = F, add.lines = list(c("Colon vs. Rectum pval", "", formatC(pval, format = "e", digits = 2))))
+
+```
+
+
+
+## Study design
+```{r results='asis', cache = T}
+# stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+# stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " *study_design_ind + sex + age_ref_imp + study_gxe"))
+
+if(params$energy_adj == TRUE) {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe + energytot_imp"))
+  stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " *study_design_ind + sex + age_ref_imp + study_gxe + energytot_imp"))
+} else {
+  stratified_formula <- as.formula(paste0("outcome ~ ", params$exposure, " + sex + age_ref_imp + study_gxe"))
+  stratified_formula_interaction <- as.formula(paste0("outcome ~ ", params$exposure, " *study_design_ind + sex + age_ref_imp + study_gxe + energytot_imp"))
+}
+
+
+
+# stratified_formula <- as.formula(paste0("outcome ~ ", "asp_ref", " + sex + age_ref_imp + study_gxe"))
+# stratified_formula_interaction <- as.formula(paste0("outcome ~ ", "asp_ref", " *study_design_ind + sex + age_ref_imp + study_gxe"))
+
+study_info <- readRDS("~/data/Annotations/FIGI_studygxe_info.rds") %>% 
+  filter(study_gxe %in% gxe$study_gxe)
+
+tmp <- dplyr::filter(gxe, study_gxe %in% study_info[which(study_info$study_design == "Case-Control"), 'study_gxe'])
+x1 <- glm(stratified_formula, data = tmp, family = 'binomial')
+
+tmp <- filter(gxe, study_gxe %in% study_info[which(study_info$study_design == "Cohort"), 'study_gxe'])
+x2 <- glm(stratified_formula, data = tmp, family = 'binomial')
+
+# create indicator for study design
+tmp <- mutate(gxe, study_design_ind = ifelse(study_gxe %in% study_info[which(study_info$study_design == "Case-Control"), 'study_gxe'], 0, 1))
+x3 <- glm(stratified_formula_interaction, data = tmp, family = 'binomial')
+
+coefs <- list(exp(coef(x1)),
+              exp(coef(x2)),
+              exp(coef(x3)))
+
+stargazer(x1, x2, x3, title = "E main effects logistic regression stratified by study design (case-control vs cohort)", align = T, type = 'html', ci=TRUE, ci.level=0.95, omit = "study_gxe", keep.stat = "n", column.labels=c("Case-Control","Cohort","Interaction (glm)"), star.cutoffs = c(0.05, 0.01, 0.001), column.sep.width = '10pt', coef=coefs, p.auto = F)
+
+```

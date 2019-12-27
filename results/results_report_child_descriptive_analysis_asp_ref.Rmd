@@ -1,0 +1,134 @@
+<!-- Descriptive analysis for asp_ref -->
+
+## asp_ref
+
+![](/home/rak/Dropbox/FIGI/Results/asp_ref/figures/nsaids_variable_list.png)
+
+
+```{r desc_data, include = F}
+gxe_table1 <- gxe_table1 %>% 
+  mutate(outcome = droplevels.factor(outcome), 
+         table1_asp_ref = factor(asp_ref, exclude = NA, levels = c("No", "Yes", "P-value")))
+label(gxe_table1$asp_ref) <- "Reg Aspirin/NSAID use"
+label(gxe_table1$outcome) <- "Outcome"
+```
+
+
+## Box Plot (All Studies)
+```{r fig.height=18, fig.width=13}
+gxe_ggplot <- figi_gwas %>% 
+  filter(gxe == 1) %>% 
+  mutate(asp_ref = fct_explicit_na(asp_ref, na_level = "NA"), 
+         asp_ref = fct_relevel(asp_ref, "NA", "Yes", "No"))
+
+ggplot(data=gxe_ggplot, aes(x=outc)) +
+    geom_bar(aes(fill = asp_ref), position = 'fill') +
+    theme_bw() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()) +
+    scale_fill_manual(values = c("black", "red", "cyan")) +
+    facet_wrap(vars(study_gxe), ncol = 5)
+
+```
+
+
+
+
+## Tables {.tabset}
+
+### By outcome (Control/Case)
+```{r, cache = T}
+
+my.render.cont <- function(x) {
+  with(stats.apply.rounding(stats.default(x), digits=3),
+       c("", "Mean (SD)"=sprintf("%s (&plusmn; %s)", MEAN, SD)))
+}
+
+my.render.cat <- function(x) {
+  c("", sapply(stats.default(x),
+               function(y) with(y, sprintf("%d (%0.0f %%)", FREQ, PCT))))
+}
+
+# insert p values. hacky, requires an outcome factor with third level for p value.
+# Also need to specify values by name (table1_outcome) in the 'rndr' function
+rndr <- function(x, name, ...) {
+  if (length(x) == 0) {
+    y <- gxe_table1[[name]]
+    s <- rep("", length(render.default(x=y, name=name, ...)))
+    if (is.numeric(y)) {
+      p <- t.test(y ~ gxe_table1$table1_outcome)$p.value
+    } else {
+      p <- chisq.test(table(y, droplevels(gxe_table1$table1_outcome)))$p.value
+    }
+    s[2] <- sub("<", "&lt;", format.pval(p, digits=3, eps=0.001))
+    s
+  } else {
+    render.default(x=x, name=name, ...)
+  }
+}
+
+rndr.strat <- function(label, n, ...) {
+  ifelse(n==0, label, render.strat.default(label, n, ...))
+}
+
+
+covariates = c("age_ref_imp", "sex", "heightcm", "bmi", "famhx1", "educ", "smoke", "hrt_ref_pm", "diab", "calcium_totqc2", "folate_totqc2", "fiberqc2", "redmeatqc2", "procmeatqc2", "fruitqc2", "vegetableqc2")
+
+
+table1(as.formula(paste0("~ ", "asp_ref", "+", paste(covariates, collapse = "+"), "| table1_outcome")),
+       data=gxe_table1,
+       render.continuous=my.render.cont,
+       render.categorical=my.render.cat,
+       render=rndr, render.strat=rndr.strat, overall = F, droplevels = F)
+
+       
+```
+
+
+
+### By asp_ref (No/Yes)
+```{r, cache = T}
+
+my.render.cont <- function(x) {
+  with(stats.apply.rounding(stats.default(x), digits=3),
+       c("", "Mean (SD)"=sprintf("%s (&plusmn; %s)", MEAN, SD)))
+}
+
+my.render.cat <- function(x) {
+  c("", sapply(stats.default(x),
+               function(y) with(y, sprintf("%d (%0.0f %%)", FREQ, PCT))))
+}
+
+# insert p values. hacky, requires an outcome factor with third level for p value.
+# In this case - using exposure
+rndr <- function(x, name, ...) {
+  if (length(x) == 0) {
+    y <- gxe_table1[[name]]
+    s <- rep("", length(render.default(x=y, name=name, ...)))
+    if (is.numeric(y)) {
+      p <- t.test(y ~ gxe_table1$asp_ref)$p.value
+    } else {
+      p <- chisq.test(table(y, droplevels(gxe_table1$asp_ref)))$p.value
+    }
+    s[2] <- sub("<", "&lt;", format.pval(p, digits=3, eps=0.001))
+    s
+  } else {
+    render.default(x=x, name=name, ...)
+  }
+}
+
+rndr.strat <- function(label, n, ...) {
+  ifelse(n==0, label, render.strat.default(label, n, ...))
+}
+
+covariates = c("age_ref_imp", "sex", "heightcm", "bmi", "famhx1", "educ", "smoke", "hrt_ref_pm", "diab", "calcium_totqc2", "folate_totqc2", "fiberqc2", "redmeatqc2", "procmeatqc2", "fruitqc2", "vegetableqc2")
+
+
+table1(as.formula(paste0("~ ", "outcome", "+", paste(covariates, collapse = "+"), "| table1_asp_ref")),
+       data=gxe_table1,
+       render.continuous=my.render.cont,
+       render.categorical=my.render.cat,
+       render=rndr, render.strat=rndr.strat, overall = F, droplevels = F)
+```
+
