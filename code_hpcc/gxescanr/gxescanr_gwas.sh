@@ -8,6 +8,5 @@
 #SBATCH --mail-user=andreeki@usc.edu
 #SBATCH --mail-type=END
 #SBATCH --array=1-22
-#SBATCH --output=/staging/dvc/andreeki/GxE/logs/GxEScanR_bmi5_sex_age_pc3_energytot_studygxe_88324_binCovF_chr%a.log
 
-Rscript job01.R ${SLURM_ARRAY_TASK_ID} /staging/dvc/andreeki/GxE/bmi5/FIGI_GxESet_bmi5_sex_age_pc10_studygxe_88324
+Rscript gxescanr.R ${SLURM_ARRAY_TASK_ID} /staging/dvc/andreeki/gxescanr/${exposure}/FIGI_v2.3_gwasset_basic_covars_gxescan

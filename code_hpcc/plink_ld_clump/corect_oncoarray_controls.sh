@@ -11,6 +11,9 @@
 # will once again use corect_oncoarray to calculate LD --- check with the PIs on this
 # alternatively, can merge plink files across imputation batches, will just take time and disk space.
 
+# for this script, create correct oncoarray plink files. 
+# it's outdated, since I did this for controls only, files are stored in the pmd drive
+
 REF=/auto/pmd-02/figi/HRC_VCF_SampleRename
 OUT=/staging/dvc/andreeki/clump
 cd ${OUT}

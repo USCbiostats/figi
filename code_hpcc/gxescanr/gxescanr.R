@@ -1,35 +1,32 @@
 #=============================================================================#
 # GxEScanR
-# FIGI GxESet (N = 102792)
+# 
+# ------ Notes: ------ #
+# - MAF < 1%
 #=============================================================================#
 library(GxEScanR)
 args <- commandArgs(trailingOnly=T)
 chr <- args[1]
-covf <- args[2]
+cov <- args[2]
 
-wdir <- "/auto/pmd-02/figi/HRC_BDose"
-covfile <- paste0(covf, ".rds")
-bdosefile <- paste0("FIGI_chr", chr, ".rds") 
+bdose_directory <- "/auto/pmd-02/figi/HRC_BDose"
+covariate_file <- paste0(cov, ".rds")
+bdose_file <- paste0("FIGI_chr", chr, ".rds") 
 
-outFile <-      paste0(covf, "_chr", chr, ".out")
-outFile_skip <- paste0(covf, "_SKIPPED_chr", chr, ".out")
+outFile <-      paste0(cov, "_chr", chr, ".out")
+outFile_skip <- paste0(cov, "_SKIPPED_chr", chr, ".out")
 
 
 #-----------------------------------------------------------------------------#
 # set directory
-setwd(wdir)
+setwd(bdose_directory)
 
 # Read in the covariate info
-figiCov <- readRDS(covfile)
+figiCov <- readRDS(covariate_file)
 
 # Read in the information of the binary dosage file
-figiGene <- readRDS(bdosefile)
+figiGene <- readRDS(bdose_file)
 class(figiGene) <- "genetic-file-info" # (temporary, john will fix)
-
-
-#numSNPs <- nrow(figiGene[[11]])
-
-
 
 # Fit the models
 Sys.time()
