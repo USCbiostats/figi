@@ -106,12 +106,12 @@ saveRDS(figi_gwas, "~/data/FIGI_EpiData_rdata/FIGI_HRC_v2.3_GWAS.rds", version =
 #-----------------------------------------------------------------------------#
 # csv file for jim
 #-----------------------------------------------------------------------------#
-# rm(list = ls())
-# figi_gwas <- readRDS("~/data/FIGI_EpiData_rdata/FIGI_HRC_v2.3_GWAS.rds")
-# 
-# write.csv(figi_gwas, file = "/media/work/tmp/FIGI_v2.3_gwas_set_N138014_20191211.csv", quote = F, row.names = F)
-# 
-# 
+rm(list = ls())
+figi_gwas <- readRDS("~/data/FIGI_EpiData_rdata/FIGI_HRC_v2.3_GWAS.rds")
+
+write.csv(figi_gwas, file = "/media/work/tmp/FIGI_v2.3_gwas_set_N138014_20191211.csv", quote = T, row.names = F)
+
+
 
 
 
