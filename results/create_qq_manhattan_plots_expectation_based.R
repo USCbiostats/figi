@@ -23,13 +23,14 @@ args <- commandArgs(trailingOnly=T)
 exposure <- args[1] # ex: asp_ref
 filename <- args[2] # ex: FIGI_GxESet_asp_ref_age_sex_pc3_studygxe_72820
 covariates <- c(args[3:length(args)])
-annotation_file <- 'temp_annotation_ver2.txt'
+annotation_file <- 'gwas_140_ld_annotation.txt'
 
 # set working directory
 # important to do because figifs functions outputs into folders based on current position (e.g. figures)
 setwd(exposure)
 
-gxe <- readRDS(paste0("~/data/Results/", exposure, "/processed/", filename, "_results.rds"))
+gxe <- readRDS(paste0("~/data/results/", exposure, "/processed/", filename, "_results.rds"))
+gxe <- readRDS("~/data/results/asp_ref/processed/FIGI_v2.3_gxeset_asp_ref_basic_covars_gxescan_results.rds")
 
 
 #-----------------------------------------------------------------------------#
@@ -37,8 +38,7 @@ gxe <- readRDS(paste0("~/data/Results/", exposure, "/processed/", filename, "_re
 #-----------------------------------------------------------------------------#
 
 # incorporate GWAS set main effects statistics to the two-step methods
-gwas_results <- readRDS("~/data/Results/gwas/processed/FIGI_GwasSet_age_sex_pc3_studygxe_124702_results_short.rds") %>% 
-  dplyr::select(-betaGE, -chiSqGE)
+gwas_results <- readRDS("~/data/results/gwas/processed/FIGI_v2.3_gwasset_basic_covars_gxescan_results_short.rds")
 
 gxe_twostep_tmp <- gxe %>% 
   dplyr::select(-betaG, -chiSqG, -chiSqEDGE, -chiSq3df) %>% 

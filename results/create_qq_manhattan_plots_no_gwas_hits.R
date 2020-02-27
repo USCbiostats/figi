@@ -23,7 +23,7 @@ args <- commandArgs(trailingOnly=T)
 exposure <- args[1] # ex: asp_ref
 filename <- args[2] # ex: FIGI_GxESet_asp_ref_age_sex_pc3_studygxe_72820
 covariates <- c(args[3:length(args)])
-annotation_file <- 'temp_annotation_ver2.txt'
+annotation_file <- 'gwas_140_ld_annotation.txt'
 
 # set working directory
 # important to do because figifs functions outputs into folders based on current position (e.g. figures)
@@ -37,7 +37,7 @@ gwashits <- readRDS("~/data/Annotations/gwas_140_snp_ld_and_region_based_to_excl
 # keep hits that are 'novel' within same GWAS regions but not in LD with
 # reported top hit
 #-----------------------------------------------------------------------------#
-annotation <- fread("~/data/Annotations/temp_annotation_ver2.txt") %>% 
+annotation <- fread("~/data/Annotations/gwas_140_ld_annotation.txt") %>% 
   dplyr::mutate(SNP = paste0(Chr, ":", Pos))
 
 gxe_nogwas <- gxetmp %>% 

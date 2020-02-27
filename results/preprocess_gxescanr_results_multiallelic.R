@@ -6,6 +6,9 @@
 # 3) output statistics for LD CLumping
 # 
 # save object as .rds file. More convenient since you create plots repeatedly
+#
+# alternate script to fix issues with multi-allelic SNPs
+# this is not an issue going forward, just for alcohol/HRT
 #=============================================================================#
 library(tidyverse)
 library(data.table)
@@ -18,12 +21,11 @@ rm(list = ls())
 # Arguments (run this script externally)
 # keep in mind some paths are coded here, if you ever change files around
 args <- commandArgs(trailingOnly=T)
-exposure <- args[1] # ex: aspirin
-filename <- args[2] # ex: FIGI_v2.3_gxeset_aspirin_basic_covars_gxescan
+exposure <- args[1] # ex: asp_ref
+filename <- args[2] # ex: FIGI_GxESet_asp_ref_age_sex_pc3_studygxe_72820
 
-
-# exposure <- "aspirin"
-# filename <- "FIGI_v2.3_gxeset_aspirin_basic_covars_gxescan"
+exposure = 'gwas'
+filename = 'FIGI_v2.3_gwasset_basic_covars_gxescan'
 
 #-----------------------------------------------------------------------------#
 # Read results, filter by Rsq
@@ -33,13 +35,28 @@ rsq_filter <- readRDS("~/data/Rsq_Estimate/FIGI_RsqEstimate_chrALL.rds")
 
 # Results
 gxe_all <- do.call(rbind, lapply(list.files(path = paste0("~/data/results/", exposure), full.names = T, pattern = filename), fread, stringsAsFactors = F)) %>% 
-  mutate(chiSqEDGE = chiSqG + chiSqGE,
-         chiSq3df = chiSqG + chiSqGxE + chiSqGE)
+  mutate(SNP = paste(SNP, Reference, Alternate, sep = ":"))
 
-gxe <- gxe_all %>% 
-  filter(SNP %in% rsq_filter$id)
+  #        chiSqEDGE = chiSqG + chiSqGE,
+  #        chiSq3df = chiSqG + chiSqGxE + chiSqGE)
+
+gxe_multi <- do.call(rbind, lapply(list.files(path = paste0("~/data/results/", exposure, "/multiallelic"), full.names = T, pattern = filename), fread, stringsAsFactor = F))
+
+gxe_nomulti <- filter(gxe_all, !SNP %in% gxe_multi$SNP)
+
+gxe <- rbind(gxe_nomulti, gxe_multi) %>% 
+  filter(SNP %in% rsq_filter$id) %>% 
+  mutate(chiSqEDGE = chiSqG + chiSqGE,
+         chiSq3df = chiSqG + chiSqGxE + chiSqGE) %>% 
+  arrange(Chromosome, Location)
+
 
 saveRDS(gxe, file = paste0("~/data/results/", exposure, "/processed/", filename, "_results.rds"), version = 2)
+
+
+# # for gwas only - create smaller file for convenience
+# gxe_short <- dplyr::select(gxe, SNP, betaG, chiSqG)
+# saveRDS(gxe_short, file = paste0("~/data/results/", exposure, "/processed/", filename, "_results_short.rds"), version = 2)
 
 
 #-----------------------------------------------------------------------------#
@@ -84,12 +101,3 @@ locuszoom <- gxe %>%
   dplyr::select(MarkerName, `P-value`)
 
 write.table(locuszoom, file = paste0("/media/work/tmp/", filename, "_chiSqG_locuszoom.txt"), quote = F, row.names = F, sep = "\t")
-
-locuszoom <- gxe %>%
-  dplyr::mutate(`P-value` = pchisq(chiSqGE, df = 1, lower.tail = F),
-                MarkerName = paste0("chr", Chromosome, ":", Location)) %>% 
-  dplyr::select(MarkerName, `P-value`)
-
-write.table(locuszoom, file = paste0("/media/work/tmp/", filename, "_chiSqGE_locuszoom.txt"), quote = F, row.names = F, sep = "\t")
-
-

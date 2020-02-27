@@ -12,7 +12,6 @@ params:
   is_exposure_categorical: TRUE
   energy_adj: FALSE
   table1_by_e: FALSE
-  additional_analyses: FALSE
   covariates_suffix: "age_ref_imp_sex_study_gxe_pc1_pc2_pc3" # so far only thing that uses this is qq + manhattan plots (names)
 ---
 
@@ -68,7 +67,6 @@ library(stargazer)
 library(nnet)
 library(forcats)
 library(kableExtra)
-library(reticulate)
 ```
 
 
@@ -123,8 +121,6 @@ gxe_table1 <- figi_gwas %>%
                 alcoholc_heavy_vs_moderate = fct_relevel(alcoholc_heavy_vs_moderate, "1-28g/d", ">28g/d"),
                 table1_hrt_ref_pm = factor(hrt_ref_pm, exclude = NA, levels = c("No", "Yes", "P-value")),
                 hrt_ref_pm = fct_relevel(hrt_ref_pm, "No", "Yes"),
-                table1_hrt_ref_pm2 = factor(hrt_ref_pm2, exclude = NA, levels = c("No", "Yes", "P-value")),
-                hrt_ref_pm2 = fct_relevel(hrt_ref_pm2, "No", "Yes"),
                 table1_eo_ref_pm_gxe = factor(eo_ref_pm_gxe, exclude = NA, levels = c("No", "Yes", "P-value")),
                 eo_ref_pm_gxe = fct_relevel(eo_ref_pm_gxe, "No", "Yes"),
                 table1_ep_ref_pm_gxe = factor(ep_ref_pm_gxe, exclude = NA, levels = c("No", "Yes", "P-value")),
@@ -189,17 +185,14 @@ gxe_ggplot <- figi_gwas %>%
          alcoholc_heavy = fct_relevel(alcoholc_heavy, "NA", ">28g/d", "nondrinker"),
          alcoholc_heavy_count = fct_relevel(alcoholc_heavy, "nondrinker", ">28g/d", "NA"),
          alcoholc_moderate = fct_explicit_na(alcoholc_moderate, na_level = "NA"), 
-         alcoholc_moderate = fct_relevel(alcoholc_moderate, "NA", "nondrinker", "1-28g/d"),
-         alcoholc_moderate_count = fct_relevel(alcoholc_moderate, "1-28g/d", "nondrinker", "NA"),
+         alcoholc_moderate = fct_relevel(alcoholc_moderate, "NA", "1-28g/d", "nondrinker"),
+         alcoholc_moderate_count = fct_relevel(alcoholc_moderate, "nondrinker", "1-28g/d", "NA"),
          alcoholc_heavy_vs_moderate = fct_explicit_na(alcoholc_heavy_vs_moderate, na_level = "NA"), 
          alcoholc_heavy_vs_moderate = fct_relevel(alcoholc_heavy_vs_moderate, "NA", ">28g/d", "1-28g/d"),
          alcoholc_heavy_vs_moderate_count = fct_relevel(alcoholc_heavy_vs_moderate, "1-28g/d", ">28g/d", "NA"),
          hrt_ref_pm = fct_explicit_na(hrt_ref_pm, na_level = "NA"), 
          hrt_ref_pm = fct_relevel(hrt_ref_pm, "NA", "Yes", "No"),
          hrt_ref_pm_count = fct_relevel(hrt_ref_pm, "No", "Yes", "NA"),
-         hrt_ref_pm2 = fct_explicit_na(hrt_ref_pm2, na_level = "NA"), 
-         hrt_ref_pm2 = fct_relevel(hrt_ref_pm2, "NA", "Yes", "No"),
-         hrt_ref_pm2_count = fct_relevel(hrt_ref_pm2, "No", "Yes", "NA"),
          eo_ref_pm_gxe = fct_explicit_na(eo_ref_pm_gxe, na_level = "NA"), 
          eo_ref_pm_gxe = fct_relevel(eo_ref_pm_gxe, "NA", "Yes", "No"),
          eo_ref_pm_gxe_count = fct_relevel(eo_ref_pm_gxe, "No", "Yes", "NA"),
@@ -233,144 +226,8 @@ gxe_ggplot_subset <- gxe_ggplot %>%
 ```
 
 
-# ``r params$exposure`` updates
-```{r child = paste0("results_report_child_updates.Rmd")}
+
+## Additional Analyses ``r params$exposure`` {.tabset}
+```{r child = paste0('results_report_child_additional_analysis_', params$exposure, '.Rmd')}
 ```
 
-<br>
-
---- 
- 
-<br>
-
-# ``r params$exposure`` post-harmonization
-
-## Description      
-- Box/bar plots  
-- Descriptive statistics by outcome and exposure status (when applicable) for CRC related variables. Only includes subset of samples with available ``r params$exposure`` information  
-- Meta-analysis of CRC/``r params$exposure`` association. Results are presented overall and stratified by sex, tumor site, and relevant covariates  
-- Pooled analysis of CRC/``r params$exposure`` in pooled FIGI GxE subset. Results also presented overall and stratified. Adjustment covariates same as those for meta-analyses, in addition to study_gxe    
-
-<br>
-
---- 
- 
-<br>
-
-```{r child = paste0("results_report_child_descriptive_analysis.Rmd")}
-```
-
-## Meta-Analysis {.tabset}
-```{r child = 'results_report_child_meta_analysis.Rmd'}
-```
-
-## Heterogeneity in pooled analysis {.tabset}
-```{r child = 'results_report_child_pooled_analysis.Rmd'}
-```
-
-## Additional Analyses {.tabset}
-```{r child = paste0('results_report_child_additional_analysis_', params$exposure, '.Rmd'), eval = params$additional_analyses}
-```
-
-
-<br>
-
---- 
- 
-<br>
-
-
-# ``r params$exposure`` GWIS results
-
-## Description 
-
-I generated figures based on results from genome-wide interaction scans using [GxEScanR](https://github.com/USCbiostats/GxEScanR). P-values are based on likelihood ratio tests. Refer to the github page for more detailed documentation of methods. I briefly describe each section and the statistic being plotted.  
-
-<br>
-Assume the following coding:  
-
-**D**:  Disease status (1=case, 0=control)  
-
-**E**:  Environmental factor of interest (binary/continuous)  
-
-**C**: 	A set of adjustment covariates. Typically includes age_ref_imp, sex, study_gxe, energytot_imp (when applicable), and the first three principal components  
-
-**G**:  Imputed genotype dosage at one of M SNPs being scanned for GxE interaction.  Only SNPs on autosomal chromosomes can be analyzed. We assume the underlying genotype for each SNP is biallelic, with possible genotype 0 (two major alleles), 1 (heterozygous), or 2 (two minor alleles).  For each SNP, the imputed dosage is assumed to be a value between 0 and 2 representing the expected number of minor alleles.  
-
-<br>
-
-### QQ/Manhattan Plots
-
-- **Genetic main effect**: standard GWAS in the form $$Logit(Pr(D=1|G)) = \lambda_0 + \lambda_GG + \boldsymbol{\lambda_CC}$$
-Models are adjusted for the exposure variable under investigation
-- **GxE**: include interaction term in formuate above: $$Logit(Pr(D=1|G)) = \beta_0 + \beta_GG + \beta_EE + \beta_{GxE}GxE + \boldsymbol{\beta_CC}$$ **Note - I included 'suggestive' hits (p < 5e-6) in the table for this section**  
-- **2DF test**: jointly tests null hypothesis $\beta_G = \beta_GxE = 0$ based on the GxE model
-- **3DF test**: jointly tests null hypothesis $\beta_G = \beta_GxE = \delta_G = 0$ based on the GxE model, where the delta term represents associations between G and E in a combined case/control sample (see below)  
-- **G|E Association (all)**: G|E association in combined cases/controls $$Logit(Pr(E=1|g)) = \delta_0 + \delta_G$$
-Serves as a filtering statistic for two-step methods, described below   
-- **G|E Association (controls)**: G|E association in controls only $$Logit(Pr(G=g|E, D = 0)) = \delta_0 + \delta_1 + \delta_E(g)(E) + \delta_CC \;\;\;\;\;\;  g = 0,1,2$$
-- **G|E Association (case only)**: G|E association in cases e.g. case-only analysis $$Logit(Pr(G=g|E, D = 1)) = \delta_0 + \delta_1 + \delta_E(g)(E) + \delta_CC \;\;\;\;\;\;  g = 0,1,2$$
-
-<br>
-
-### 2DF/3DF Excluding GWAS Loci
-2DF/3DF plots after removing GWAS loci reported in Jeroen's paper (https://www.ncbi.nlm.nih.gov/pubmed/30510241). We excluded these markers in order to better visualize potentially novel interaction loci that are not driven entirely by main effects in joint tests. I removed both the main hits and flanking SNPs ($\pm 2MB)$ with correlation $r^2 > 0.2$ 
-
-<br> 
-
-### Two-step methods
-
-Two-step methods implement a filtering step prior to GxE testing that decreases multiple testing burden. The filtering step (step 1) can be based on marginal statistics, G|E correlation among combined cases/control, and a combination of the two statistics, EDGE -- provided independence between the filtering step and the GxE testing step is preserved. GxE testing (step 2) can then be performed on a subset of SNPs after filtering  
-
-However, rather than restrict GxE testing to a subset of SNPs (and avoid having to optimize the step 1 p-value cutoff level), we employ a weighted hypothesis testing approach. SNPs are assigned to bins with increasingly more stringent GxE (step 2) significance thresholds based on the ordered p-values from step 1 statistics. In short, GxE significance thresholds would be much more permissive for SNPs that have more significant step 1 p values. More details can be found in Ionita-Loza 2007   
-
-We are also exploring expectation based bins, which in step 1 assigns SNPs to bins based on the expected uniform distribution p-value cutoffs. This is work in progress, but I generated the prospective plots in any case  
-
-**Lastly, I need to add LD clumped plots to this document, I will update as I generate the result**  
-
-- **Step1 statistic: D|G**: SNPs filtered/assigned to bins based on main effect p-values (Kooperberg 2008)  
-- **Step1 statistic: G|E**: SNPs filtered/assigned to bins based on G|E correlation among a combined case/control sample (Murcray 2009)  
-- **Step1 statistic: EDGE**: SNPs filtered/assigned to bins based on EDGE statistic (Gauderman 2013)  
-- **Step1 statistic: D|G (expectation based)**:  
-- **Step1 statistic: G|E (expectation based)**:   
-- **Step1 statistic: EDGE (expectation based)**:   
-
-<br>
-
-### Two-step methods (GWAS Step1 statistic)
-
-Rather than using the *Genetic main effect* statistic to conduct two-step methods, here we use the main effects statistic calculated on the GWAS subset of individuals in the FIGI dataset, N ~ 120K individuals. Models are only adjusted for age, sex, study_gxe, and principal components.
-
----
-
-<!-- ```{r, echo=FALSE, results="asis"} -->
-<!-- cat(paste0("# Results from FIGI G x ", params$exposure, " scan", collapse = '\n')) -->
-<!-- ``` -->
-
-## QQ + Manhattan Plots {.tabset}
-```{r child = 'results_report_child_qq_manhattan.Rmd' }
-```
-
-## 2DF/3DF Excluding GWAS Loci {.tabset}
-```{r child = 'results_report_child_qq_manhattan_no_gwas.Rmd' }
-```
-
-## Two-step methods {.tabset}
-Note - uses marginal statistics estimated from exposure gxe subset, adjusted by the exposure variable
-```{r child = 'results_report_child_two_step.Rmd' }
-```
-
-## Two-step methods - GWAS Step1 statistic {.tabset}
-Note - uses marginal statistics estimated from FIGI GWAS set (N = 120K)
-```{r child = 'results_report_child_two_step_gwas_step1.Rmd' }
-```
-
-<!-- ## Two-step methods - chiSqG LD Clumped {.tabset} -->
-<!-- Note - uses marginal statistics estimated from exposure gxe subset, adjusted by the exposure variable. LD 'clumped' based on G (marginal) statistic -->
-<!-- ```{r child = 'results_report_child_two_step_chiSqG_ld_clump.Rmd' } -->
-<!-- ``` -->
-
-<!-- ## Two-step methods - chiSqGxE LD Clumped {.tabset} -->
-<!-- Note - uses marginal statistics estimated from exposure gxe subset, adjusted by the exposure variable. LD 'clumped' based on GxE statistic -->
-<!-- ```{r child = 'results_report_child_two_step_chiSqGxE_ld_clump.Rmd' } -->
-<!-- ``` -->

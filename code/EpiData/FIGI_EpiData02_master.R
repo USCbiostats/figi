@@ -47,27 +47,42 @@ figi_gwas <- inner_join(figi, pc, by = c("vcfid" = "IID")) %>%
                 bmi5 = as.numeric(bmi5), 
                 # height
                 heightcm = as.numeric(heightcm),
+                height10 = as.numeric(height10),
                 # smoking
                 smoke = factor(smoke),
                 smoke = fct_relevel(smoke, "Never smoker", "Former smoker", "Smoker"), 
                 smk_ever = factor(smk_ever), 
                 smk_pkyrqc2 = factor(smk_pkyrqc2), 
+                smk_aveday = as.numeric(smk_aveday),
+                smk_pkyr = as.numeric(smk_pkyr),
                 # alcohol
+                # modified so moderate drinking is ref in alcoholc_moderate
                 alcoholc = factor(alcoholc), # keep original labels
                 alcoholc = fct_relevel(alcoholc, "nondrinker", "1-28g/d", ">28g/d"),
                 alcoholc_heavy = factor(ifelse(alcoholc == "1-28g/d", NA, alcoholc), labels = c("nondrinker", ">28g/d")),
                 alcoholc_heavy = fct_drop(alcoholc_heavy),
                 alcoholc_moderate = factor(ifelse(alcoholc == ">28g/d", NA, alcoholc), labels = c("nondrinker", "1-28g/d")),
                 alcoholc_moderate = fct_drop(alcoholc_moderate), 
+                alcoholc_moderate = fct_relevel(alcoholc_moderate, "1-28g/d", "nondrinker"),
+                alcoholc_heavy_vs_moderate = ifelse(alcoholc == "1-28g/d", 0,
+                                             ifelse(alcoholc == ">28g/d", 1, NA)),
+                alcoholc_heavy_vs_moderate = factor(alcoholc_heavy_vs_moderate, labels = c("1-28g/d", ">28g/d")),
                 # HRT
                 hrt_ref_pm = factor(hrt_ref_pm), 
+                hrt_ref_pm2 = factor(hrt_ref_pm2), 
                 eo_ref_pm = factor(eo_ref_pm),
                 ep_ref_pm = factor(ep_ref_pm),
+                eo_ref_pm_gxe = ifelse(eo_ref_pm == "Yes" & hrt_ref_pm2 == "Yes", "Yes", 
+                                       ifelse(hrt_ref_pm2 == "No", "No", NA)), 
+                ep_ref_pm_gxe = ifelse(ep_ref_pm == "Yes" & hrt_ref_pm2 == "Yes", "Yes", 
+                                       ifelse(hrt_ref_pm2 == "No", "No", NA)),
+                eo_ref_pm_gxe = factor(eo_ref_pm_gxe),
+                ep_ref_pm_gxe = factor(ep_ref_pm_gxe),
                 # diabetes
                 diab = factor(diab), 
                 # calcium
                 calcium_totqc2 = factor(calcium_totqc2),
-                calcium_dietqc2 = factor(calcium_totqc2),
+                calcium_dietqc2 = factor(calcium_dietqc2),
                 calcium_supp = factor(calcium_supp),
                 # folate
                 folate_totqc2 = factor(folate_totqc2),
@@ -106,10 +121,10 @@ saveRDS(figi_gwas, "~/data/FIGI_EpiData_rdata/FIGI_HRC_v2.3_GWAS.rds", version =
 #-----------------------------------------------------------------------------#
 # csv file for jim
 #-----------------------------------------------------------------------------#
-rm(list = ls())
-figi_gwas <- readRDS("~/data/FIGI_EpiData_rdata/FIGI_HRC_v2.3_GWAS.rds")
-
-write.csv(figi_gwas, file = "/media/work/tmp/FIGI_v2.3_gwas_set_N138014_20191211.csv", quote = T, row.names = F)
+# rm(list = ls())
+# figi_gwas <- readRDS("~/data/FIGI_EpiData_rdata/FIGI_HRC_v2.3_GWAS.rds")
+# 
+# write.csv(figi_gwas, file = "/media/work/tmp/FIGI_v2.3_gwas_set_N138014_20191211.csv", quote = T, row.names = F)
 
 
 

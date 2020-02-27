@@ -1,0 +1,75 @@
+---
+title: 
+output: pdf_document
+---
+<!-- % !TeX program = XeLaTeX -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# redmeatqc2 summary table with and without studies with missing energy
+
+```{r echo = F, message=F, error = F}
+library(tidyverse)
+library(data.table)
+library(figifs)
+library(kableExtra)
+rm(list = ls())
+figi_gwas <- readRDS("~/data/FIGI_EpiData_rdata/FIGI_HRC_v2.3_GWAS.rds")
+figi_gxe <- dplyr::filter(figi_gwas, gxe == 1, EUR_subset == 1)
+
+
+# generate a simpler table - case/control counts before and after removing studies with missing energy information
+# but use the subset that you were initially submitting
+x <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_v2.3_gxeset_redmeatqc2_basic_covars_glm.rds")
+figi_gxe <- dplyr::filter(figi_gwas, gxe == 1, EUR_subset == 1) %>%
+  filter(vcfid %in% x$vcfid)
+
+tmp <- figi_gxe %>%
+  group_by(study_gxe) %>%
+  count(outc)
+
+totals <- ungroup(tmp) %>%
+  group_by(outc) %>%
+  summarise(n = sum(n))
+totals$study_gxe = "Total"
+
+out <- bind_rows(tmp, totals) %>%
+  mutate(pct = round( (100*n) / sum(n), 1),
+         out = paste0(n, " (", pct, ")")) %>%
+  dplyr::select(-n, -pct) %>%
+  arrange(outc) %>%
+  pivot_wider(names_from = c(outc), values_from = out )
+
+
+x <- readRDS("~/data/GxEScanR_PhenotypeFiles/FIGI_v2.3_gxeset_redmeatqc2_basic_covars_glm.rds")
+figi_gxe <- dplyr::filter(figi_gwas, gxe == 1, EUR_subset == 1) %>%
+  filter(vcfid %in% x$vcfid,
+         energytot.missing == 0,
+         energytot_imp != 0)
+
+tmp <- figi_gxe %>%
+  group_by(study_gxe) %>%
+  count(outc)
+
+totals <- ungroup(tmp) %>%
+  group_by(outc) %>%
+  summarise(n = sum(n))
+totals$study_gxe = "Total"
+
+out2 <- bind_rows(tmp, totals) %>%
+  mutate(pct = round( (100*n) / sum(n), 1),
+         out = paste0(n, " (", pct, ")")) %>%
+  dplyr::select(-n, -pct) %>%
+  arrange(outc) %>%
+  pivot_wider(names_from = c(outc), values_from = out )
+names(out2) <- c("study_gxe", "Case (no energy)", "Control (no energy)")
+
+final <- full_join(out, out2, 'study_gxe')
+
+kable(final) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F, position = 'left')
+
+
+```

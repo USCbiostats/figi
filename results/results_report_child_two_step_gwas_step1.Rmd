@@ -1,0 +1,66 @@
+
+```{r include = F}
+
+twostep_dt_wrap <- function(x) {
+  tmp <- x %>% 
+    rename(Bin = grp) %>% 
+    mutate(Step1p = formatC(step1p, format = "e", digits = 2),
+           Step2p = formatC(step2p, format = "e", digits = 2)) %>% 
+    dplyr::select(SNP, Chromosome, Location, Reference, Alternate, Subjects, Cases, Bin,  Step1p, Step2p)
+}
+
+
+
+```
+
+
+### Step1 statistic: D|G
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/twostep_wht_chiSqG_", params$exposure, "_", params$covariates, "_gwas_step1.png"))
+
+x <- twostep_dt_wrap(readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/twostep_wht_chiSqG_", params$exposure, "_", params$covariates, "_gwas_step1.rds")))
+datatable(x, options = list(pageLength = 10))
+```
+
+### Step1 statistic: G|E
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/twostep_wht_chiSqGE_", params$exposure, "_", params$covariates, "_gwas_step1.png"))
+
+x <- twostep_dt_wrap(readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/twostep_wht_chiSqGE_", params$exposure, "_", params$covariates, "_gwas_step1.rds")))
+datatable(x, options = list(pageLength = 10))
+```
+
+### Step1 statistic: EDGE
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/twostep_wht_chiSqEDGE_", params$exposure, "_", params$covariates, "_gwas_step1.png"))
+
+x <- twostep_dt_wrap(readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/twostep_wht_chiSqEDGE_", params$exposure, "_", params$covariates, "_gwas_step1.rds")))
+datatable(x, options = list(pageLength = 10))
+```
+
+
+### Step1 statistic: D|G (expectation based)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/twostep_wht_chiSqG_", params$exposure, "_", params$covariates, "_gwas_step1_expectation_based.png"))
+
+x <- twostep_dt_wrap(readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/twostep_wht_chiSqG_", params$exposure, "_", params$covariates, "_gwas_step1_expectation_based.rds")))
+datatable(x, options = list(pageLength = 10))
+```
+
+### Step1 statistic: G|E (expectation based)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/twostep_wht_chiSqGE_", params$exposure, "_", params$covariates, "_gwas_step1_expectation_based.png"))
+
+x <- twostep_dt_wrap(readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/twostep_wht_chiSqGE_", params$exposure, "_", params$covariates, "_gwas_step1_expectation_based.rds")))
+datatable(x, options = list(pageLength = 10))
+```
+
+### Step1 statistic: EDGE (expectation based)
+```{r , echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/twostep_wht_chiSqEDGE_", params$exposure, "_", params$covariates, "_gwas_step1_expectation_based.png"))
+
+x <- twostep_dt_wrap(readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/twostep_wht_chiSqEDGE_", params$exposure, "_", params$covariates, "_gwas_step1_expectation_based.rds")))
+datatable(x, options = list(pageLength = 10))
+```
+
+

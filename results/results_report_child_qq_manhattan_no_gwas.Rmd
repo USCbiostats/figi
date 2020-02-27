@@ -1,0 +1,17 @@
+### 2DF Test
+```{r , echo=FALSE, out.width = '100%'}
+# knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSq2df_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSq2df_", params$exposure, "_", params$covariates, "_no_gwas.mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSq2df_", params$exposure, "_", params$covariates, "_no_gwas.rds"))
+datatable(x, options = list(pageLength = 10))
+```
+
+### 3DF Test
+```{r , echo=FALSE, out.width = '100%'}
+# knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSq3df_",        params$exposure, "_", params$covariates, "_no_gwas.png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSq3df_", params$exposure, "_", params$covariates, "_no_gwas.mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSq3df_", params$exposure, "_", params$covariates, "_no_gwas.rds"))
+datatable(x, options = list(pageLength = 10))
+```

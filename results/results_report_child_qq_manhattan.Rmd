@@ -1,45 +1,65 @@
 
 
-## Genetic Main Effect
+### Genetic Main Effect
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqG_",        params$exposure, "_", params$covariates, ".png"))
-knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSqG_", params$exposure, "_", params$covariates, ".mh.png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSqG_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSqG_", params$exposure, "_", params$covariates, ".mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSqG_", params$exposure, "_", params$covariates, ".rds"))
+datatable(x, options = list(pageLength = 10))
 ```
 
-## GxE
+### GxE
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqGxE_",        params$exposure, "_", params$covariates, ".png"))
-knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSqGxE_", params$exposure, "_", params$covariates, ".mh.png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSqGxE_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSqGxE_", params$exposure, "_", params$covariates, ".mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSqGxE_", params$exposure, "_", params$covariates, ".rds"))
+datatable(x, options = list(pageLength = 10))
 ```
 
-## 2DF Test
+### 2DF Test
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSq2df_",        params$exposure, "_", params$covariates, ".png"))
-knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSq2df_", params$exposure, "_", params$covariates, ".mh.png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSq2df_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSq2df_", params$exposure, "_", params$covariates, ".mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSq2df_", params$exposure, "_", params$covariates, ".rds"))
+datatable(x, options = list(pageLength = 10))
 ```
 
-## 3DF Test
+### 3DF Test
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSq3df_",        params$exposure, "_", params$covariates, ".png"))
-knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSq3df_", params$exposure, "_", params$covariates, ".mh.png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSq3df_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSq3df_", params$exposure, "_", params$covariates, ".mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSq3df_", params$exposure, "_", params$covariates, ".rds"))
+datatable(x, options = list(pageLength = 10))
 ```
 
-## G|E Association (all)
+### G|E Association (all)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqGE_",        params$exposure, "_", params$covariates, ".png"))
-knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSqGE_", params$exposure, "_", params$covariates, ".mh.png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSqGE_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSqGE_", params$exposure, "_", params$covariates, ".mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSqGE_", params$exposure, "_", params$covariates, ".rds"))
+datatable(x, options = list(pageLength = 10))
 ```
 
-
-## G|E Association (controls)
+### G|E Association (controls)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqControl_",        params$exposure, "_", params$covariates, ".png"))
-knitr::include_graphics(paste0(params$exposure, "/figures/manhattan_chiSqControl_", params$exposure, "_", params$covariates, ".mh.png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSqControl_",        params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSqControl_", params$exposure, "_", params$covariates, ".mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSqControl_", params$exposure, "_", params$covariates, ".rds"))
+datatable(x, options = list(pageLength = 10))
 ```
 
-## G|E Association (case only)
+### G|E Association (case only)
 ```{r , echo=FALSE, out.width = '100%'}
-knitr::include_graphics(paste0(params$exposure, "/figures/qq_chiSqCase_",       params$exposure, "_", params$covariates, ".png"))
-knitr::include_graphics(paste0(params$exposure,"/figures/manhattan_chiSqCase_", params$exposure, "_", params$covariates, ".mh.png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/qq_chiSqCase_",       params$exposure, "_", params$covariates, ".png"))
+knitr::include_graphics(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/plots/manhattan_chiSqCase_", params$exposure, "_", params$covariates, ".mh.png"))
+
+x <- readRDS(paste0("/home/rak/Dropbox/FIGI/Results/", params$exposure, "/files/chiSqCase_", params$exposure, "_", params$covariates, ".rds"))
+datatable(x, options = list(pageLength = 10))
 ```
 
