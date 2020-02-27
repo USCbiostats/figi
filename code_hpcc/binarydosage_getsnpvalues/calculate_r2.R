@@ -1,49 +1,43 @@
 #=============================================================================#
-# FIGI - Extract Dosages from BinaryDosage files
+# Calculcate r2 between top hit and SNPs within 1MB of hit
 # 11/03/2019
+# Updated 01/03/2020
 #
-# Take a long vector of index positions (CHROMOSOME SPECIFIC)
-#   split vector into chunks, then loop (or apply) over them to extract dosages
-#   output chunked dosages into rds files
-#   combine rds files into a single data.frame for convenience
+# to be run after you extract dosages in chunks 
+#
+# remember youre running this separately for each top hit locus, 
+# called sbatch for each of the 140 of them 
 #=============================================================================#
 library(BinaryDosage)
 library(tidyverse)
 library(data.table)
 
-# always take two arguments - chr and snplist (vector of index positions)
+# take two arguments - chromosome and bp position of top hit
 args <- commandArgs(trailingOnly=T)
-filename <- args[1] # just a string of the file name containing SNP index positions in BinaryDosage files
-tophit <- as.character(args[2])
-
+chr <- args[1] # chromosome
+bp <- args[2] # base-pair position
 
 # vcfids for controls
-figi_controls_vcfid <- readRDS("/staging/dvc/andreeki/gwas_annotation_ld/FIGI_controls_vcfid_73601.rds")
+figi_controls_vcfid <- readRDS("/staging/dvc/andreeki/gwas_ld_annotation/FIGI_controls_vcfid_73598.rds")
 
-# combine temporary files into a single data.frame. more convenient
-file_list <- list.files("/staging/dvc/andreeki/gwas_annotation_ld", pattern = filename, full.names = T)
 
-merge.all <- function(x, y) {
-    merge(x, y, all = T, by = "vcfid")
+file_list <-  list.files("/staging/dvc/andreeki/gwas_ld_annotation", pattern = paste0("huygue_gwas_140_", chr, "_", bp, "_TMP"), full.names = T)
+tophit <- readRDS(paste0("/staging/dvc/andreeki/gwas_tophits_dosages/huygue_gwas_140_tophitonly_", chr, "_", bp, "_TMP1.rds")) %>%
+    dplyr::filter(vcfid %in% figi_controls_vcfid$vcfid)
+tophit_dosage <- tophit[, 1]
+
+# remember the rds file contains data.frame (vcfid, tophitdosage)
+read_r2_wrapper <- function(x) {
+    tmp <- readRDS(x) %>%
+        dplyr::filter(vcfid %in% figi_controls_vcfid$vcfid) %>%
+        dplyr::select(-vcfid)
+    apply(tmp, 2, function(y) cor(y, tophit_dosage)^2)
 }
 
-read.all <- function(x) {
-    readRDS(x) %>%
-        dplyr::filter(vcfid %in% figi_controls_vcfid$vcfid)
-}
+out <- lapply(file_list, read_r2_wrapper)
+out_final <- do.call(c, out)
 
-dosages <- Reduce(merge.all, lapply(file_list, read.all)) %>%
-    dplyr::select(-vcfid)
-
-# pull out top hit
-# calculate r2 with every snp in data.frame
-
-#tophit_dosage <- dosages[, tophit]
-tophit_dosage <- dplyr::select(dosages, tophit)
-
-out <- apply(dosages, 2, function(x) cor(x, tophit_dosage)^2)
-
-saveRDS(out, file = paste0("/staging/dvc/andreeki/gwas_annotation_ld/", filename, "_r2.rds"))
+saveRDS(out_final, file = paste0("/staging/dvc/andreeki/gwas_ld_annotation/huygue_gwas_140_", chr, "_", bp, "_r2.rds"))
 
 
 

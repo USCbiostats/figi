@@ -20,3 +20,11 @@ plink \
     --clump-p1 1 --clump-p2 1 \
     --out   ${OUT}/FIGI_v2.3_gxeset_${exposure}_basic_covars_gxescan_chr${SLURM_ARRAY_TASK_ID}_chiSqGxE_ldclump
 
+plink \
+    --bed ${INN}/corect_oncoarray_controls_chr${SLURM_ARRAY_TASK_ID}.bed \
+    --bim ${INN}/corect_oncoarray_controls_chr${SLURM_ARRAY_TASK_ID}.bim \
+    --fam ${INN}/corect_oncoarray_controls_chr${SLURM_ARRAY_TASK_ID}.fam \
+    --memory 8000 \
+    --clump ${OUT}/FIGI_v2.3_gxeset_${exposure}_basic_covars_gxescan_chr${SLURM_ARRAY_TASK_ID}_chiSqG_ldclump.txt \
+    --clump-p1 1 --clump-p2 1 \
+    --out   ${OUT}/FIGI_v2.3_gxeset_${exposure}_basic_covars_gxescan_chr${SLURM_ARRAY_TASK_ID}_chiSqG_ldclump

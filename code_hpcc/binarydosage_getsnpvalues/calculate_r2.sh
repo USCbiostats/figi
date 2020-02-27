@@ -6,5 +6,5 @@
 #SBATCH --partition=conti
 
 #Rscript calculate_r2.R  huygue_gwas_140_chr1_TMP X1.55246035
-Rscript calculate_r2_working.R ${chr} ${bp}
+Rscript calculate_r2.R ${chr} ${bp}
 
